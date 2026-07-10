@@ -125,4 +125,5 @@ struct DerivateView: View {
 
 #Preview {
     DerivateView()
+        .preferredColorScheme(.dark)
 }

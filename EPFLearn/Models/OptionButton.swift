@@ -16,15 +16,17 @@ struct OptionButton: View {
     let action: () -> Void
     
     var body: some View {
-        Button(action: action) {
+        Button(action: { if state == .idle { action() } }) {
             Text(text)
-                .frame(maxWidth: .infinity)
+                .multilineTextAlignment(.leading)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .padding()
                 .background(backgroundColor)
-                .foregroundStyle(foregroundColor)
                 .clipShape(RoundedRectangle(cornerRadius: 10))
         }
-        .disabled(state != .idle)
+        .buttonStyle(.plain)
+        .foregroundStyle(foregroundColor)
     }
     
     var backgroundColor: Color {
@@ -42,5 +44,8 @@ struct OptionButton: View {
            case .wrong: return .red
            }
        }
+}
+#Preview {
+    OptionButton(text: "test", state: .correct, action: {})
 }
 

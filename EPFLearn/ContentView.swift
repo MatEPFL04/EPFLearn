@@ -9,8 +9,19 @@ import SwiftUI
 
 struct ContentView: View {
     @State private var vm = QuizViewModel()
+    @State private var previousScores = [ResultQCM]()
+
     var body: some View {
-        QuizView()
+        TabView {
+            QuizView(vm: $vm)
+                .tabItem { Label("Quiz", systemImage: "questionmark.circle") }
+            StatisticsView(scores: $previousScores)
+                .tabItem { Label("Home", systemImage: "house") }
+        }
+        .preferredColorScheme(.dark)    
+        .onAppear {
+            vm.onComplete = { res in previousScores.append(res) }
+        }
     }
 }
 

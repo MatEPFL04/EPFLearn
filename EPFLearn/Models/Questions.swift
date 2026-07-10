@@ -15,7 +15,7 @@
 import SwiftUI
 
 enum Subject {
-    case algebra, analysis, algorithm
+    case analysis, arrays, graphs
 }
 
 struct Question: Identifiable {
@@ -60,14 +60,10 @@ enum VisualizationType {
     case trigo
 }
 
-// MARK: - Random, one question per theme
-
 extension Question {
     
-    static func sampleQuestions() -> [Question] {
+    static func sampleQuestionsAnalysis() -> [Question] {
         return [
-            
-            
             trigoQuestions.shuffled().first!,
             complexPlaneQuestions.shuffled().first!,
             darbouxQuestions.shuffled().first!,
@@ -81,6 +77,11 @@ extension Question {
             lhopitalQuestions.shuffled().first!,
             sandwichQuestions.shuffled().first!,
             taylorQuestions.shuffled().first!,
+       
+        ]
+    }
+    static func sampleQuestionsArrays() -> [Question] {
+        return [
             
             insertionQuestions.shuffled().first!,
             mergesortQuestions.shuffled().first!,
@@ -90,6 +91,11 @@ extension Question {
             searchQuestions.shuffled().first!,
             quicksortQuestions.shuffled().first!,
             kadaneQuestions.shuffled().first!,
+ 
+        ]
+    }
+    static func sampleQuestionsGraphs() -> [Question] {
+        return [
             
             dfsQuestions.shuffled().first!,
             bfsQuestions.shuffled().first!,
@@ -97,8 +103,7 @@ extension Question {
             kruskalQuestions.shuffled().first!,
             bellmanQuestion.shuffled().first!,
             djikistraQuestion.shuffled().first!,
-            
-           
+             
         ]
     }
 }

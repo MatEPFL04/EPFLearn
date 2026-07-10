@@ -126,16 +126,10 @@ struct FunctionDrawing: Shape {
                 integrF: { x in pow(x, 2) + 5 * x },
                 scale: scale
             )
-        case .quadratic:
-            return FunctionDrawing(
-                f:      { x in 3 * pow(x, 2) },
-                integrF: { x in pow(x, 3) },
-                scale: scale
-            )
         case .cubic:
             return FunctionDrawing(
-                f:      { x in pow(x, 3) },
-                integrF: { x in pow(x, 4) / 4 },
+                f:      { x in 0.01 * pow(x, 3) },
+                integrF: { x in 0.01 * pow(x, 4) / 4 },
                 scale: scale
             )
         case .sine:
@@ -150,22 +144,32 @@ struct FunctionDrawing: Shape {
                 integrF: { x in  50 * sin(0.2 * x) },
                 scale: scale
             )
+        
+        case .dirichlet:
+            let period = 0.01
+            return FunctionDrawing(
+                f: { x in
+                    Int(floor(x / period)) % 2 == 0 ? 1.0 : 0.0
+                },
+                integrF: { _ in .nan },
+                scale: scale
+            )
         }
     }
 }
  
 enum MathFunctionType: String, CaseIterable {
     case affine    = "f(x) = 2x + 5"
-    case quadratic = "f(x) = 3x²"
     case cubic     = "f(x) = x³"
-    case sine      = "f(x) = 10sin(0.2x)"
-    case cosine    = "f(x) = 10cos(0.2x)"
+    case sine      = "f(x) = sin(x)"
+    case cosine    = "f(x) = cos(x)"
+    case dirichlet = "f(x) = 1 si x∈ℚ, 0 sinon"
 }
  
 struct DarbouxView: View {
     @State private var scale: Double = 10
     @State private var subDivisionStep = 15.0
-    @State private var selectedFunction = MathFunctionType.quadratic
+    @State private var selectedFunction = MathFunctionType.sine
 
     let graphSize: CGFloat = 300
 
@@ -188,9 +192,9 @@ struct DarbouxView: View {
                 GridDrawing(step: 10)
                     .stroke(Color.blue.opacity(0.5), lineWidth: 0.5)
                 AxisDrawing(axis: .horizontal)
-                    .stroke(Color.blue.opacity(0.8), lineWidth: 1.5)
+                    .stroke(Color.white.opacity(0.8), lineWidth: 1.5)
                 AxisDrawing(axis: .vertical)
-                    .stroke(Color.blue.opacity(0.8), lineWidth: 1.5)
+                    .stroke(Color.white.opacity(0.8), lineWidth: 1.5)
                 currentFunction
                     .stroke(lineWidth: 1)
                 darbouxSup
@@ -210,7 +214,12 @@ struct DarbouxView: View {
 
             VStack(alignment: .leading, spacing: 6) {
                 let n = Int(graphSize / subDivisionStep)
-                Text("Integral: \(currentFunction.integralValue(in: graphRect), specifier: "%.2f")")
+                if selectedFunction == .dirichlet {
+                    Text("Intégrale : n'existe pas (f n'est pas Riemann-intégrable)")
+                        .foregroundStyle(.orange)
+                } else {
+                    Text("Integral: \(currentFunction.integralValue(in: graphRect), specifier: "%.2f")")
+                }
                 Text("Darboux sup: \(darbouxSup.area(from: mathRange.from, to: mathRange.to, subdivisions: n), specifier: "%.2f")")
                 Text("Darboux inf: \(darbouxInf.area(from: mathRange.from, to: mathRange.to, subdivisions: n), specifier: "%.2f")")
             }
@@ -229,4 +238,8 @@ struct DarbouxView: View {
         }
         .padding()
     }
+}
+#Preview {
+    DarbouxView()
+        .preferredColorScheme(.dark)
 }

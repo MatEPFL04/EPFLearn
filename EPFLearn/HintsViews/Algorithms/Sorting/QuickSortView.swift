@@ -17,18 +17,19 @@ import Combine
 
 import SwiftUI
 
-// Une étape de quicksort : le tableau + le contexte récursif (fenêtre, pivot)
-// + le compteur de comparaisons À CET instant → tout est animé en même temps.
+
 struct QSFrame {
     var array: [Int]
-    var lo: Int          // bornes de la partition en cours
+    var lo: Int
     var hi: Int
-    var pivot: Int       // index du pivot (-1 = aucun)
-    var comparisons: Int // total cumulé jusqu'à cette étape
+    var pivot: Int
+    var comparisons: Int
+    var bestLo: Int = -1     // meilleur sous-tableau trouvé jusqu'ici
+    var bestHi: Int = -1
 }
 
-// Quicksort instrumenté — logique pure, même esprit que `enum Graph` / `enum Sorting`.
 enum QuickSort {
+
     enum Pivot { case last, medianOfThree }
 
     static func run(_ input: [Int], pivot: Pivot) -> [QSFrame] {
@@ -53,40 +54,39 @@ enum QuickSort {
 
         func partition(_ lo: Int, _ hi: Int) -> Int {
             let pIdx = choosePivot(lo, hi)
-            a.swapAt(pIdx, hi)                 // pivot placé en fin
+            a.swapAt(pIdx, hi)
             let pivotVal = a[hi]
-            snap(lo, hi, hi)                   // début de partition : fenêtre + pivot
+            snap(lo, hi, hi)
             var i = lo - 1
             for j in lo..<hi {
-                comparisons += 1              // ← incrément AVANT le snap
+                comparisons += 1
                 if a[j] <= pivotVal {
                     i += 1
                     a.swapAt(i, j)
-                    snap(lo, hi, hi)          // état après échange, compteur à jour
+                    snap(lo, hi, hi)
                 } else {
-                    snap(lo, hi, hi)          // snap aussi sur comparaison sans échange,
-                                              // pour que le compteur monte à chaque comparaison
+                    snap(lo, hi, hi)
                 }
             }
             a.swapAt(i + 1, hi)
-            snap(lo, hi, i + 1)               // pivot posé à sa place définitive
+            snap(lo, hi, i + 1)
             return i + 1
         }
 
         func sort(_ lo: Int, _ hi: Int) {
             guard lo < hi else { return }
             let p = partition(lo, hi)
-            sort(lo, p - 1)                   // récursion gauche
-            sort(p + 1, hi)                   // récursion droite
+            sort(lo, p - 1)
+            sort(p + 1, hi)
         }
         sort(0, a.count - 1)
         return frames
     }
 }
 
-// Rendu barre-par-barre via Canvas — une couleur par barre (impossible avec un Shape).
 struct QSBars: View {
     let frame: QSFrame
+    var targetIndex: Int? = nil
 
     var body: some View {
         Canvas { ctx, size in
@@ -105,9 +105,12 @@ struct QSBars: View {
                 p.addLine(to: CGPoint(x: x, y: top))
 
                 let color: Color =
-                    i == frame.pivot ? .orange :                        // pivot
-                    (i >= frame.lo && i <= frame.hi) ? .blue            // fenêtre récursive
-                    : .gray.opacity(0.3)                                // hors récursion
+                    i == frame.pivot      ? .orange :
+                    i == targetIndex      ? .green  :
+                    (i >= frame.lo && i <= frame.hi) ? .blue :
+                    .gray.opacity(0.3)
+
+                ctx.stroke(p, with: .color(color.opacity(0.5)), lineWidth: max(3, delta + 2))
                 ctx.stroke(p, with: .color(color), lineWidth: max(1, delta - 1.5))
             }
         }
@@ -116,48 +119,91 @@ struct QSBars: View {
 
 struct QuickSortView: View {
 
-    private static let n = 30
-    static func shuffled() -> [Int] { Array(1...n).shuffled() }
-    static func sorted()   -> [Int] { Array(1...n) }
+    enum Input: String, CaseIterable {
+        case sorted   = "Sorted"
+        case reversed = "Reversed"
+        case constant = "Constant"
+        case minLast  = "Min at end"
+        case nearly   = "Almost sorted"
+    }
 
-    // Frame courante affichée
-    @State private var frameShuf = QSFrame(array: shuffled(), lo: 0, hi: n - 1, pivot: -1, comparisons: 0)
-    @State private var frameSort = QSFrame(array: sorted(),   lo: 0, hi: n - 1, pivot: -1, comparisons: 0)
-
-    // Frames pré-calculées + curseur de lecture
+    @State private var n: Int
+    @State private var input: Input
+    @State private var baseShuf: QSFrame
+    @State private var baseStruct: QSFrame
     @State private var framesShuf: [QSFrame] = []
-    @State private var framesSort: [QSFrame] = []
-    @State private var stepShuf = 0
-    @State private var stepSort = 0
+    @State private var framesStruct: [QSFrame] = []
+    @State private var step: Double = 0
 
-    private let timer = Timer.publish(every: 0.02, on: .main, in: .common).autoconnect()
+    init(n: Int = 30, input: Input = .sorted) {
+        _n = State(initialValue: n)
+        _input = State(initialValue: input)
+        _baseShuf = State(initialValue: QSFrame(array: Self.shuffled(n), lo: 0, hi: n - 1, pivot: -1, comparisons: 0))
+        _baseStruct = State(initialValue: QSFrame(array: Self.makeInput(input, n), lo: 0, hi: n - 1, pivot: -1, comparisons: 0))
+    }
 
-    private var running: Bool { stepShuf < framesShuf.count || stepSort < framesSort.count }
+    static func shuffled(_ n: Int) -> [Int] { Array(1...n).shuffled() }
+
+    static func makeInput(_ input: Input, _ n: Int) -> [Int] {
+        switch input {
+        case .sorted:
+            return Array(1...n)
+        case .reversed:
+            return Array((1...n).reversed())
+        case .constant:
+            return Array(repeating: 1, count: n)
+        case .minLast:
+            // trié sauf le minimum déplacé en dernière position
+            return Array(2...n) + [1]
+        case .nearly:
+            // trié avec quelques éléments du milieu permutés
+            var a = Array(1...n)
+            if n >= 6 {
+                a.swapAt(n/2 - 1, n/2 + 1)
+                a.swapAt(n/3, n/3 + 1)
+            }
+            return a
+        }
+    }
+
+    private var maxStep: Int { max(0, max(framesShuf.count, framesStruct.count) - 1) }
 
     var body: some View {
         VStack(spacing: 16) {
 
-            panel(title: "Random array", frame: frameShuf)
-            panel(title: "Already sorted array", frame: frameSort)
+            panel(title: "Random array", frame: displayed(framesShuf, baseShuf))
+            panel(title: input.rawValue,  frame: displayed(framesStruct, baseStruct))
 
-            Text("QuickSort")
-                .font(.caption).foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .fixedSize(horizontal: false, vertical: true)
+            if maxStep > 0 {
+                VStack(spacing: 4) {
+                    Slider(value: $step, in: 0...Double(maxStep), step: 1)
+                    Text("Étape \(Int(step)) / \(maxStep)")
+                        .font(.system(.caption2, design: .monospaced))
+                        .foregroundStyle(.secondary)
+                }
+            }
 
             HStack(spacing: 12) {
-                Button("Mélanger") { reset() }
-                    .buttonStyle(.bordered)
-                Button("Comparer") { run() }
-                    .buttonStyle(.borderedProminent)
-                    .disabled(running)
+                Button("Mélanger") { reset() }.buttonStyle(.bordered)
+                Button("Comparer") { run() }.buttonStyle(.borderedProminent)
             }
+
+            Picker("Input", selection: $input) {
+                ForEach(Input.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+            }
+            .pickerStyle(.menu)
+            .onChange(of: input) { reset() }
+
+            Text("Number of elements in the array : \(n)")
+                .font(.system(.caption, design: .monospaced))
+                .foregroundStyle(.secondary)
+            Slider(
+                value: Binding(get: { Double(n) }, set: { n = Int($0) }),
+                in: 1...100, step: 1
+            )
+            .onChange(of: n) { reset() }
         }
         .padding()
-        .onReceive(timer) { _ in
-            if stepShuf < framesShuf.count { frameShuf = framesShuf[stepShuf]; stepShuf += 1 }
-            if stepSort < framesSort.count { frameSort = framesSort[stepSort]; stepSort += 1 }
-        }
     }
 
     @ViewBuilder
@@ -166,34 +212,39 @@ struct QuickSortView: View {
             HStack {
                 Text(title).font(.caption).bold()
                 Spacer()
-                Text("\(frame.comparisons) comparaisons")    // ← lu depuis la frame → temps réel
+                Text("\(frame.comparisons) comparaisons")
                     .font(.system(.caption2, design: .monospaced))
                     .foregroundStyle(.secondary)
-                    .contentTransition(.numericText())       // petite anim du chiffre
+                    .contentTransition(.numericText())
             }
             QSBars(frame: frame)
                 .frame(height: 150)
                 .padding(.vertical, 6)
-                .background(Color.white)
+                .background(Color.black)
                 .clipShape(RoundedRectangle(cornerRadius: 10))
                 .overlay(RoundedRectangle(cornerRadius: 10).stroke(.gray.opacity(0.2)))
         }
     }
 
+    private func displayed(_ frames: [QSFrame], _ base: QSFrame) -> QSFrame {
+        guard !frames.isEmpty else { return base }
+        return frames[min(Int(step), frames.count - 1)]
+    }
+
     private func run() {
-        framesShuf = QuickSort.run(frameShuf.array, pivot: .last); stepShuf = 0
-        framesSort = QuickSort.run(frameSort.array, pivot: .last); stepSort = 0
+        framesShuf = QuickSort.run(baseShuf.array, pivot: .last)
+        framesStruct = QuickSort.run(baseStruct.array, pivot: .last)
+        step = 0
     }
 
     private func reset() {
-        let fresh = Self.shuffled()
-        frameShuf = QSFrame(array: fresh,         lo: 0, hi: fresh.count - 1, pivot: -1, comparisons: 0)
-        frameSort = QSFrame(array: Self.sorted(), lo: 0, hi: Self.n - 1,      pivot: -1, comparisons: 0)
-        framesShuf = []; framesSort = []
-        stepShuf = 0; stepSort = 0
+        baseShuf = QSFrame(array: Self.shuffled(n), lo: 0, hi: n - 1, pivot: -1, comparisons: 0)
+        baseStruct = QSFrame(array: Self.makeInput(input, n), lo: 0, hi: n - 1, pivot: -1, comparisons: 0)
+        framesShuf = []; framesStruct = []
+        step = 0
     }
 }
 
 #Preview {
-    QuickSortView()
+    QuickSortView().preferredColorScheme(.dark)
 }
