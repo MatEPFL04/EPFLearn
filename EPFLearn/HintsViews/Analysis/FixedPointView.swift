@@ -6,15 +6,38 @@
 //
 import SwiftUI
 
+struct BreakingFunctionDrawing: Shape {
+    let f: @Sendable (Double) -> Double
+    let scale: Double
+    
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        var previousY: CGFloat? = nil
+        let jumpThreshold: CGFloat = 15
+        
+        for x in stride(from: rect.minX, to: rect.maxX, by: 0.5) {
+            let xMath = (x - rect.width/2) / scale
+            let y = -CGFloat(f(xMath) * scale) + rect.height / 2
+            
+            if let prevY = previousY, abs(y - prevY) < jumpThreshold {
+                path.addLine(to: CGPoint(x: x, y: y))
+            } else {
+                path.move(to: CGPoint(x: x, y: y))
+            }
+            previousY = y
+        }
+        return path
+    }
+}
 struct FixedPointView: View {
     
     @State private var selectedFunction = 0
     let graphSize: CGFloat = 300
     let scale: Double = 100
     
-    // Points A et B fixes en coordonnées math
-    let A = (0.0, 1.0)  // au dessus diagonale : 0.5 > -1
-    let B = (1.0, 0.0)   // en dessous diagonale : 0.5 < 1
+    // Points A et B recalculés depuis la fonction sélectionnée§§§
+    var A: (Double, Double) { (0.0, functions[selectedFunction](0.0)) }
+    var B: (Double, Double) { (1.0, functions[selectedFunction](1.0)) }
 
     // Cercle A
     
@@ -26,30 +49,34 @@ struct FixedPointView: View {
     static func f2(_ x: Double) -> Double { return -pow(x,2) + 1 }
     static func f3(_ x: Double) -> Double { return cos(.pi / 2 * x) }
     static func f4(_ x: Double) -> Double { return 1 - x + 0.6 * 2 * sin(3 * .pi * x) }
+    static func f5(_ x: Double) -> Double { return x <= 1.2 ? (-x + 1) : (-x + 1) + 1.5 }
+    static func f6(_ x: Double) -> Double { return x < 0.5 ? 0.9 : 0.1 }
     
     static func functionName(_ i: Int) -> String {
         switch i {
         case 0:
-            return "first function"
+            return "f(x) = 1 − x"
         case 1:
-            return "second function"
+            return "f(x) = 1 − x²"
         case 2:
-            return "third function"
+            return "f(x) = cos(πx/2)"
         case 3:
-            return "fourth function"
+            return "f(x) = 1 − x + sin oscillation"
+        case 4:
+            return "discontinuity inside [a,b]"
         default:
             return ""
         }
-         
     }
     
-    let functions: [(Double) -> Double] = [f1,f2,f3,f4]
-    
+    let functions: [(Double) -> Double] = [f1,f2,f3,f4,f6]
+
     enum Functions: Int, CaseIterable {
         case f1 = 0
         case f2 = 1
         case f3 = 2
         case f4 = 3
+        case f6 = 4
     }
     
     var body: some View {
@@ -65,11 +92,11 @@ struct FixedPointView: View {
             // Diagonale y = x
             FunctionDrawing(f: { x in x }, integrF: { x in pow(x,2)/2 }, scale: scale)
                 .stroke(Color.gray.opacity(1), style: StrokeStyle(lineWidth: 1, dash: [4,3]))
-            FunctionDrawing(f: { x in (functions[selectedFunction](x)) }, integrF: { x in pow(x,2)/2 }, scale: scale)
+            BreakingFunctionDrawing(f: { x in (functions[selectedFunction](x)) }, scale: scale)
                 .stroke(lineWidth: 1)
            
             
-            // Point A (-1, 0.5) — au dessus
+            // Point A
             Circle()
                 .fill(Color.blue)
                 .frame(width: 10, height: 10)
@@ -79,7 +106,7 @@ struct FixedPointView: View {
                 .foregroundStyle(.blue)
                 .position(x: xScreen(A.0) - 14, y: yScreen(A.1) - 8)
             
-            // Point B (1, 0.5) — en dessous
+            // Point B
             Circle()
                 .fill(Color.blue)
                 .frame(width: 10, height: 10)
@@ -92,6 +119,8 @@ struct FixedPointView: View {
            
         }
         .frame(width: graphSize, height: graphSize)
+        .padding(6)
+        .background(Color(.systemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 8))
         .pickerStyle(.segmented)
         

@@ -401,8 +401,6 @@ struct TopoSortLab: View {
     }
 }
 
-// MARK: - Ready-to-plug views
-
 struct KahnView: View {
     var n: Int = 7
     var body: some View { TopoSortLab(n: n, lockedAlgo: .kahn) }

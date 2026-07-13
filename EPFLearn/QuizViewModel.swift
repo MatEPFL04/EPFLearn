@@ -69,6 +69,7 @@ class QuizViewModel {
             isFinished = true
             correctAnswers = []
             score = 0
+            
         }
     }
     

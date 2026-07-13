@@ -440,7 +440,6 @@ struct ShortestPathLab: View {
     }
 }
 
-// MARK: - Ready-to-plug views
 
 struct DijkstraView: View {
     var n: Int = 7

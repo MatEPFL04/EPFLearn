@@ -7,7 +7,6 @@
 
 import SwiftUI
 
-// MARK: - Modèle de fonction
 
 private struct MathFunction {
     let name:       String
@@ -22,6 +21,12 @@ private let availableFunctions: [MathFunction] = [
         f:          { x in cos(x) + x / 2 },
         fPrime:     { x in sin(x) + pow(x, 2) / 4 },
         derivative: { x in -sin(x) + 0.5 }
+    ),
+    MathFunction(
+        name:       "3 sin(x)",
+        f:          { x in 3 * sin(x) },
+        fPrime:     { x in -3 * cos(x) },
+        derivative: { x in 3 * cos(x) }
     ),
     MathFunction(
         name:       "|x|",
@@ -49,7 +54,7 @@ struct SlopeView: Shape {
         let cs = MathCoordinateSpace(rect: rect, scale: scale)
         var path = Path()
         let xMathStart = cs.toMath(x: rect.minX + xOffset)
-        let xMathEnd   = cs.toMath(x: rect.maxX - xOffsetEnd)
+        let xMathEnd   = cs.toMath(x: rect.minX + xOffsetEnd)
         path.move(to:    cs.toScreen(x: xMathStart, y: f(xMathStart)))
         path.addLine(to: cs.toScreen(x: xMathEnd,   y: f(xMathEnd)))
         return path
@@ -60,8 +65,8 @@ struct SlopeView: Shape {
 
 struct DerivateView: View {
 
-    @State private var xOffset       = 0.0
-    @State private var xOffsetEnd    = 0.0
+    @State private var xOffset       = 100.0
+    @State private var xOffsetEnd    = 200.0
     @State private var selectedIndex = 0
 
     let scale:     Double  = 10
@@ -72,13 +77,13 @@ struct DerivateView: View {
         let cs = MathCoordinateSpace(size: graphSize, scale: scale)
 
         let xMathStart = cs.toMath(x: xOffset)
-        let xMathEnd   = cs.toMath(x: graphSize - xOffsetEnd)
+        let xMathEnd   = cs.toMath(x: xOffsetEnd)
 
         let slope         = fn.derivative(xMathStart)
         let tangent:      (Double) -> Double = { x in fn.f(xMathStart) + slope * (x - xMathStart) }
         let tangentPrime: (Double) -> Double = { _ in slope }
 
-        VStack(spacing: 12) {
+        VStack(spacing: 14) {
             ZStack {
                 GridDrawing(step: 10)
                     .stroke(Color.blue.opacity(0.5), lineWidth: 0.5)
@@ -109,16 +114,30 @@ struct DerivateView: View {
             .frame(width: graphSize, height: graphSize)
             .clipped()
 
-            Picker("Fonction", selection: $selectedIndex) {
+            Picker("Function", selection: $selectedIndex) {
                 ForEach(availableFunctions.indices, id: \.self) { i in
                     Text(availableFunctions[i].name).tag(i)
                 }
             }
-            .pickerStyle(.segmented)
-            .padding(.horizontal)
+            .pickerStyle(.menu)
+            .frame(width: graphSize)
 
-            Slider(value: $xOffset,    in: 0...graphSize)
-            Slider(value: $xOffsetEnd, in: 0...graphSize)
+            // Sliders constrained to the graph's width, with a title showing the current value
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Tangent point (x = \(xMathStart, specifier: "%.2f"))")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Slider(value: $xOffset, in: 0...graphSize)
+            }
+            .frame(width: graphSize)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Secant reference point (x = \(xMathEnd, specifier: "%.2f"))")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Slider(value: $xOffsetEnd, in: 0...graphSize)
+            }
+            .frame(width: graphSize)
         }
     }
 }

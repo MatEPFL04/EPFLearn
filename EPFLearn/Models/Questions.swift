@@ -14,10 +14,9 @@
 
 import SwiftUI
 
-enum Subject {
+enum Subject: String, Codable, CaseIterable {
     case analysis, arrays, graphs
 }
-
 struct Question: Identifiable {
     let id = UUID()
     let subject: Subject
@@ -82,7 +81,6 @@ extension Question {
     }
     static func sampleQuestionsArrays() -> [Question] {
         return [
-            
             insertionQuestions.shuffled().first!,
             mergesortQuestions.shuffled().first!,
             selectionQuestions.shuffled().first!,
@@ -91,19 +89,17 @@ extension Question {
             searchQuestions.shuffled().first!,
             quicksortQuestions.shuffled().first!,
             kadaneQuestions.shuffled().first!,
- 
         ]
     }
+    
     static func sampleQuestionsGraphs() -> [Question] {
         return [
-            
             dfsQuestions.shuffled().first!,
             bfsQuestions.shuffled().first!,
             primQuestions.shuffled().first!,
             kruskalQuestions.shuffled().first!,
             bellmanQuestion.shuffled().first!,
             djikistraQuestion.shuffled().first!,
-             
         ]
     }
 }

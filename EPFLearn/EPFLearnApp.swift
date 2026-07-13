@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 
 @main
 struct EPFLearnApp: App {
@@ -13,6 +14,6 @@ struct EPFLearnApp: App {
         WindowGroup {
             ContentView()
         }
+        .modelContainer(for: QuizResult.self)
     }
 }
-

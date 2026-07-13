@@ -1,4 +1,3 @@
-
 import SwiftUI
 
 // MARK: - Palette
@@ -10,8 +9,8 @@ enum TrigPalette {
     static let radius = Color(red: 0.48, green: 0.38, blue: 0.78)     // z₁
     static let z2 = Color(red: 0.87, green: 0.32, blue: 0.55)         // z₂
     static let result = Color(red: 0.85, green: 0.62, blue: 0.08)     // z₁ combiné z₂
-    static let ghost = Color(red: 0.55, green: 0.55, blue: 0.6)
-    static let ink = Color(red: 0.20, green: 0.22, blue: 0.28)
+    static let ghost = Color(.secondaryLabel)
+    static let ink = Color(.label)
 }
 
 struct TrigoView: View {
@@ -33,6 +32,9 @@ struct TrigoView: View {
 
     let graphSize: CGFloat = 320
     let scale: Double = 110
+
+    // Repère mathématique <-> écran, comme dans les autres vues du projet.
+    var cs: MathCoordinateSpace { MathCoordinateSpace(size: graphSize, scale: scale) }
 
     // Angles remarquables affichés autour du cercle (et utilisés pour l'aimantation)
     static let markers: [(Double, String)] = [
@@ -73,8 +75,6 @@ struct TrigoView: View {
     var combinedReal: Double { combinedModulus * cos(combinedArgument) }
     var combinedImag: Double { combinedModulus * sin(combinedArgument) }
 
-    func xScreen(_ x: Double) -> CGFloat { CGFloat(x * scale) + graphSize / 2 }
-    func yScreen(_ y: Double) -> CGFloat { -CGFloat(y * scale) + graphSize / 2 }
     func fmt(_ v: Double) -> String { String(format: "%.2f", v) }
 
     // affiche a + bi proprement (pas de "+ -1.01i")
@@ -116,15 +116,19 @@ struct TrigoView: View {
     var body: some View {
         VStack(spacing: 12) {
 
+            Text("Unit circle: real & complex view")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
             Picker("", selection: $mode) {
                 ForEach(Mode.allCases, id: \.self) { m in Text(m.rawValue).tag(m) }
             }
             .pickerStyle(.segmented)
-            .frame(maxWidth: 220)
+            .frame(width: graphSize)
 
             ZStack {
                 RoundedRectangle(cornerRadius: 22)
-                    .fill(LinearGradient(colors: [Color(white: 0.99), Color(white: 0.93)],
+                    .fill(LinearGradient(colors: [Color(.secondarySystemBackground), Color(.systemBackground)],
                                          startPoint: .top, endPoint: .bottom))
 
                 GridDrawing(step: 20)
@@ -136,25 +140,25 @@ struct TrigoView: View {
                 Circle()
                     .stroke(TrigPalette.ink.opacity(0.5), lineWidth: 1.5)
                     .frame(width: scale * 2, height: scale * 2)
-                    .position(x: graphSize / 2, y: graphSize / 2)
+                    .position(cs.toScreen(x: 0, y: 0))
 
                 // en mode Complexe, cercle pointillé au rayon réel de z₁ si différent de 1
                 if mode == .complexe {
                     Circle()
                         .stroke(TrigPalette.radius.opacity(0.3), style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
                         .frame(width: scale * 2 * r1, height: scale * 2 * r1)
-                        .position(x: graphSize / 2, y: graphSize / 2)
+                        .position(cs.toScreen(x: 0, y: 0))
                 }
 
                 // marqueurs des angles remarquables
                 ForEach(Array(Self.markers.enumerated()), id: \.offset) { _, marker in
                     let (value, label) = marker
                     Circle().fill(TrigPalette.ghost.opacity(0.5)).frame(width: 4, height: 4)
-                        .position(x: xScreen(cos(value)), y: yScreen(sin(value)))
+                        .position(cs.toScreen(x: cos(value), y: sin(value)))
                     Text(label)
                         .font(.system(size: 9, design: .monospaced))
                         .foregroundStyle(TrigPalette.ghost)
-                        .position(x: xScreen(cos(value) * 1.18), y: yScreen(sin(value) * 1.18))
+                        .position(cs.toScreen(x: cos(value) * 1.18, y: sin(value) * 1.18))
                 }
 
                 // arc balayant l'angle θ depuis l'axe des x
@@ -162,7 +166,7 @@ struct TrigoView: View {
                     let steps = 40
                     let points = (0...steps).map { i -> CGPoint in
                         let t = theta * Double(i) / Double(steps)
-                        return CGPoint(x: xScreen(0.22 * cos(t)), y: yScreen(0.22 * sin(t)))
+                        return cs.toScreen(x: 0.22 * cos(t), y: 0.22 * sin(t))
                     }
                     path.move(to: points[0])
                     for p in points.dropFirst() { path.addLine(to: p) }
@@ -173,61 +177,62 @@ struct TrigoView: View {
                 if mode == .reel {
                     // segment cos θ le long de l'axe x
                     Path { p in
-                        p.move(to: CGPoint(x: xScreen(0), y: yScreen(0)))
-                        p.addLine(to: CGPoint(x: xScreen(cosT), y: yScreen(0)))
+                        p.move(to: cs.toScreen(x: 0, y: 0))
+                        p.addLine(to: cs.toScreen(x: cosT, y: 0))
                     }
                     .stroke(TrigPalette.cosColor, lineWidth: 3)
 
                     Path { p in
-                        p.move(to: CGPoint(x: xScreen(cosT), y: yScreen(0)))
-                        p.addLine(to: CGPoint(x: xScreen(cosT), y: yScreen(sinT)))
+                        p.move(to: cs.toScreen(x: cosT, y: 0))
+                        p.addLine(to: cs.toScreen(x: cosT, y: sinT))
                     }
                     .stroke(TrigPalette.cosColor.opacity(0.4), style: StrokeStyle(lineWidth: 1.2, dash: [3, 3]))
 
                     // segment sin θ le long de l'axe y
                     Path { p in
-                        p.move(to: CGPoint(x: xScreen(0), y: yScreen(0)))
-                        p.addLine(to: CGPoint(x: xScreen(0), y: yScreen(sinT)))
+                        p.move(to: cs.toScreen(x: 0, y: 0))
+                        p.addLine(to: cs.toScreen(x: 0, y: sinT))
                     }
                     .stroke(TrigPalette.sinColor, lineWidth: 3)
 
                     Path { p in
-                        p.move(to: CGPoint(x: xScreen(0), y: yScreen(sinT)))
-                        p.addLine(to: CGPoint(x: xScreen(cosT), y: yScreen(sinT)))
+                        p.move(to: cs.toScreen(x: 0, y: sinT))
+                        p.addLine(to: cs.toScreen(x: cosT, y: sinT))
                     }
                     .stroke(TrigPalette.sinColor.opacity(0.4), style: StrokeStyle(lineWidth: 1.2, dash: [3, 3]))
 
                     // rayon
                     Path { p in
-                        p.move(to: CGPoint(x: xScreen(0), y: yScreen(0)))
-                        p.addLine(to: CGPoint(x: xScreen(cosT), y: yScreen(sinT)))
+                        p.move(to: cs.toScreen(x: 0, y: 0))
+                        p.addLine(to: cs.toScreen(x: cosT, y: sinT))
                     }
                     .stroke(TrigPalette.radius, lineWidth: 2)
 
                     // droite tangente en (1,0) — n'a de sens qu'en mode Réel
                     Path { p in
-                        p.move(to: CGPoint(x: xScreen(1), y: yScreen(-2.6)))
-                        p.addLine(to: CGPoint(x: xScreen(1), y: yScreen(2.6)))
+                        p.move(to: cs.toScreen(x: 1, y: -2.6))
+                        p.addLine(to: cs.toScreen(x: 1, y: 2.6))
                     }
                     .stroke(TrigPalette.tanColor.opacity(0.25), style: StrokeStyle(lineWidth: 1, dash: [4, 4]))
 
                     if let tv = tanT {
                         Path { p in
-                            p.move(to: CGPoint(x: xScreen(cosT), y: yScreen(sinT)))
-                            p.addLine(to: CGPoint(x: xScreen(1), y: yScreen(tv)))
+                            p.move(to: cs.toScreen(x: cosT, y: sinT))
+                            p.addLine(to: cs.toScreen(x: 1, y: tv))
                         }
                         .stroke(TrigPalette.radius.opacity(0.4), style: StrokeStyle(lineWidth: 1.2, dash: [2, 3]))
 
                         Path { p in
-                            p.move(to: CGPoint(x: xScreen(1), y: yScreen(0)))
-                            p.addLine(to: CGPoint(x: xScreen(1), y: yScreen(tv)))
+                            p.move(to: cs.toScreen(x: 1, y: 0))
+                            p.addLine(to: cs.toScreen(x: 1, y: tv))
                         }
                         .stroke(TrigPalette.tanColor, lineWidth: 3)
 
+                        let tanPoint = cs.toScreen(x: 1, y: tv)
                         Text("tan θ")
                             .font(.caption2.bold())
                             .foregroundStyle(TrigPalette.tanColor)
-                            .position(x: xScreen(1) + 20, y: yScreen(tv))
+                            .position(x: tanPoint.x + 20, y: tanPoint.y)
                     }
 
                     // point mobile
@@ -235,16 +240,19 @@ struct TrigoView: View {
                         .fill(TrigPalette.radius)
                         .frame(width: 13, height: 13)
                         .shadow(color: TrigPalette.radius.opacity(0.5), radius: 5)
-                        .position(x: xScreen(cosT), y: yScreen(sinT))
+                        .position(cs.toScreen(x: cosT, y: sinT))
 
+                    let cosLabelPoint = cs.toScreen(x: cosT / 2, y: 0)
                     Text("cos θ")
                         .font(.caption2.bold())
                         .foregroundStyle(TrigPalette.cosColor)
-                        .position(x: xScreen(cosT / 2), y: yScreen(0) + 12)
+                        .position(x: cosLabelPoint.x, y: cosLabelPoint.y + 12)
+
+                    let sinLabelPoint = cs.toScreen(x: 0, y: sinT / 2)
                     Text("sin θ")
                         .font(.caption2.bold())
                         .foregroundStyle(TrigPalette.sinColor)
-                        .position(x: xScreen(0) - 18, y: yScreen(sinT / 2))
+                        .position(x: sinLabelPoint.x - 18, y: sinLabelPoint.y)
                 }
 
                 // ===================== MODE COMPLEXE =====================
@@ -252,54 +260,57 @@ struct TrigoView: View {
                     // guides du parallélogramme pour la somme z₁ + z₂
                     if operation == .add {
                         Path { p in
-                            p.move(to: CGPoint(x: xScreen(z1Real), y: yScreen(z1Imag)))
-                            p.addLine(to: CGPoint(x: xScreen(z1Real + z2Real), y: yScreen(z1Imag + z2Imag)))
+                            p.move(to: cs.toScreen(x: z1Real, y: z1Imag))
+                            p.addLine(to: cs.toScreen(x: z1Real + z2Real, y: z1Imag + z2Imag))
                         }
                         .stroke(TrigPalette.z2.opacity(0.35), style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
 
                         Path { p in
-                            p.move(to: CGPoint(x: xScreen(z2Real), y: yScreen(z2Imag)))
-                            p.addLine(to: CGPoint(x: xScreen(z1Real + z2Real), y: yScreen(z1Imag + z2Imag)))
+                            p.move(to: cs.toScreen(x: z2Real, y: z2Imag))
+                            p.addLine(to: cs.toScreen(x: z1Real + z2Real, y: z1Imag + z2Imag))
                         }
                         .stroke(TrigPalette.radius.opacity(0.35), style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
                     }
 
                     // vecteur z₁
                     Path { p in
-                        p.move(to: CGPoint(x: xScreen(0), y: yScreen(0)))
-                        p.addLine(to: CGPoint(x: xScreen(z1Real), y: yScreen(z1Imag)))
+                        p.move(to: cs.toScreen(x: 0, y: 0))
+                        p.addLine(to: cs.toScreen(x: z1Real, y: z1Imag))
                     }
                     .stroke(TrigPalette.radius, lineWidth: 2.4)
                     Circle().fill(TrigPalette.radius).frame(width: 11, height: 11)
                         .shadow(color: TrigPalette.radius.opacity(0.5), radius: 4)
-                        .position(x: xScreen(z1Real), y: yScreen(z1Imag))
+                        .position(cs.toScreen(x: z1Real, y: z1Imag))
+                    let z1Point = cs.toScreen(x: z1Real, y: z1Imag)
                     Text("z₁").font(.caption2.bold()).foregroundStyle(TrigPalette.radius)
-                        .position(x: xScreen(z1Real) + 14, y: yScreen(z1Imag) - 10)
+                        .position(x: z1Point.x + 14, y: z1Point.y - 10)
 
                     // vecteur z₂
                     Path { p in
-                        p.move(to: CGPoint(x: xScreen(0), y: yScreen(0)))
-                        p.addLine(to: CGPoint(x: xScreen(z2Real), y: yScreen(z2Imag)))
+                        p.move(to: cs.toScreen(x: 0, y: 0))
+                        p.addLine(to: cs.toScreen(x: z2Real, y: z2Imag))
                     }
                     .stroke(TrigPalette.z2, lineWidth: 2.4)
                     Circle().fill(TrigPalette.z2).frame(width: 11, height: 11)
                         .shadow(color: TrigPalette.z2.opacity(0.5), radius: 4)
-                        .position(x: xScreen(z2Real), y: yScreen(z2Imag))
+                        .position(cs.toScreen(x: z2Real, y: z2Imag))
+                    let z2Point = cs.toScreen(x: z2Real, y: z2Imag)
                     Text("z₂").font(.caption2.bold()).foregroundStyle(TrigPalette.z2)
-                        .position(x: xScreen(z2Real) + 14, y: yScreen(z2Imag) - 10)
+                        .position(x: z2Point.x + 14, y: z2Point.y - 10)
 
                     // vecteur résultat (mis en avant)
                     Path { p in
-                        p.move(to: CGPoint(x: xScreen(0), y: yScreen(0)))
-                        p.addLine(to: CGPoint(x: xScreen(combinedReal), y: yScreen(combinedImag)))
+                        p.move(to: cs.toScreen(x: 0, y: 0))
+                        p.addLine(to: cs.toScreen(x: combinedReal, y: combinedImag))
                     }
                     .stroke(TrigPalette.result, lineWidth: 3)
                     Circle().fill(TrigPalette.result).frame(width: 14, height: 14)
                         .shadow(color: TrigPalette.result.opacity(0.6), radius: 6)
-                        .position(x: xScreen(combinedReal), y: yScreen(combinedImag))
+                        .position(cs.toScreen(x: combinedReal, y: combinedImag))
+                    let resultPoint = cs.toScreen(x: combinedReal, y: combinedImag)
                     Text("z₁ \(operation.rawValue) z₂")
                         .font(.caption2.bold()).foregroundStyle(TrigPalette.result)
-                        .position(x: xScreen(combinedReal) + 26, y: yScreen(combinedImag) - 10)
+                        .position(x: resultPoint.x + 26, y: resultPoint.y - 10)
                 }
             }
             .frame(width: graphSize, height: graphSize)
@@ -316,12 +327,15 @@ struct TrigoView: View {
             )
             .shadow(color: .black.opacity(0.1), radius: 12, y: 6)
 
+            // Sliders volontairement plus étroits que l'écran : un slider qui
+            // touche les bords entre en conflit avec le geste de retour
+            // (swipe depuis le bord) quand on arrive d'une autre page.
             if mode == .reel {
                 HStack(spacing: 8) {
                     Text("θ").font(.caption).foregroundStyle(TrigPalette.radius).frame(width: 20)
                     Slider(value: $theta, in: 0...(2 * .pi)).tint(TrigPalette.radius)
                 }
-                .padding(.horizontal)
+                .frame(width: graphSize - 40)
 
                 HStack(spacing: 18) {
                     Text("cos θ = \(fmt(cosT))").foregroundStyle(TrigPalette.cosColor)
@@ -330,8 +344,7 @@ struct TrigoView: View {
                         .foregroundStyle(TrigPalette.tanColor)
                 }
                 .font(.system(.footnote, design: .monospaced))
-                .frame(maxWidth: .infinity)
-                .padding(.horizontal)
+                .frame(width: graphSize)
             } else {
                 VStack(spacing: 6) {
                     Text("z₁").font(.caption).foregroundStyle(TrigPalette.radius)
@@ -365,7 +378,7 @@ struct TrigoView: View {
                     .pickerStyle(.segmented)
                     .padding(.top, 4)
                 }
-                .padding(.horizontal)
+                .frame(width: graphSize - 40)
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text("z₁ = \(fmt(r1))∠\(piCoeff(theta)) = \(complexString(z1Real, z1Imag))")
@@ -377,7 +390,7 @@ struct TrigoView: View {
                         .fontWeight(.semibold)
                 }
                 .font(.system(.footnote, design: .monospaced))
-                .padding(.horizontal)
+                .frame(width: graphSize)
             }
         }
         .padding()
@@ -386,4 +399,5 @@ struct TrigoView: View {
 
 #Preview {
     TrigoView()
+        .preferredColorScheme(.dark)
 }

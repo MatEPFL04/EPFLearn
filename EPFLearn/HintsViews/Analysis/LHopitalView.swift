@@ -1,101 +1,149 @@
-//
-//  LHopitalView.swift
-//  EPFLearn
-//
- 
 import SwiftUI
- 
+
+private struct LHopitalCase: Identifiable {
+    let id: Int
+    let chip: String
+    let fLabel: String
+    let gLabel: String
+    let f: (Double) -> Double
+    let g: (Double) -> Double
+    let fSlope: Double?   // f'(0), nil si la pente n'existe pas / oscille
+    let gSlope: Double
+    let note: String
+}
+
+private let lhopitalCases: [LHopitalCase] = [
+    LHopitalCase(
+        id: 0, chip: "sin(x)/x",
+        fLabel: "f(x) = sin x", gLabel: "g(x) = x",
+        f: { sin($0) }, g: { $0 },
+        fSlope: 1, gSlope: 1,
+        note: "Same slope at 0 → ratio = 1."
+    ),
+    LHopitalCase(
+        id: 1, chip: "sin(2x)/sin(3x)",
+        fLabel: "f(x) = sin 2x", gLabel: "g(x) = sin 3x",
+        f: { sin(2 * $0) }, g: { sin(3 * $0) },
+        fSlope: 2, gSlope: 3,
+        note: "f twice as steep, g three times → ratio = 2/3."
+    ),
+    LHopitalCase(
+        id: 2, chip: "x²sin(1/x) / sin(x)",
+        fLabel: "f(x) = x²sin(1/x)", gLabel: "g(x) = sin x",
+        f: { x in x == 0 ? 0 : pow(x, 2) * sin(1 / x) }, g: { sin($0) },
+        fSlope: nil, gSlope: 1,
+        note: "g flattens onto its tangent (slope 1) — but f keeps oscillating no matter the zoom, no slope to read. L'Hôpital gives no answer."
+    ),
+]
+
 struct LHopitalView: View {
- 
+
+    @State private var selected = 0
+
+    // Zoom exposé au slider sur une échelle 0...1, puis mappé de façon
+    // exponentielle sur la plage réelle de zoom. Une échelle linéaire
+    // saturait visuellement dès ~30% du slider (sin(x) ≈ x pour x petit),
+    // rendant les 70% restants inutiles.
+    // minZoom = 15 → demi-largeur visible ≈ 10 unités math, soit ~3 périodes
+    // complètes de sin(x) (période 2π ≈ 6.28) à l'écran le plus large.
+    @State private var zoomT: Double = 0.0
+    private let minZoom: Double = 15
+    private let maxZoom: Double = 2000
+    private var zoom: Double {
+        minZoom * pow(maxZoom / minZoom, zoomT)
+    }
+
     let graphSize: CGFloat = 300
-    // zoom va de 100 (vue large) à 2000 (très zoomé)
-    @State private var zoom: Double = 100
- 
-    // f(x) = sin(x), g(x) = x  →  sin(x)/x → 1
-    // Au zoom maximal, sin(x) ≈ x donc les deux courbes se confondent
-    let fColor = Color.red
-    let gColor = Color.blue
- 
-    func xScreen(_ x: Double) -> CGFloat { CGFloat(x * zoom) + graphSize / 2 }
-    func yScreen(_ y: Double) -> CGFloat { CGFloat(-y * zoom) + graphSize / 2 }
- 
+
+    private var current: LHopitalCase { lhopitalCases[selected] }
+
     var body: some View {
         VStack(spacing: 14) {
- 
-            // Titre dynamique
-            Group {
-                if zoom < 300 {
-                    Text("f(x) = sin(x) et g(x) = x semblent différentes")
-                } else if zoom < 800 {
-                    Text("En zoomant, les courbes se rapprochent…")
-                } else {
-                    Text("Totalement zoomé : sin(x) ≈ x → sin(x)/x → 1")
-                        .foregroundStyle(.green)
+
+            Picker("Function pair", selection: $selected) {
+                ForEach(lhopitalCases) { c in
+                    Text(c.chip).tag(c.id)
                 }
             }
-            .font(.caption)
-            .multilineTextAlignment(.center)
-            .padding(.horizontal)
-            .animation(.easeInOut, value: zoom)
- 
+            .pickerStyle(.menu)
+            .frame(width: graphSize)
+
             ZStack {
                 GridDrawing(step: 10).stroke(Color.blue.opacity(0.2), lineWidth: 0.5)
                 AxisDrawing(axis: .horizontal).stroke(Color.blue.opacity(0.5), lineWidth: 1)
                 AxisDrawing(axis: .vertical).stroke(Color.blue.opacity(0.5), lineWidth: 1)
- 
-                // f(x) = sin(x) en rouge
-                FunctionDrawing(f: { x in sin(x) }, integrF: { _ in 0 }, scale: zoom)
-                    .stroke(fColor, lineWidth: 2)
- 
-                // g(x) = x en bleu
-                FunctionDrawing(f: { x in x }, integrF: { _ in 0 }, scale: zoom)
-                    .stroke(gColor, lineWidth: 2)
+
+                FunctionDrawing(f: current.g, integrF: { _ in 0 }, scale: zoom)
+                    .stroke(Color.blue, lineWidth: 2)
+                FunctionDrawing(f: current.f, integrF: { _ in 0 }, scale: zoom)
+                    .stroke(Color.red, lineWidth: current.fSlope == nil ? 1 : 2)
             }
             .frame(width: graphSize, height: graphSize)
+            .padding(6)
+            .background(Color(.systemBackground))
             .clipShape(RoundedRectangle(cornerRadius: 8))
-            .overlay(alignment: .topLeading) {
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 6) {
-                        Rectangle().fill(fColor).frame(width: 16, height: 3)
-                        Text("f(x) = sin(x)").font(.caption2).foregroundStyle(fColor)
-                    }
-                    HStack(spacing: 6) {
-                        Rectangle().fill(gColor).frame(width: 16, height: 3)
-                        Text("g(x) = x").font(.caption2).foregroundStyle(gColor)
-                    }
+
+            // Légende sous le graphe (plus de superposition avec les courbes),
+            // avec le nom explicite de f et g plutôt que juste "slope X".
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(spacing: 8) {
+                    Rectangle().fill(Color.red).frame(width: 20, height: 3)
+                    Text(current.fLabel)
+                        .font(.system(size: 13, weight: .medium, design: .monospaced))
+                        .foregroundStyle(.red)
+                    Spacer()
+                    Text(current.fSlope == nil ? "no slope" : "slope \(current.fSlope!, specifier: "%.0f")")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
-                .padding(8)
+                HStack(spacing: 8) {
+                    Rectangle().fill(Color.blue).frame(width: 20, height: 3)
+                    Text(current.gLabel)
+                        .font(.system(size: 13, weight: .medium, design: .monospaced))
+                        .foregroundStyle(.blue)
+                    Spacer()
+                    Text("slope \(current.gSlope, specifier: "%.0f")")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
             }
- 
-            // Message central
-            VStack(spacing: 4) {
-                Text("Plus on zoome autour de 0, plus f(x) ≈ f′(0)·x et g(x) ≈ g′(0)·x")
-                    .font(.caption).foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                Text("donc  f(x)/g(x)  →  f′(0)/g′(0) = cos(0)/1 = 1")
-                    .font(.system(size: 13, design: .monospaced))
-                    .foregroundStyle(.green)
-            }
-            .padding(.horizontal)
- 
-            // Slider de zoom
-            VStack(spacing: 4) {
+            .padding(10)
+            .background(Color(.secondarySystemBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .frame(width: graphSize)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Zoom (x\(zoom, specifier: "%.0f"))")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
                 HStack {
-                    Text("vue large")
-                        .font(.caption2).foregroundStyle(.secondary)
-                    Slider(value: $zoom, in: 80...2000)
-                    Text("zoom ×\(Int(zoom/100))")
-                        .font(.caption2).foregroundStyle(.secondary)
-                        .frame(width: 55, alignment: .trailing)
+                    Text("wide view").font(.caption2).foregroundStyle(.secondary)
+                    Slider(value: $zoomT, in: 0...1)
+                    Text("zoomed").font(.caption2).foregroundStyle(.secondary)
                 }
             }
-            .padding(.horizontal)
+            .frame(width: graphSize)
+
+            if let fSlope = current.fSlope {
+                Text("f′(0)/g′(0) = \(fSlope, specifier: "%.0f")/\(current.gSlope, specifier: "%.0f") = \(fSlope / current.gSlope, specifier: "%.3f")")
+                    .font(.system(size: 14, weight: .semibold, design: .monospaced))
+                    .foregroundStyle(.green)
+            } else {
+                Text("f′(0) doesn't exist — L'Hôpital gives no answer here")
+                    .font(.system(size: 14, weight: .semibold, design: .monospaced))
+                    .foregroundStyle(.red)
+            }
+
+            Text(current.note)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
         }
+        .padding()
     }
 }
- 
+
 #Preview {
     LHopitalView()
         .preferredColorScheme(.dark)
 }
-

@@ -1,3 +1,9 @@
+//
+//  QuestionView.swift
+//  EPFLearn
+//
+//  Created by Mat on 04.04.2026.
+//
 
 import Foundation
 import SwiftUI
@@ -5,18 +11,17 @@ import SwiftUI
 struct QuestionView: View {
 
     var vm: QuizViewModel
-    @State private var hintRevealed = false
-    
+    @State private var showVisualization = false
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
+            ZStack {
 
+                // Contenu de la question
+                VStack(alignment: .leading, spacing: 20) {
                     Text(vm.currentQuestion.text)
                         .font(.title3)
                         .fontWeight(.medium)
-                        .fixedSize(horizontal: false, vertical: true)
 
                     ForEach(Array(vm.currentQuestion.options.enumerated()), id: \.offset) { index, option in
                         OptionButton(
@@ -30,7 +35,6 @@ struct QuestionView: View {
                         Text(vm.currentQuestion.explanation)
                             .font(.footnote)
                             .foregroundStyle(.secondary)
-                            .fixedSize(horizontal: false, vertical: true)
                             .padding()
                             .background(.regularMaterial)
                             .clipShape(RoundedRectangle(cornerRadius: 10))
@@ -39,15 +43,34 @@ struct QuestionView: View {
                     if vm.hasAnswered {
                         OptionButton(text: "Prochaine question", state: .idle, action: { vm.nextQuestion() })
                     }
+
+                    Spacer()
                 }
                 .padding()
+                .opacity(showVisualization ? 0 : 1)
+                .allowsHitTesting(!showVisualization)
+
+                // Visualisation associée à la question. Elle reste instanciée
+                // en permanence — seule son opacité change — donc ses réglages
+                // (slider, fonction sélectionnée, etc.) ne sont pas perdus quand
+                // on va relire la question puis qu'on y revient.
+                //
+                // .id(vm.currentQuestion.id) force en revanche une réinitialisation
+                // propre dès qu'on passe à une VRAIE nouvelle question (et donc,
+                // potentiellement, une nouvelle visualisation).
+                VisualizationView(
+                    type: vm.currentQuestion.visualization,
+                    hint: vm.currentQuestion.hint,
+                    hintRevealed: vm.hasAnswered
+                )
+                    .id(vm.currentQuestion.id)
+                    .padding()
+                    .opacity(showVisualization ? 1 : 0)
+                    .allowsHitTesting(showVisualization)
             }
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    NavigationLink(destination: VisualizationView(type: vm.currentQuestion.visualization,
-                                                                  hint: vm.currentQuestion.hint,
-                                                                  hintRevealed: true),
-                                   label: { Text("Hint") })
+                Button(showVisualization ? "Question" : "Hint") {
+                    showVisualization.toggle()
                 }
             }
         }
