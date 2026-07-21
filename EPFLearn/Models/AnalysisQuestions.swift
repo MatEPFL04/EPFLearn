@@ -56,7 +56,7 @@ extension Question {
                 "−3π/4"
             ],
             correctIndex: 1,
-            explanation: "3π/4 + 3π/2 = 9π/4. Since 9π/4 exceeds 2π, subtract 2π (= 8π/4) to bring it back into range: 9π/4 − 2π = π/4. .",
+            explanation: "3π/4 + 3π/2 = 9π/4. Since 9π/4 exceeds 2π, subtract 2π (= 8π/4) to bring it back into range: 9π/4 − 2π = π/4.",
             visualization: .complexNumbers
         ),
     ]
@@ -114,8 +114,6 @@ extension Question {
                     explanation: "The condition |sin θ| > |cos θ| means the y-coordinate has a greater absolute value than the x-coordinate. This happens in the regions steeper than the 45-degree diagonal lines. Visually, this creates two large continuous arcs centered around the vertical axis: the top arc (π/4, 3π/4) and the bottom arc (5π/4, 7π/4). Within the domain [0, 2π], these form exactly 2 separate intervals that combined cover half of the circle.",
                     visualization: .trigo
                 )
-
-
     ]
     
     
@@ -164,16 +162,16 @@ extension Question {
         ),
         Question(
             subject: .analysis,
-            text: "f is increasing on [a,b]. Can we bound S⁺(P) - S⁻(P) for a regular subdivision of step δ?",
-            hint: "On each sub-interval, the sup and inf are reached at the endpoints. A short computation should help.",
+            text: "For a constant function f(x) = c on [a,b], what are the Darboux sums S⁻ and S⁺ for any subdivision?",
+            hint: "On every sub-interval the min and the max of f are the same.",
             options: [
-                "No — we'd need to know f' to bound the gap",
-                "Yes: S⁺ - S⁻ = δ · (f(b) - f(a))",
-                "Yes: S⁺ - S⁻ = (f(b) - f(a)) / δ",
-                "No, f must be continuous for the gap to be controllable"
+                "S⁻ = S⁺ = c(b − a), for every subdivision",
+                "S⁻ = 0 and S⁺ = c(b − a)",
+                "They depend on how fine the subdivision is",
+                "S⁻ = S⁺ = c"
             ],
-            correctIndex: 1,
-            explanation: "On each sub-interval [xₖ, xₖ₊₁] of width δ, since f is increasing, sup = f(xₖ₊₁) and inf = f(xₖ). Its contribution to S⁺ - S⁻ is δ·(f(xₖ₊₁) - f(xₖ)). Summing everything telescopes: S⁺ - S⁻ = δ·(f(b) - f(a)). So as δ → 0, the gap → 0: every monotone function is integrable.",
+            correctIndex: 0,
+            explanation: "On each sub-interval the infimum and supremum of f are both c, so every lower and upper rectangle has height c. Both sums equal c times the total width: S⁻ = S⁺ = c(b − a), whatever the subdivision. The gap is 0 from the start — the exact opposite of the Dirichlet function, where the gap never closes.",
             visualization: .darboux
         ),
     ]
@@ -358,7 +356,6 @@ extension Question {
         ),
     ]
 
-    // MARK: - Fundamental Theorem of Calculus
     static let TFIQuestions: [Question] = [
         Question(
             subject: .analysis,

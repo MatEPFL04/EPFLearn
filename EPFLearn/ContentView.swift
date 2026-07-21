@@ -15,9 +15,9 @@ struct ContentView: View {
     @Query private var allRecords: [QuizResultRecord]
     
     var previousScores: [ResultQCM] {
-        allRecords
-            .filter { $0.userID == auth.userID }
-            .compactMap { $0.asResultQCM }
+        let filtered = allRecords.filter { $0.userID == auth.userID }
+        let mapped = filtered.compactMap { $0.asResultQCM }
+        return mapped
     }
     
     var body: some View {
@@ -32,10 +32,15 @@ struct ContentView: View {
                 .preferredColorScheme(.dark)
                 .onAppear {
                     vm.onComplete = { res in
-                        guard let uid = auth.userID else { return }
+                        guard let uid = auth.userID else {
+                            return
+                        }
                         let record = QuizResultRecord(result: res, userID: uid)
                         modelContext.insert(record)
-                        try? modelContext.save()
+                        do {
+                            try modelContext.save()
+                        }
+                        catch { print("⚠️ save: \(error)") }
                     }
                 }
             } else {
@@ -47,5 +52,8 @@ struct ContentView: View {
 }
 
 #Preview {
-    ContentView()
+    let _ = UserDefaults.standard.set("preview-user", forKey: "appleUserID")
+
+    return ContentView()
+        .modelContainer(for: QuizResultRecord.self, inMemory: true)
 }

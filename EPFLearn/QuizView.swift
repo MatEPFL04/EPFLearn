@@ -60,6 +60,14 @@ struct QuizView: View {
                     CategoryCard(title: "Searching & Sorting", subtitle: "Algorithms, reasoning on inputs", icon: "arrow.up.and.down.and.sparkles", color: .orange) {
                         startQuiz(index: 1)
                     }
+                    
+                    CategoryCard(title: "Discrete Maths", subtitle: "Combinatorics, probability, recurrence", icon: "number.square", color: .green) {
+                        startQuiz(index: 3)
+                    }
+                    
+                    CategoryCard(title: "Linear Algebra", subtitle: "Matrices, vectors, transformations", icon: "squareshape.split.3x3", color: .pink) {
+                        startQuiz(index: 4)
+                    }
                 }
                 .padding(.horizontal)
             }

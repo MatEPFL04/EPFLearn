@@ -14,6 +14,6 @@ struct EPFLearnApp: App {
         WindowGroup {
             ContentView()
         }
-        .modelContainer(for: QuizResult.self)
+        .modelContainer(for: QuizResultRecord.self)
     }
 }

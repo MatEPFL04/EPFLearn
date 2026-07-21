@@ -18,55 +18,64 @@ struct QuestionView: View {
             ZStack {
 
                 // Contenu de la question
-                VStack(alignment: .leading, spacing: 20) {
-                    Text(vm.currentQuestion.text)
-                        .font(.title3)
-                        .fontWeight(.medium)
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 20) {
+                        Text(vm.currentQuestion.text)
+                            .font(.title3)
+                            .fontWeight(.medium)
 
-                    ForEach(Array(vm.currentQuestion.options.enumerated()), id: \.offset) { index, option in
-                        OptionButton(
-                            text: option,
-                            state: buttonState(for: index),
-                            action: { vm.selectAnswer(index) }
-                        )
+                        ForEach(Array(vm.currentQuestion.options.enumerated()), id: \.offset) { index, option in
+                            OptionButton(
+                                text: option,
+                                state: buttonState(for: index),
+                                action: { vm.selectAnswer(index) }
+                            )
+                        }
+
+                        if vm.hasAnswered {
+                            Text(vm.currentQuestion.explanation)
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                                .padding()
+                                .background(.regularMaterial)
+                                .clipShape(RoundedRectangle(cornerRadius: 10))
+
+                            // Tuteur socratique — uniquement si la réponse est fausse
+                            if let selected = vm.selectedAnswer,
+                               selected != vm.currentQuestion.correctIndex {
+                                NavigationLink {
+                                    TutorView(
+                                        question: vm.currentQuestion,
+                                        studentChoice: selected
+                                    )
+                                } label: {
+                                    Label("Understand my mistake",
+                                          systemImage: "bubble.left.and.text.bubble.right")
+                                        .frame(maxWidth: .infinity)
+                                        .padding()
+                                        .background(.blue.opacity(0.12))
+                                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                                }
+                            }
+
+                            OptionButton(text: "Next question", state: .idle,
+                                         action: { vm.nextQuestion() })
+                        }
                     }
-
-                    if vm.hasAnswered {
-                        Text(vm.currentQuestion.explanation)
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                            .padding()
-                            .background(.regularMaterial)
-                            .clipShape(RoundedRectangle(cornerRadius: 10))
-                    }
-
-                    if vm.hasAnswered {
-                        OptionButton(text: "Prochaine question", state: .idle, action: { vm.nextQuestion() })
-                    }
-
-                    Spacer()
+                    .frame(maxWidth: .infinity, alignment: .leading)   // remplace le Spacer()
+                    .padding()
                 }
-                .padding()
                 .opacity(showVisualization ? 0 : 1)
                 .allowsHitTesting(!showVisualization)
 
-                // Visualisation associée à la question. Elle reste instanciée
-                // en permanence — seule son opacité change — donc ses réglages
-                // (slider, fonction sélectionnée, etc.) ne sont pas perdus quand
-                // on va relire la question puis qu'on y revient.
-                //
-                // .id(vm.currentQuestion.id) force en revanche une réinitialisation
-                // propre dès qu'on passe à une VRAIE nouvelle question (et donc,
-                // potentiellement, une nouvelle visualisation).
                 VisualizationView(
                     type: vm.currentQuestion.visualization,
                     hint: vm.currentQuestion.hint,
                     hintRevealed: vm.hasAnswered
                 )
-                    .id(vm.currentQuestion.id)
-                    .padding()
-                    .opacity(showVisualization ? 1 : 0)
-                    .allowsHitTesting(showVisualization)
+                .id(vm.currentQuestion.id)
+                .opacity(showVisualization ? 1 : 0)
+                .allowsHitTesting(showVisualization)
             }
             .toolbar {
                 Button(showVisualization ? "Question" : "Hint") {

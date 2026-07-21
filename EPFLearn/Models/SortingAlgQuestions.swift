@@ -34,7 +34,7 @@ extension Question {
         Question(
             subject: .arrays,
             text: "Which statement about insertion sort is false?",
-            hint: "Look at the issue with the algorithm's structure on the specific example given.",
+            hint: "Run the algorithms (insertion or merge sort) to invalidate some of the options",
             options: [
                 "The algorithm runs in Θ(n) time on an already sorted array",
                 "There exist instances where insertion sort's running time is Ω(n)",
@@ -42,16 +42,16 @@ extension Question {
                 "Having a sorted subarray of length ≥ n/2 somewhere guarantees a running time of O(n)"
             ],
             correctIndex: 3,
-            explanation: "If we take an array with a sorted block of length n/2 in the first indices, and small (constant) values on the right, all of these small values may need to be compared against the n/2 elements on their left, giving a quadratic running time.",
+            explanation: "If we use \"Rotated\" and a disorder of ~n/2, we can invalidate option 3, as the running time is clearly quadratic",
             visualization: .sorting_basic
         ),
         Question(
             subject: .arrays,
             text: "An array is built by taking a sorted array of n elements and swapping each element at an even index with its immediate right neighbor. What is insertion sort's running time on it?",
-            hint: "Insertion sort's cost grows with the number of inversions. Count how many pairs are out of order here — is it closer to n or to n²? Build a small example and step through.",
+            hint: "Insertion sort's cost grows with the number of inversions. Count how many pairs are out of order here, is it closer to n or to n²? Build a small example and step through.",
             options: ["Θ(n)", "Θ(n log n)", "Θ(n²)", "Θ(n √n)"],
             correctIndex: 0,
-            explanation: "Each adjacent swap creates exactly ONE inversion, and there are n/2 of them, so Θ(n) inversions total. Insertion sort runs in Θ(n + inversions) = Θ(n). It looks shuffled but every element is at most one slot from home — the visualization shows each element settling in a single shift.",
+            explanation: "Each adjacent swap creates exactly one inversion, and there are n/2 of them, so Θ(n) inversions total. Insertion sort runs in Θ(n + inversions) = Θ(n). It looks shuffled but every element is at most one slot from home, the visualization shows each element settling in a single shift.",
             visualization: .sorting_zigzag
         ),
     ]

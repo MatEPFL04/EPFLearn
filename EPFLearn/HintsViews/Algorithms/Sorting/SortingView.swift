@@ -65,8 +65,13 @@ struct SortingView: View {
         case .organ:
             return (0..<n).map { $0 < n/2 ? 2*$0 : 2*(n - 1 - $0) }
         case .almostSorted:
-            let half = n / 2
-            return (0..<half).map { $0 * 2 } + Array(repeating: 0, count: n - half)
+            var a = Array(0..<n)
+            let swaps = max(1, n / 10)
+            for _ in 0..<swaps {
+                let i = Int.random(in: 0..<(n - 1))
+                a.swapAt(i, i + 1)
+            }
+            return a
         case .ksorted:
             var a = Array(0..<n)
             let k = max(1, min(m, n - 1))
@@ -91,41 +96,44 @@ struct SortingView: View {
 
             if maxStep > 0 {
                 Slider(value: $step, in: 0...Double(maxStep), step: 1)
-                Text("Étape \(Int(step)) / \(maxStep)")
+                Text("Step \(Int(step)) / \(maxStep)")
                     .font(.system(.caption2, design: .monospaced))
                     .foregroundStyle(.secondary)
             } else {
-                Text("Choisis un algorithme et lance")
+                Text("Choose an algorithm and run it!")
                     .font(.caption).foregroundStyle(.secondary)
             }
 
-            Picker("Algorithme", selection: $algo) {
+            Picker("Algorithm", selection: $algo) {
                 ForEach(Algo.allCases, id: \.self) { Text($0.rawValue).tag($0) }
             }
             .pickerStyle(.segmented)
             .onChange(of: algo) { frames = []; step = 0 }   // même tableau → on peut comparer
 
             HStack(spacing: 12) {
-                Button("Trier") { run() }.buttonStyle(.borderedProminent)
-                Button("Nouveau") { rebuild() }.buttonStyle(.bordered)
+                Button("Sort") { run() }.buttonStyle(.borderedProminent)
+                if shape == .almostSorted || shape == .random {
+                    
+                    Button("New instance") { rebuild() }.buttonStyle(.bordered)
+                }
             }
 
-            Picker("Forme", selection: $shape) {
+            Picker("Shape", selection: $shape) {
                 ForEach(Shape.allCases, id: \.self) { Text($0.rawValue).tag($0) }
             }
             .pickerStyle(.menu)
             .onChange(of: shape) { rebuild() }
 
             if shape == .reversed || shape == .rotated || shape == .ksorted {
-                Text(shape == .ksorted ? "k (déplacement max) : \(Int(disorder))"
-                                       : "Désordre : \(Int(disorder))")
+                Text(shape == .ksorted ? "k (max displacement) : \(Int(disorder))"
+                                       : "Disorder : \(Int(disorder))")
                     .font(.system(.caption2, design: .monospaced))
                     .foregroundStyle(.secondary)
                 Slider(value: $disorder, in: 0...Double(n), step: 1)
                     .onChange(of: disorder) { rebuild() }
             }
 
-            Text("Nombre d'éléments : \(n)")
+            Text("Number of elements : \(n)")
                 .font(.system(.caption2, design: .monospaced))
                 .foregroundStyle(.secondary)
             Slider(value: Binding(get: { Double(n) }, set: { n = Int($0) }), in: 5...100, step: 1)
@@ -139,7 +147,7 @@ struct SortingView: View {
             HStack {
                 Text(algo.rawValue).font(.caption).bold()
                 Spacer()
-                Text("\(current.comparisons) comparaisons")
+                Text("\(current.comparisons) comparisons")
                     .font(.system(.caption2, design: .monospaced))
                     .foregroundStyle(.secondary)
                     .contentTransition(.numericText())

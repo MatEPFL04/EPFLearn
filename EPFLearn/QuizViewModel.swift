@@ -43,6 +43,12 @@ class QuizViewModel {
         case 2:
             questions = Question.sampleQuestionsGraphs()
             category = .graphs
+        case 3:
+            questions = Question.sampleQuestionsDiscreteMaths()
+            category = .discreteMaths
+        case 4:
+            questions = Question.sampleQuestionsLinearAlgebra()
+            category = .linearAlgebra
         default:
             questions = Question.sampleQuestionsAnalysis()
             category = .analysis

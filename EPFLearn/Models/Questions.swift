@@ -15,7 +15,7 @@
 import SwiftUI
 
 enum Subject: String, Codable, CaseIterable {
-    case analysis, arrays, graphs
+    case analysis, arrays, graphs, discreteMaths, linearAlgebra
 }
 struct Question: Identifiable {
     let id = UUID()
@@ -57,6 +57,26 @@ enum VisualizationType {
     case topologicalorder
     case complexNumbers
     case trigo
+    // Discrete Maths
+    case combinatorics
+    case permutations
+    case binomialCoefficients
+    case pigeonholePrinciple
+    case inclusionExclusion
+    case recurrenceRelations
+    case generatingFunctions
+    case probability
+    case expectation
+    // Linear Algebra
+    case matrixOperations
+    case determinant
+    case eigenvalues
+    case vectorSpaces
+    case linearTransformations
+    case gaussianElimination
+    case gramSchmidt
+    case svd
+    case diagonalization
 }
 
 extension Question {
@@ -100,6 +120,32 @@ extension Question {
             kruskalQuestions.shuffled().first!,
             bellmanQuestion.shuffled().first!,
             djikistraQuestion.shuffled().first!,
+        ]
+    }
+    
+    static func sampleQuestionsDiscreteMaths() -> [Question] {
+        return [
+            combinatoricsQuestions.shuffled().first!,
+            permutationsQuestions.shuffled().first!,
+            binomialQuestions.shuffled().first!,
+            pigeonholeQuestions.shuffled().first!,
+            inclusionExclusionQuestions.shuffled().first!,
+            recurrenceQuestions.shuffled().first!,
+            probabilityQuestions.shuffled().first!,
+            expectationQuestions.shuffled().first!,
+        ]
+    }
+    
+    static func sampleQuestionsLinearAlgebra() -> [Question] {
+        return [
+            matrixOperationsQuestions.shuffled().first!,
+            determinantQuestions.shuffled().first!,
+            eigenvalueQuestions.shuffled().first!,
+            vectorSpaceQuestions.shuffled().first!,
+            linearTransformQuestions.shuffled().first!,
+            gaussianQuestions.shuffled().first!,
+            gramSchmidtQuestions.shuffled().first!,
+            diagonalizationQuestions.shuffled().first!,
         ]
     }
 }
