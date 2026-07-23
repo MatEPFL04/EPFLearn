@@ -19,23 +19,15 @@ struct VectorSpaceView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
-                headerSection
+                Text("Vector Spaces").font(.largeTitle.bold())
+                
                 vectorInputSection
                 linearCombinationSection
                 visualizationSection
-                conceptsSection
             }
             .padding(20)
         }
         .background(Color(.systemGroupedBackground))
-    }
-    
-    private var headerSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Vector Spaces").font(.largeTitle.bold())
-            Text("A vector space is closed under addition and scalar multiplication. Explore linear combinations, span, and linear independence.")
-                .font(.callout).foregroundStyle(.secondary)
-        }
     }
     
     private var vectorInputSection: some View {
@@ -43,29 +35,61 @@ struct VectorSpaceView: View {
             Text("Base Vectors").font(.headline)
             
             HStack(spacing: 16) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("v₁").font(.subheadline.weight(.semibold)).foregroundStyle(.pink)
-                    HStack {
-                        TextField("x", value: $v1x, format: .number)
-                            .textFieldStyle(.roundedBorder)
-                            .frame(width: 60)
-                        TextField("y", value: $v1y, format: .number)
-                            .textFieldStyle(.roundedBorder)
-                            .frame(width: 60)
+                VStack(spacing: 8) {
+                    Text("v₁").font(.headline).foregroundStyle(.pink)
+                    HStack(spacing: 12) {
+                        VStack {
+                            Text("x").font(.caption).foregroundStyle(.secondary)
+                            Picker("v1x", selection: $v1x) {
+                                ForEach(Array(stride(from: -3.0, through: 3.0, by: 0.5)), id: \.self) { val in
+                                    Text(String(format: "%.1f", val)).tag(val)
+                                }
+                            }
+                            .pickerStyle(.wheel)
+                            .frame(width: 70, height: 80)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                        }
+                        VStack {
+                            Text("y").font(.caption).foregroundStyle(.secondary)
+                            Picker("v1y", selection: $v1y) {
+                                ForEach(Array(stride(from: -3.0, through: 3.0, by: 0.5)), id: \.self) { val in
+                                    Text(String(format: "%.1f", val)).tag(val)
+                                }
+                            }
+                            .pickerStyle(.wheel)
+                            .frame(width: 70, height: 80)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                        }
                     }
                 }
                 .padding()
                 .background(RoundedRectangle(cornerRadius: 12).fill(Color.pink.opacity(0.08)))
                 
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("v₂").font(.subheadline.weight(.semibold)).foregroundStyle(.purple)
-                    HStack {
-                        TextField("x", value: $v2x, format: .number)
-                            .textFieldStyle(.roundedBorder)
-                            .frame(width: 60)
-                        TextField("y", value: $v2y, format: .number)
-                            .textFieldStyle(.roundedBorder)
-                            .frame(width: 60)
+                VStack(spacing: 8) {
+                    Text("v₂").font(.headline).foregroundStyle(.purple)
+                    HStack(spacing: 12) {
+                        VStack {
+                            Text("x").font(.caption).foregroundStyle(.secondary)
+                            Picker("v2x", selection: $v2x) {
+                                ForEach(Array(stride(from: -3.0, through: 3.0, by: 0.5)), id: \.self) { val in
+                                    Text(String(format: "%.1f", val)).tag(val)
+                                }
+                            }
+                            .pickerStyle(.wheel)
+                            .frame(width: 70, height: 80)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                        }
+                        VStack {
+                            Text("y").font(.caption).foregroundStyle(.secondary)
+                            Picker("v2y", selection: $v2y) {
+                                ForEach(Array(stride(from: -3.0, through: 3.0, by: 0.5)), id: \.self) { val in
+                                    Text(String(format: "%.1f", val)).tag(val)
+                                }
+                            }
+                            .pickerStyle(.wheel)
+                            .frame(width: 70, height: 80)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                        }
                     }
                 }
                 .padding()
@@ -80,31 +104,31 @@ struct VectorSpaceView: View {
             
             VStack(spacing: 12) {
                 VStack(alignment: .leading, spacing: 6) {
-                    HStack {
-                        Text("α (coefficient for v₁)")
-                            .font(.subheadline)
-                        Spacer()
-                        Text(String(format: "%.1f", alpha))
-                            .font(.subheadline.monospacedDigit().weight(.semibold))
-                            .padding(.horizontal, 8).padding(.vertical, 2)
-                            .background(Capsule().fill(Color.pink.opacity(0.15)))
-                            .foregroundStyle(.pink)
+                    Text("α (coefficient for v₁)")
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(.pink)
+                    Picker("Alpha", selection: $alpha) {
+                        ForEach(Array(stride(from: -2.0, through: 2.0, by: 0.1)), id: \.self) { value in
+                            Text(String(format: "%.1f", value)).tag(value)
+                        }
                     }
-                    Slider(value: $alpha, in: -2...2, step: 0.1).tint(.pink)
+                    .pickerStyle(.wheel)
+                    .frame(height: 100)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
                 
                 VStack(alignment: .leading, spacing: 6) {
-                    HStack {
-                        Text("β (coefficient for v₂)")
-                            .font(.subheadline)
-                        Spacer()
-                        Text(String(format: "%.1f", beta))
-                            .font(.subheadline.monospacedDigit().weight(.semibold))
-                            .padding(.horizontal, 8).padding(.vertical, 2)
-                            .background(Capsule().fill(Color.purple.opacity(0.15)))
-                            .foregroundStyle(.purple)
+                    Text("β (coefficient for v₂)")
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(.purple)
+                    Picker("Beta", selection: $beta) {
+                        ForEach(Array(stride(from: -2.0, through: 2.0, by: 0.1)), id: \.self) { value in
+                            Text(String(format: "%.1f", value)).tag(value)
+                        }
                     }
-                    Slider(value: $beta, in: -2...2, step: 0.1).tint(.purple)
+                    .pickerStyle(.wheel)
+                    .frame(height: 100)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
             }
             
@@ -128,29 +152,28 @@ struct VectorSpaceView: View {
     
     private var visualizationSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Visualization").font(.headline)
+            Text("Linear Combination: w = αv₁ + βv₂").font(.headline)
             
             Canvas { ctx, size in
                 drawVectors(ctx, size: size)
             }
-            .frame(height: 300)
+            .frame(height: 320)
             .background(RoundedRectangle(cornerRadius: 16).fill(Color(.secondarySystemGroupedBackground)))
             
-            HStack(spacing: 16) {
-                HStack(spacing: 6) {
-                    Circle().fill(.pink).frame(width: 10)
-                    Text("v₁").font(.caption)
+            let resultX = alpha * v1x + beta * v2x
+            let resultY = alpha * v1y + beta * v2y
+            
+            HStack(spacing: 12) {
+                VStack(spacing: 6) {
+                    Text("w").font(.headline).foregroundStyle(.green)
+                    Text("[\(formatted(resultX)), \(formatted(resultY))]")
+                        .font(.callout.monospaced())
+                        .foregroundStyle(.green)
                 }
-                HStack(spacing: 6) {
-                    Circle().fill(.purple).frame(width: 10)
-                    Text("v₂").font(.caption)
-                }
-                HStack(spacing: 6) {
-                    Circle().fill(.green).frame(width: 10)
-                    Text("w = αv₁ + βv₂").font(.caption)
-                }
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(RoundedRectangle(cornerRadius: 12).fill(Color.green.opacity(0.1)))
             }
-            .foregroundStyle(.secondary)
         }
     }
     

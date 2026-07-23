@@ -48,8 +48,6 @@ struct GaussianEliminationView: View {
                 }
                 
                 stepExplanation
-                
-                operationsSection
             }
             .padding(20)
         }
@@ -89,53 +87,6 @@ struct GaussianEliminationView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(RoundedRectangle(cornerRadius: 12).fill(Color.pink.opacity(0.12)))
         }
-    }
-    
-    private var operationsSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Elementary Row Operations").font(.headline)
-            
-            Group {
-                operationCard(
-                    title: "Row Swap",
-                    formula: "Rᵢ ↔ Rⱼ",
-                    description: "Exchange two rows",
-                    icon: "arrow.left.arrow.right"
-                )
-                
-                operationCard(
-                    title: "Scalar Multiply",
-                    formula: "Rᵢ → cRᵢ",
-                    description: "Multiply a row by non-zero constant",
-                    icon: "multiply"
-                )
-                
-                operationCard(
-                    title: "Row Addition",
-                    formula: "Rᵢ → Rᵢ + cRⱼ",
-                    description: "Add multiple of one row to another",
-                    icon: "plus"
-                )
-            }
-        }
-    }
-    
-    private func operationCard(title: String, formula: String, description: String, icon: String) -> some View {
-        HStack(spacing: 12) {
-            Image(systemName: icon)
-                .font(.title3)
-                .foregroundStyle(.pink)
-                .frame(width: 40, height: 40)
-                .background(Circle().fill(Color.pink.opacity(0.12)))
-            
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title).font(.subheadline.weight(.semibold))
-                Text(formula).font(.caption.monospaced()).foregroundStyle(.pink)
-                Text(description).font(.caption).foregroundStyle(.secondary)
-            }
-        }
-        .padding()
-        .background(RoundedRectangle(cornerRadius: 12).fill(Color(.secondarySystemGroupedBackground)))
     }
     
     private func getCurrentMatrix() -> [[Double]] {
@@ -184,6 +135,8 @@ struct GaussianEliminationView: View {
     }
 }
 
-#Preview {
-    GaussianEliminationView()
+struct GaussianEliminationView_Previews: PreviewProvider {
+    static var previews: some View {
+        GaussianEliminationView()
+    }
 }

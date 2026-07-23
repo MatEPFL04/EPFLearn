@@ -25,8 +25,6 @@ struct DiagonalizationView: View {
                 matrixInputSection
                 decompositionSection
                 powerSection
-                propertiesSection
-                applicationsSection
             }
             .padding(20)
         }
@@ -142,17 +140,17 @@ struct DiagonalizationView: View {
             Text("Matrix Powers: A^k = PD^kP⁻¹").font(.headline)
             
             VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Text("Exponent k")
-                        .font(.subheadline)
-                    Spacer()
-                    Text("\(Int(powerK))")
-                        .font(.subheadline.monospacedDigit().weight(.semibold))
-                        .padding(.horizontal, 8).padding(.vertical, 2)
-                        .background(Capsule().fill(Color.pink.opacity(0.15)))
-                        .foregroundStyle(.pink)
+                Text("Exponent k")
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(.pink)
+                Picker("Exponent", selection: $powerK) {
+                    ForEach(1...10, id: \.self) { value in
+                        Text("\(value)").tag(Double(value))
+                    }
                 }
-                Slider(value: $powerK, in: 1...10, step: 1).tint(.pink)
+                .pickerStyle(.wheel)
+                .frame(height: 100)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
             }
             
             let (lambda1, lambda2) = calculateEigenvalues()
@@ -199,63 +197,6 @@ struct DiagonalizationView: View {
         }
     }
     
-    private var propertiesSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Key Properties").font(.headline)
-            
-            propertyCard(
-                title: "Condition",
-                formula: "A is n×n with n independent eigenvectors",
-                description: "Need a complete set of eigenvectors",
-                icon: "checkmark.circle"
-            )
-            
-            propertyCard(
-                title: "Symmetric Matrices",
-                formula: "All symmetric matrices are diagonalizable",
-                description: "Guaranteed to have orthonormal eigenvectors",
-                icon: "arrow.left.arrow.right"
-            )
-            
-            propertyCard(
-                title: "Distinct Eigenvalues",
-                formula: "n distinct λᵢ ⟹ diagonalizable",
-                description: "Sufficient but not necessary condition",
-                icon: "number"
-            )
-        }
-    }
-    
-    private var applicationsSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Applications").font(.headline)
-            
-            applicationCard(
-                title: "Differential Equations",
-                description: "Solve systems dx/dt = Ax efficiently",
-                icon: "function"
-            )
-            
-            applicationCard(
-                title: "Markov Chains",
-                description: "Find steady states and long-term behavior",
-                icon: "arrow.triangle.branch"
-            )
-            
-            applicationCard(
-                title: "Quantum Mechanics",
-                description: "Observable operators are diagonalizable",
-                icon: "atom"
-            )
-            
-            applicationCard(
-                title: "Vibration Analysis",
-                description: "Find normal modes of oscillating systems",
-                icon: "waveform"
-            )
-        }
-    }
-    
     private func matrixBox(title: String, values: String, color: Color) -> some View {
         VStack(spacing: 4) {
             Text(title)
@@ -267,41 +208,6 @@ struct DiagonalizationView: View {
                 .padding(8)
                 .background(RoundedRectangle(cornerRadius: 6).fill(color.opacity(0.12)))
         }
-    }
-    
-    private func propertyCard(title: String, formula: String, description: String, icon: String) -> some View {
-        HStack(spacing: 12) {
-            Image(systemName: icon)
-                .font(.title3)
-                .foregroundStyle(.pink)
-                .frame(width: 40, height: 40)
-                .background(Circle().fill(Color.pink.opacity(0.12)))
-            
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title).font(.subheadline.weight(.semibold))
-                Text(formula).font(.caption.monospaced()).foregroundStyle(.pink)
-                Text(description).font(.caption).foregroundStyle(.secondary)
-            }
-        }
-        .padding()
-        .background(RoundedRectangle(cornerRadius: 12).fill(Color(.secondarySystemGroupedBackground)))
-    }
-    
-    private func applicationCard(title: String, description: String, icon: String) -> some View {
-        HStack(spacing: 12) {
-            Image(systemName: icon)
-                .font(.title3)
-                .foregroundStyle(.pink)
-                .frame(width: 40, height: 40)
-                .background(Circle().fill(Color.pink.opacity(0.12)))
-            
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title).font(.subheadline.weight(.semibold))
-                Text(description).font(.caption).foregroundStyle(.secondary)
-            }
-        }
-        .padding()
-        .background(RoundedRectangle(cornerRadius: 12).fill(Color(.secondarySystemGroupedBackground)))
     }
     
     private func calculateEigenvalues() -> (Double, Double) {

@@ -68,6 +68,10 @@ struct QuizView: View {
                     CategoryCard(title: "Linear Algebra", subtitle: "Matrices, vectors, transformations", icon: "squareshape.split.3x3", color: .pink) {
                         startQuiz(index: 4)
                     }
+                    
+                    CategoryCard(title: "Programming Basics", subtitle: "Variables, loops, functions", icon: "chevron.left.forwardslash.chevron.right", color: .indigo) {
+                        startQuiz(index: 5)
+                    }
                 }
                 .padding(.horizontal)
             }

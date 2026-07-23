@@ -190,20 +190,11 @@ let inclusionExclusionQuestions = [
 let recurrenceQuestions = [
     Question(
         subject: .discreteMaths,
-        text: "The Fibonacci sequence is defined by F(0)=0, F(1)=1, F(n)=F(n-1)+F(n-2). What is F(6)?",
-        hint: "Calculate step by step: F(2)=1, F(3)=2, F(4)=3, F(5)=5...",
-        options: ["5", "8", "13", "21"],
-        correctIndex: 1,
-        explanation: "F(2)=1, F(3)=2, F(4)=3, F(5)=5, F(6)=5+3=8.",
-        visualization: .recurrenceRelations
-    ),
-    Question(
-        subject: .discreteMaths,
         text: "A sequence satisfies aₙ = 2aₙ₋₁ + 3 with a₀ = 1. What is a₃?",
         hint: "Calculate iteratively: a₁, then a₂, then a₃.",
-        options: ["11", "15", "17", "21"],
-        correctIndex: 2,
-        explanation: "a₁ = 2(1) + 3 = 5, a₂ = 2(5) + 3 = 13, a₃ = 2(13) + 3 = 29. Wait, let me recalculate: a₁=5, a₂=13, a₃=29... Actually a₃ = 2×8+3=19. Hmm, let me verify: a₀=1, a₁=2×1+3=5, a₂=2×5+3=13, a₃=2×13+3=29. The answer should be 29, but if the options show 17, there may be a different a₀.",
+        options: ["11", "17", "21", "29"],
+        correctIndex: 3,
+        explanation: "a₁ = 2(1) + 3 = 5, a₂ = 2(5) + 3 = 13, a₃ = 2(13) + 3 = 29.",
         visualization: .recurrenceRelations
     ),
     Question(
@@ -213,6 +204,15 @@ let recurrenceQuestions = [
         options: ["7", "11", "15", "31"],
         correctIndex: 2,
         explanation: "T(1)=1, T(2)=2×1+1=3, T(3)=2×3+1=7, T(4)=2×7+1=15.",
+        visualization: .recurrenceRelations
+    ),
+    Question(
+        subject: .discreteMaths,
+        text: "A geometric sequence has first term 2 and ratio 3. What is the 5th term?",
+        hint: "Geometric sequence: aₙ = a₁ × rⁿ⁻¹",
+        options: ["54", "162", "243", "486"],
+        correctIndex: 1,
+        explanation: "a₅ = 2 × 3⁴ = 2 × 81 = 162.",
         visualization: .recurrenceRelations
     )
 ]

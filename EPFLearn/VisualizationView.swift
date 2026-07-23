@@ -61,25 +61,28 @@ struct VisualizationView: View {
         // Linear Algebra visualizations
         case .matrixOperations: MatrixOperationsView()
         case .determinant: DeterminantView()
-        case .eigenvalues: EigenvalueView()
+        case .eigenvalues: EigenvalueVisualView()
         case .vectorSpaces: VectorSpaceView()
-        case .linearTransformations: LinearTransformationView()
+        case .linearTransformations: LinearTransformVisualView()
         case .gaussianElimination: GaussianEliminationView()
         case .gramSchmidt: GramSchmidtView()
-        case .svd: SVDView()
+        case .svd: SVDVisualView()
         case .diagonalization: DiagonalizationView()
+        
+        // Programming Basics visualizations
+        case .whileLoop: WhileLoopView()
+        case .forLoop: ForLoopView()
+        case .ifStatement: IfElseView()
+        case .bitwiseOperations: BitwiseView()
+        case .recursion: RecurrenceRelationsView()
+        case .variablesMemory: VariablesView()
+        case .functions: FunctionView()
         }
     }
 
     var body: some View {
         ScrollView {
             vizContent
-                // .top plutôt que le centrage par défaut : sinon une vue plus
-                // courte que 800pt (ex. TrigoView, ~600pt) se retrouve centrée
-                // dans la boîte de 800, avec du vide au-dessus ET en dessous —
-                // ce qui donne l'impression que la vue "descend" au chargement,
-                // car la ScrollView démarre en haut de cet espace vide.
-                .frame(minHeight: 800, alignment: .top)
         }
         .safeAreaInset(edge: .bottom) {
             if !hint.isEmpty {

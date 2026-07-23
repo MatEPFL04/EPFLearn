@@ -239,14 +239,18 @@ struct DarbouxView: View {
             .background(.regularMaterial)
             .clipShape(RoundedRectangle(cornerRadius: 10))
 
-            // Slider volontairement plus étroit que l'écran : un slider qui
-            // touche les bords entre en conflit avec le geste de retour
-            // (swipe depuis le bord) quand on arrive d'une autre page.
             VStack(alignment: .leading, spacing: 4) {
-                Text("Number of sections: \(Int(sectionCount))")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                Slider(value: $sectionCount, in: 2...100, step: 1)
+                Text("Number of sections")
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(.blue)
+                Picker("Sections", selection: $sectionCount) {
+                    ForEach(2...100, id: \.self) { value in
+                        Text("\(value)").tag(Double(value))
+                    }
+                }
+                .pickerStyle(.wheel)
+                .frame(height: 100)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
             }
             .frame(width: graphSize - 40)
         }

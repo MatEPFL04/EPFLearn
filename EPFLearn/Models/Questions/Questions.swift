@@ -15,7 +15,7 @@
 import SwiftUI
 
 enum Subject: String, Codable, CaseIterable {
-    case analysis, arrays, graphs, discreteMaths, linearAlgebra
+    case analysis, arrays, graphs, discreteMaths, linearAlgebra, programmingBasics
 }
 struct Question: Identifiable {
     let id = UUID()
@@ -77,6 +77,14 @@ enum VisualizationType {
     case gramSchmidt
     case svd
     case diagonalization
+    // Programming Basics
+    case whileLoop
+    case forLoop
+    case ifStatement
+    case bitwiseOperations
+    case recursion
+    case variablesMemory
+    case functions
 }
 
 extension Question {
@@ -146,6 +154,17 @@ extension Question {
             gaussianQuestions.shuffled().first!,
             gramSchmidtQuestions.shuffled().first!,
             diagonalizationQuestions.shuffled().first!,
+        ]
+    }
+    
+    static func sampleQuestionsProgrammingBasics() -> [Question] {
+        return [
+            variablesQuestions.shuffled().first!,
+            ifElseQuestions.shuffled().first!,
+            forLoopQuestions.shuffled().first!,
+            whileLoopQuestions.shuffled().first!,
+            functionQuestions.shuffled().first!,
+            bitwiseQuestions.shuffled().first!,
         ]
     }
 }

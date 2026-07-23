@@ -12,6 +12,7 @@ extension Subject {
         case .graphs:   return "Graphs"
         case .discreteMaths: return "Discrete Maths"
         case .linearAlgebra: return "Linear Algebra"
+        case .programmingBasics: return "Programming Basics"
         }
     }
 
@@ -22,6 +23,7 @@ extension Subject {
         case .arrays:   return .orange
         case .discreteMaths: return .green
         case .linearAlgebra: return .pink
+        case .programmingBasics: return .indigo
         }
     }
 }

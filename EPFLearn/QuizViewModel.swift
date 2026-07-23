@@ -49,6 +49,9 @@ class QuizViewModel {
         case 4:
             questions = Question.sampleQuestionsLinearAlgebra()
             category = .linearAlgebra
+        case 5:
+            questions = Question.sampleQuestionsProgrammingBasics()
+            category = .programmingBasics
         default:
             questions = Question.sampleQuestionsAnalysis()
             category = .analysis

@@ -13,26 +13,15 @@ struct GramSchmidtView: View {
     @State private var v1y: Double = 1
     @State private var v2x: Double = 2
     @State private var v2y: Double = 2
-    @State private var showSteps = true
     
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
-                Text("Gram-Schmidt Process").font(.largeTitle.bold())
-                Text("Transform linearly independent vectors into an orthonormal basis.")
-                    .font(.callout).foregroundStyle(.secondary)
+                Text("Gram-Schmidt").font(.largeTitle.bold())
                 
                 inputSection
-                Toggle("Show calculation steps", isOn: $showSteps)
-                    .tint(.pink)
-                
-                if showSteps {
-                    calculationSteps
-                }
-                
-                resultsSection
                 visualizationSection
-                definitionsSection
+                resultsSection
             }
             .padding(20)
         }

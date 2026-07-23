@@ -325,17 +325,17 @@ struct ExpectationView: View {
     private var controls: some View {
         VStack(alignment: .leading, spacing: 16) {
             VStack(alignment: .leading, spacing: 6) {
-                HStack {
-                    Label("Number of values", systemImage: "number")
-                        .font(.subheadline.weight(.medium))
-                    Spacer()
-                    Text("\(n)")
-                        .font(.subheadline.monospacedDigit().weight(.semibold))
-                        .padding(.horizontal, 10).padding(.vertical, 3)
-                        .background(Capsule().fill(Color.blue.opacity(0.15)))
-                        .foregroundStyle(.blue)
+                Label("Number of values", systemImage: "number")
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(.blue)
+                Picker("Number of values", selection: $count) {
+                    ForEach(2...20, id: \.self) { value in
+                        Text("\(value)").tag(Double(value))
+                    }
                 }
-                Slider(value: $count, in: 2...20, step: 1).tint(.blue)
+                .pickerStyle(.wheel)
+                .frame(height: 100)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
             }
 
             VStack(alignment: .leading, spacing: 8) {
@@ -343,7 +343,9 @@ struct ExpectationView: View {
                 Picker("Law", selection: $shape) {
                     ForEach(DistributionShape.allCases) { Text($0.rawValue).tag($0) }
                 }
-                .pickerStyle(.segmented)
+                .pickerStyle(.wheel)
+                .frame(height: 100)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
 
                 if shape == .bell || shape == .decreasing {
                     HStack(spacing: 10) {
@@ -370,17 +372,17 @@ struct ExpectationView: View {
                 .font(.callout).foregroundStyle(.secondary)
 
             VStack(alignment: .leading, spacing: 6) {
-                HStack {
-                    Label("Draws", systemImage: "die.face.5")
-                        .font(.subheadline.weight(.medium))
-                    Spacer()
-                    Text("\(usedDraws)")
-                        .font(.subheadline.monospacedDigit().weight(.semibold))
-                        .padding(.horizontal, 10).padding(.vertical, 3)
-                        .background(Capsule().fill(Color.orange.opacity(0.18)))
-                        .foregroundStyle(.orange)
+                Label("Draws", systemImage: "die.face.5")
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(.orange)
+                Picker("Draws", selection: $draws) {
+                    ForEach(Array(stride(from: 0, through: maxDraws, by: 10)), id: \.self) { value in
+                        Text("\(value)").tag(Double(value))
+                    }
                 }
-                Slider(value: $draws, in: 0...Double(maxDraws), step: 1).tint(.orange)
+                .pickerStyle(.wheel)
+                .frame(height: 100)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
             }
 
             Button {

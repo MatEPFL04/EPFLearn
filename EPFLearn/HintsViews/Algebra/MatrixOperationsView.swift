@@ -32,23 +32,15 @@ struct MatrixOperationsView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
-                headerSection
+                Text("Matrix Operations").font(.largeTitle.bold())
+                
                 operationPickerSection
                 controlsSection
                 visualizationSection
-                rulesSection
             }
             .padding(20)
         }
         .background(Color(.systemGroupedBackground))
-    }
-    
-    private var headerSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Matrix Operations").font(.largeTitle.bold())
-            Text("Explore fundamental matrix operations: multiplication, addition, transposition, and scalar multiplication.")
-                .font(.callout).foregroundStyle(.secondary)
-        }
     }
     
     private var operationPickerSection: some View {
@@ -59,7 +51,9 @@ struct MatrixOperationsView: View {
                     Text(op.rawValue).tag(op)
                 }
             }
-            .pickerStyle(.segmented)
+            .pickerStyle(.wheel)
+            .frame(height: 120)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
         }
     }
     
@@ -300,57 +294,7 @@ struct MatrixOperationsView: View {
         }
     }
     
-    private var rulesSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Key Properties").font(.headline)
-            
-            propertyCard(
-                title: "Non-Commutativity",
-                formula: "AB ≠ BA (in general)",
-                description: "Matrix multiplication order matters!",
-                icon: "exclamationmark.triangle"
-            )
-            
-            propertyCard(
-                title: "Associativity",
-                formula: "(AB)C = A(BC)",
-                description: "You can regroup matrix multiplications",
-                icon: "link"
-            )
-            
-            propertyCard(
-                title: "Distributivity",
-                formula: "A(B + C) = AB + AC",
-                description: "Multiplication distributes over addition",
-                icon: "plus.forwardslash.minus"
-            )
-            
-            propertyCard(
-                title: "Identity Matrix",
-                formula: "AI = IA = A",
-                description: "I is the multiplicative identity",
-                icon: "1.square"
-            )
-        }
-    }
-    
-    private func propertyCard(title: String, formula: String, description: String, icon: String) -> some View {
-        HStack(spacing: 12) {
-            Image(systemName: icon)
-                .font(.title3)
-                .foregroundStyle(.pink)
-                .frame(width: 40, height: 40)
-                .background(Circle().fill(Color.pink.opacity(0.12)))
-            
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title).font(.subheadline.weight(.semibold))
-                Text(formula).font(.caption.monospaced()).foregroundStyle(.pink)
-                Text(description).font(.caption).foregroundStyle(.secondary)
-            }
-        }
-        .padding()
-        .background(RoundedRectangle(cornerRadius: 12).fill(Color(.secondarySystemGroupedBackground)))
-    }
+
 }
 
 #Preview {

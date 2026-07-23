@@ -9,13 +9,12 @@ import SwiftUI
 
 /// Interactive view for exploring recurrence relations
 struct RecurrenceRelationsView: View {
-    @State private var selectedRelation = RecurrenceType.fibonacci
+    @State private var selectedRelation = RecurrenceType.geometric
     @State private var steps: Double = 10
     
     private var stepCount: Int { max(1, min(20, Int(steps.rounded()))) }
     
     enum RecurrenceType: String, CaseIterable, Identifiable {
-        case fibonacci = "Fibonacci"
         case geometric = "Geometric"
         case arithmetic = "Arithmetic"
         case towerOfHanoi = "Tower of Hanoi"
@@ -78,17 +77,17 @@ struct RecurrenceRelationsView: View {
     
     private var controlSection: some View {
         VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                Label("Number of terms", systemImage: "number")
-                    .font(.subheadline.weight(.medium))
-                Spacer()
-                Text("\(stepCount)")
-                    .font(.subheadline.monospacedDigit().weight(.semibold))
-                    .padding(.horizontal, 10).padding(.vertical, 3)
-                    .background(Capsule().fill(relationColor.opacity(0.15)))
-                    .foregroundStyle(relationColor)
+            Label("Number of terms", systemImage: "number")
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(relationColor)
+            Picker("Terms", selection: $steps) {
+                ForEach(1...20, id: \.self) { value in
+                    Text("\(value)").tag(Double(value))
+                }
             }
-            Slider(value: $steps, in: 1...20, step: 1).tint(relationColor)
+            .pickerStyle(.wheel)
+            .frame(height: 100)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
         }
     }
     
@@ -136,17 +135,6 @@ struct RecurrenceRelationsView: View {
             Text("Applications").font(.headline)
             
             switch selectedRelation {
-            case .fibonacci:
-                applicationCard(
-                    title: "Nature & Biology",
-                    description: "Fibonacci numbers appear in flower petals, pine cones, and tree branches.",
-                    icon: "leaf"
-                )
-                applicationCard(
-                    title: "Golden Ratio",
-                    description: "The ratio of consecutive Fibonacci numbers approaches φ ≈ 1.618.",
-                    icon: "square.and.pencil"
-                )
             case .geometric:
                 applicationCard(
                     title: "Population Growth",
@@ -205,8 +193,6 @@ struct RecurrenceRelationsView: View {
     
     private var formula: String {
         switch selectedRelation {
-        case .fibonacci:
-            return "F(n) = F(n-1) + F(n-2)\nF(0) = 0, F(1) = 1"
         case .geometric:
             return "a(n) = 2 × a(n-1)\na(0) = 1"
         case .arithmetic:
@@ -218,8 +204,6 @@ struct RecurrenceRelationsView: View {
     
     private var description: String {
         switch selectedRelation {
-        case .fibonacci:
-            return "Each term is the sum of the two preceding terms."
         case .geometric:
             return "Each term is double the previous term (ratio = 2)."
         case .arithmetic:
@@ -231,7 +215,6 @@ struct RecurrenceRelationsView: View {
     
     private var relationColor: Color {
         switch selectedRelation {
-        case .fibonacci: return .purple
         case .geometric: return .orange
         case .arithmetic: return .blue
         case .towerOfHanoi: return .green
@@ -240,8 +223,6 @@ struct RecurrenceRelationsView: View {
     
     private func calculateValue(at n: Int) -> Int {
         switch selectedRelation {
-        case .fibonacci:
-            return fibonacci(n)
         case .geometric:
             return geometric(n)
         case .arithmetic:
@@ -249,17 +230,6 @@ struct RecurrenceRelationsView: View {
         case .towerOfHanoi:
             return hanoi(n)
         }
-    }
-    
-    private func fibonacci(_ n: Int) -> Int {
-        guard n > 1 else { return n }
-        var a = 0, b = 1
-        for _ in 2...n {
-            let temp = a + b
-            a = b
-            b = temp
-        }
-        return b
     }
     
     private func geometric(_ n: Int) -> Int {
