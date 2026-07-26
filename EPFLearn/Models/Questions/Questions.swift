@@ -29,6 +29,7 @@ struct Question: Identifiable {
 }
 
 enum VisualizationType {
+    
     case derivative
     case darboux
     case sequence
@@ -40,8 +41,28 @@ enum VisualizationType {
     case convergence
     case lhopital
     case sandwich
+    case complexNumbers
+    case trigo
+    
+    
+    case matrixOperations
+    case determinant
+    case vectorSpaces
+    case linearTransformations
+    case gaussianElimination
+    case ker
+    case image
+    
+    
     case DFS
     case BFS
+    case kruskal
+    case prim
+    case djikistra
+    case bellmanford
+    case topologicalorder
+    
+    
     case sorting_basic
     case sorting_zigzag
     case sorting_reverse_merge
@@ -50,14 +71,8 @@ enum VisualizationType {
     case search
     case kadane
     case dynamicProgramming
-    case kruskal
-    case prim
-    case djikistra
-    case bellmanford
-    case topologicalorder
-    case complexNumbers
-    case trigo
-    // Discrete Maths
+    
+    
     case combinatorics
     case permutations
     case binomialCoefficients
@@ -67,17 +82,8 @@ enum VisualizationType {
     case generatingFunctions
     case probability
     case expectation
-    // Linear Algebra
-    case matrixOperations
-    case determinant
-    case eigenvalues
-    case vectorSpaces
-    case linearTransformations
-    case gaussianElimination
-    case gramSchmidt
-    case svd
-    case diagonalization
-    // Programming Basics
+    
+
     case whileLoop
     case forLoop
     case ifStatement
@@ -148,12 +154,10 @@ extension Question {
         return [
             matrixOperationsQuestions.shuffled().first!,
             determinantQuestions.shuffled().first!,
-            eigenvalueQuestions.shuffled().first!,
             vectorSpaceQuestions.shuffled().first!,
             linearTransformQuestions.shuffled().first!,
-            gaussianQuestions.shuffled().first!,
-            gramSchmidtQuestions.shuffled().first!,
-            diagonalizationQuestions.shuffled().first!,
+            //gramSchmidtQuestions.shuffled().first!,
+            matrix3DQuestions.shuffled().first!,
         ]
     }
     

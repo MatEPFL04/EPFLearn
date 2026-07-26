@@ -8,11 +8,15 @@
 import SwiftUI
 
 struct ForLoopView: View {
-    @State private var isRunning = false
+    @State private var currentStep = 0
     @State private var currentLine = 0
     @State private var i = 0
     @State private var sum = 0
     @State private var maxValue: Double = 5
+    
+    private var totalSteps: Int {
+        Int(maxValue) * 2 + 2  // init + (check + add) * n + end
+    }
     
     var body: some View {
         ScrollView {
@@ -30,31 +34,41 @@ struct ForLoopView: View {
     }
     
     private var controlsSection: some View {
-        HStack(spacing: 12) {
-            Button {
-                if isRunning {
-                    stopExecution()
-                } else {
-                    startExecution()
+        VStack(spacing: 12) {
+            HStack {
+                Text("Step \(currentStep) / \(totalSteps)")
+                    .font(.headline)
+                Spacer()
+                Button {
+                    currentStep = 0
+                    updateState()
+                } label: {
+                    Label("Reset", systemImage: "arrow.counterclockwise")
                 }
-            } label: {
-                Label(isRunning ? "Stop" : "Run", systemImage: isRunning ? "stop.fill" : "play.fill")
-                    .frame(maxWidth: .infinity)
+                .buttonStyle(.bordered)
+                .tint(.blue)
             }
-            .buttonStyle(.bordered)
-            .tint(isRunning ? .red : .green)
-            .controlSize(.large)
             
-            Button {
-                resetExecution()
-            } label: {
-                Label("Reset", systemImage: "arrow.counterclockwise")
-                    .frame(maxWidth: .infinity)
+            Slider(value: Binding(
+                get: { Double(currentStep) },
+                set: { currentStep = Int($0) }
+            ), in: 0...Double(totalSteps), step: 1)
+            .onChange(of: currentStep) { _ in
+                updateState()
             }
-            .buttonStyle(.bordered)
-            .tint(.blue)
-            .controlSize(.large)
+            
+            HStack {
+                Text("Start")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Text("End")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
         }
+        .padding()
+        .background(RoundedRectangle(cornerRadius: 12).fill(Color(.secondarySystemGroupedBackground)))
     }
     
     private var codeVisualization: some View {
@@ -144,51 +158,38 @@ struct ForLoopView: View {
         }
     }
     
-    private func startExecution() {
-        isRunning = true
-        sum = 0
-        i = 0
-        currentLine = 0
-        executeNextLine()
-    }
     
-    private func executeNextLine() {
-        guard isRunning else { return }
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            withAnimation {
-                if currentLine == 0 {
-                    sum = 0
+    private func updateState() {
+        withAnimation(.spring(duration: 0.2)) {
+            let max = Int(maxValue)
+            
+            if currentStep == 0 {
+                // Init
+                currentLine = 0
+                sum = 0
+                i = 0
+            } else if currentStep <= max * 2 {
+                // Loop iterations
+                let iteration = (currentStep - 1) / 2
+                let inIterationStep = (currentStep - 1) % 2
+                
+                i = iteration
+                
+                if inIterationStep == 0 {
+                    // Check condition
                     currentLine = 1
-                } else if currentLine == 1 {
-                    if i < Int(maxValue) {
-                        currentLine = 2
-                    } else {
-                        currentLine = 4
-                        stopExecution()
-                        return
-                    }
-                } else if currentLine == 2 {
-                    sum += i
-                    currentLine = 3
-                } else if currentLine == 3 {
-                    i += 1
-                    currentLine = 1
+                } else {
+                    // Add to sum
+                    currentLine = 2
+                    sum = (0...iteration).reduce(0, +)
                 }
+            } else {
+                // End
+                currentLine = 4
+                i = max
+                sum = (0..<max).reduce(0, +)
             }
-            executeNextLine()
         }
-    }
-    
-    private func stopExecution() {
-        isRunning = false
-    }
-    
-    private func resetExecution() {
-        isRunning = false
-        currentLine = 0
-        i = 0
-        sum = 0
     }
 }
 

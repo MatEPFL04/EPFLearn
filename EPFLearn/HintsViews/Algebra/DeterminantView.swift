@@ -31,17 +31,27 @@ struct DeterminantView: View {
     }
     
     private var matrixControls: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 4) {
+            // Left bracket
+            Text("(")
+                .font(.system(size: 100, weight: .thin))
+                .foregroundStyle(.secondary)
+            
             VStack(spacing: 8) {
                 HStack(spacing: 8) {
                     pickerCompact(value: $a, color: .pink)
-                    pickerCompact(value: $b, color: .pink)
+                    pickerCompact(value: $b, color: .purple)
                 }
                 HStack(spacing: 8) {
-                    pickerCompact(value: $c, color: .purple)
+                    pickerCompact(value: $c, color: .pink)
                     pickerCompact(value: $d, color: .purple)
                 }
             }
+            
+            // Right bracket
+            Text(")")
+                .font(.system(size: 100, weight: .thin))
+                .foregroundStyle(.secondary)
         }
         .padding()
         .background(RoundedRectangle(cornerRadius: 12).fill(Color(.secondarySystemGroupedBackground)))
@@ -204,4 +214,5 @@ struct DeterminantView: View {
 
 #Preview {
     DeterminantView()
+        .preferredColorScheme(.dark)
 }

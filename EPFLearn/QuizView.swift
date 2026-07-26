@@ -53,25 +53,29 @@ struct QuizView: View {
                         startQuiz(index: 0)
                     }
                     
-                    CategoryCard(title: "Graphs", subtitle: "Visualizing and understanding graphs", icon: "waveform.path", color: .purple) {
-                        startQuiz(index: 2)
+                    CategoryCard(title: "Linear Algebra", subtitle: "Matrices, vectors, transformations", icon: "squareshape.split.3x3", color: .pink) {
+                        startQuiz(index: 4)
                     }
                     
-                    CategoryCard(title: "Searching & Sorting", subtitle: "Algorithms, reasoning on inputs", icon: "arrow.up.and.down.and.sparkles", color: .orange) {
-                        startQuiz(index: 1)
-                    }
                     
                     CategoryCard(title: "Discrete Maths", subtitle: "Combinatorics, probability, recurrence", icon: "number.square", color: .green) {
                         startQuiz(index: 3)
                     }
                     
-                    CategoryCard(title: "Linear Algebra", subtitle: "Matrices, vectors, transformations", icon: "squareshape.split.3x3", color: .pink) {
-                        startQuiz(index: 4)
-                    }
-                    
                     CategoryCard(title: "Programming Basics", subtitle: "Variables, loops, functions", icon: "chevron.left.forwardslash.chevron.right", color: .indigo) {
                         startQuiz(index: 5)
                     }
+                    
+                    
+                    CategoryCard(title: "Searching & Sorting", subtitle: "Algorithms, reasoning on inputs", icon: "arrow.up.and.down.and.sparkles", color: .orange) {
+                        startQuiz(index: 1)
+                    }
+          
+                   
+                    CategoryCard(title: "Graphs", subtitle: "Visualizing and understanding graphs", icon: "waveform.path", color: .purple) {
+                        startQuiz(index: 2)
+                    }
+                    
                 }
                 .padding(.horizontal)
             }

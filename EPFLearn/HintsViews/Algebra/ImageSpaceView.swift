@@ -1,0 +1,517 @@
+//
+//  ImageSpaceView.swift
+//  EPFLearn
+//
+//  The image of a linear map: an integer lattice, and where it travels.
+//  Reuses V3 / M3 / Projector / ScrubCell / BracketShape from Matrix3DView.swift.
+//
+
+import SwiftUI
+
+struct ImageSpaceView: View {
+
+    @State private var matrix = M3(c1: V3(1, 0.3, 0), c2: V3(0.2, 1, 0.3), c3: V3(0, 0.2, 1))
+    @State private var presetIndex = 2
+    @State private var morph: Double = 1
+
+    @State private var azimuth: Double = -0.9
+    @State private var elevation: Double = 0.42
+    @State private var distance: Double = 11
+    @State private var orbitAnchor: (Double, Double)? = nil
+
+    static let neonCore = Color(red: 1.00, green: 0.99, blue: 0.78)
+    static let neonHalo = Color(red: 1.00, green: 0.84, blue: 0.02)
+    static let neonUI   = Color(red: 0.62, green: 0.48, blue: 0.00)
+    static let sourceCol = Color(red: 0.55, green: 0.60, blue: 0.72)
+
+    /// Integer combinations of e₁, e₂, e₃.
+    static let lattice: [V3] = {
+        var pts: [V3] = []
+        let r: Int = 3
+        for i in -r...r {
+            for j in -r...r {
+                for k in -r...r {
+                    pts.append(V3(Double(i), Double(j), Double(k)))
+                }
+            }
+        }
+        return pts
+    }()
+
+    /// A shell near the origin, threaded to its image.
+    static let traced: [V3] = lattice.filter { p in
+        let s: Double = abs(p.x) + abs(p.y) + abs(p.z)
+        return s > 0.5 && s < 2.5
+    }
+
+    /// The matrix actually applied right now.
+    private var live: M3 { M3.lerp(.identity, matrix, morph) }
+
+    // MARK: Rank of the target map
+
+    private var imageBasis: [V3] {
+        var basis: [V3] = []
+        for c in [matrix.c1, matrix.c2, matrix.c3] {
+            var v: V3 = c
+            for b in basis {
+                let proj: V3 = b.dot(v) * b
+                v = v - proj
+            }
+            if v.norm > 1e-4 { basis.append(v.unit) }
+        }
+        return basis
+    }
+
+    private var rank: Int { imageBasis.count }
+
+    private var imageName: String {
+        switch rank {
+        case 3:  return "im A = ℝ³"
+        case 2:  return "im A is a plane through 0"
+        case 1:  return "im A is a line through 0"
+        default: return "im A = {0}"
+        }
+    }
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 10) {
+                header
+                viewport
+                morphCard
+                controls
+            }
+            .padding(14)
+        }
+        .background(Color(.systemGroupedBackground))
+    }
+
+    private var header: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text("The Image of a Map")
+                .font(.title3.bold())
+            Text("Drag the transform slider and watch the grid leave its origin.")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    // MARK: - Viewport
+
+    private var viewport: some View {
+        ZStack(alignment: .topLeading) {
+            Canvas { ctx, size in render(ctx, size: size) }
+                .frame(height: 400)
+                .background(Color(red: 0.03, green: 0.03, blue: 0.05))
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+                .contentShape(RoundedRectangle(cornerRadius: 16))
+                .highPriorityGesture(orbitGesture)
+                .onTapGesture(count: 2) {
+                    azimuth = -0.9; elevation = 0.42; distance = 11
+                }
+
+            hud.padding(10)
+        }
+        .overlay(alignment: .bottomLeading) { legend.padding(10) }
+        .overlay(alignment: .bottomTrailing) { zoomSlider.padding(9) }
+    }
+
+    private var orbitGesture: some Gesture {
+        DragGesture(minimumDistance: 2)
+            .onChanged { g in
+                if orbitAnchor == nil { orbitAnchor = (azimuth, elevation) }
+                guard let a = orbitAnchor else { return }
+                azimuth = a.0 - Double(g.translation.width) * 0.008
+                elevation = min(max(a.1 + Double(g.translation.height) * 0.006, -1.45), 1.45)
+            }
+            .onEnded { _ in orbitAnchor = nil }
+    }
+
+    private var hud: some View {
+        VStack(alignment: .leading, spacing: 1) {
+            Text("dim im A = \(rank)")
+                .font(.system(size: 14, weight: .bold, design: .monospaced))
+                .foregroundStyle(ImageSpaceView.neonHalo)
+            Text(imageName)
+                .font(.system(size: 10))
+                .foregroundStyle(.white.opacity(0.55))
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 5)
+        .background(.black.opacity(0.4), in: RoundedRectangle(cornerRadius: 8))
+    }
+
+    private var legend: some View {
+        HStack(spacing: 11) {
+            HStack(spacing: 5) {
+                Circle()
+                    .stroke(ImageSpaceView.sourceCol.opacity(0.9), lineWidth: 1.2)
+                    .frame(width: 7, height: 7)
+                Text("x").font(.system(size: 10, weight: .bold, design: .monospaced))
+                    .foregroundStyle(ImageSpaceView.sourceCol)
+            }
+            HStack(spacing: 5) {
+                Circle().fill(ImageSpaceView.neonCore)
+                    .frame(width: 6, height: 6)
+                Text("Ax").font(.system(size: 10, weight: .bold, design: .monospaced))
+                    .foregroundStyle(ImageSpaceView.neonHalo)
+            }
+        }
+        .padding(.horizontal, 9)
+        .padding(.vertical, 4)
+        .background(.black.opacity(0.45), in: Capsule())
+    }
+
+    private var zoomSlider: some View {
+        HStack(spacing: 5) {
+            Image(systemName: "minus.magnifyingglass").font(.system(size: 9))
+            Slider(value: $distance, in: 6...24).frame(width: 88)
+            Image(systemName: "plus.magnifyingglass").font(.system(size: 9))
+        }
+        .foregroundStyle(.white.opacity(0.7))
+        .tint(ImageSpaceView.neonHalo)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 2)
+        .background(.black.opacity(0.35), in: Capsule())
+    }
+
+    // MARK: - Morph
+
+    private var morphCard: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 0) {
+                Text("Transformation slider")
+                    .font(.system(size: 9, weight: .bold))
+                    .tracking(0.7)
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Text(morphReadout)
+                    .font(.system(size: 10, weight: .heavy, design: .monospaced))
+                    .foregroundStyle(ImageSpaceView.neonUI)
+            }
+            Slider(value: $morph, in: 0...1).tint(ImageSpaceView.neonUI)
+        }
+        .padding(10)
+        .background(RoundedRectangle(cornerRadius: 13).fill(Color(.secondarySystemGroupedBackground)))
+    }
+
+    private var morphReadout: String {
+        if morph < 0.001 { return "identity" }
+        if morph > 0.999 { return "A applied" }
+        let pct: Int = Int(morph * 100)
+        return "\(pct)%"
+    }
+
+    // MARK: - Matrix + presets
+
+    private var controls: some View {
+        HStack(alignment: .top, spacing: 12) {
+            VStack(spacing: 2) {
+                HStack(spacing: 3) {
+                    ForEach(0..<3, id: \.self) { c in
+                        Text(["e⃗₁", "e⃗₂", "e⃗₃"][c])
+                            .font(.system(size: 9, weight: .bold))
+                            .foregroundStyle([Color.red, .green, .blue][c])
+                            .frame(width: Matrix3DView.cellW)
+                    }
+                }
+                HStack(spacing: 2) {
+                    BracketShape(leading: true)
+                        .stroke(Color.secondary.opacity(0.5), lineWidth: 1.2).frame(width: 5)
+                    VStack(spacing: 3) {
+                        ForEach(0..<3, id: \.self) { r in
+                            HStack(spacing: 3) {
+                                ForEach(0..<3, id: \.self) { c in
+                                    ScrubCell(value: cellBinding(r, c),
+                                              tint: [Color.red, .green, .blue][c])
+                                }
+                            }
+                        }
+                    }
+                    BracketShape(leading: false)
+                        .stroke(Color.secondary.opacity(0.5), lineWidth: 1.2).frame(width: 5)
+                }
+                Text("drag ↔ · double-tap to zero")
+                    .font(.system(size: 8.5))
+                    .foregroundStyle(.tertiary)
+                    .padding(.top, 2)
+            }
+
+            VStack(alignment: .leading, spacing: 0) {
+                Text("EXAMPLES")
+                    .font(.system(size: 9, weight: .bold))
+                    .tracking(0.7)
+                    .foregroundStyle(.secondary)
+                Picker("", selection: $presetIndex) {
+                    ForEach(ImageSpaceView.presets.indices, id: \.self) { i in
+                        Text(ImageSpaceView.presets[i].0)
+                            .font(.system(size: 13, weight: .medium))
+                            .tag(i)
+                    }
+                }
+                .pickerStyle(.wheel)
+                .frame(height: 88)
+                .clipped()
+                .onChange(of: presetIndex) { applyPreset() }
+            }
+            .frame(maxWidth: .infinity)
+        }
+        .padding(10)
+        .background(RoundedRectangle(cornerRadius: 13).fill(Color(.secondarySystemGroupedBackground)))
+    }
+
+    private func cellBinding(_ r: Int, _ c: Int) -> Binding<Double> {
+        Binding(get: { matrix[r, c] },
+                set: { matrix[r, c] = $0; presetIndex = 0 })
+    }
+
+    private func applyPreset() {
+        guard let m = ImageSpaceView.presets[presetIndex].1 else { return }
+        matrix = m
+        morph = 1
+    }
+
+    static let presets: [(String, M3?)] = [
+        ("Custom", nil),
+        ("Identity", M3(c1: V3(1, 0, 0), c2: V3(0, 1, 0), c3: V3(0, 0, 1))),
+        ("Plane · rank 2", M3(c1: V3(1, 0, 0), c2: V3(0, 1, 0), c3: V3(1, 1, 0))),
+        ("Tilted plane", M3(c1: V3(1, 0, 0.5), c2: V3(0, 1, 0.5), c3: V3(1, 1, 1))),
+        ("Projection on xy", M3(c1: V3(1, 0, 0), c2: V3(0, 1, 0), c3: V3(0, 0, 0))),
+        ("Line · rank 1", M3(c1: V3(1, 1, 0.5), c2: V3(2, 2, 1), c3: V3(-1, -1, -0.5))),
+        ("Zero map", M3(c1: .zero, c2: .zero, c3: .zero))
+    ]
+
+    // MARK: - Rendering
+
+    private func render(_ ctx: GraphicsContext, size: CGSize) {
+        let p = Projector(azimuth: azimuth, elevation: elevation, distance: distance, size: size)
+        let A: M3 = live
+
+        drawGrid(ctx, p)
+        drawAxes(ctx, p)
+        drawSpanRegion(ctx, p)
+        drawSourceLattice(ctx, p)
+        drawSourceBox(ctx, p)
+        drawImageBox(ctx, p, A)
+        drawImageLattice(ctx, p, A)
+        drawColumns(ctx, p, A)
+    }
+
+    private func drawGrid(_ ctx: GraphicsContext, _ p: Projector) {
+        var grid = Path()
+        var i: Double = -4
+        while i <= 4 + 1e-6 {
+            if let s = p.segment(V3(i, -4, 0), V3(i, 4, 0)) { grid.move(to: s.0); grid.addLine(to: s.1) }
+            if let s = p.segment(V3(-4, i, 0), V3(4, i, 0)) { grid.move(to: s.0); grid.addLine(to: s.1) }
+            i += 1
+        }
+        ctx.stroke(grid, with: .color(.white.opacity(0.05)), lineWidth: 0.6)
+    }
+
+    private func drawAxes(_ ctx: GraphicsContext, _ p: Projector) {
+        let axes: [(V3, Color)] = [(V3(4, 0, 0), .red), (V3(0, 4, 0), .green), (V3(0, 0, 4), .blue)]
+        for (end, color) in axes {
+            let start: V3 = (-1.0) * end
+            if let s = p.segment(start, end) {
+                var path = Path()
+                path.move(to: s.0); path.addLine(to: s.1)
+                ctx.stroke(path, with: .color(color.opacity(0.20)), lineWidth: 1)
+            }
+        }
+    }
+
+    /// Source points: hollow rings, no glow. They never move.
+    private func drawSourceLattice(_ ctx: GraphicsContext, _ p: Projector) {
+        var rings = Path()
+        for q in ImageSpaceView.lattice {
+            guard let s = p.project(q) else { continue }
+            let d: Double = p.depth(q)
+            let r: CGFloat = d < distance ? 2.6 : 1.9
+            rings.addEllipse(in: CGRect(x: s.x - r, y: s.y - r, width: r * 2, height: r * 2))
+        }
+        ctx.stroke(rings, with: .color(ImageSpaceView.sourceCol.opacity(0.55)), lineWidth: 0.9)
+    }
+
+    /// The canonical box, fixed.
+    private func drawSourceBox(_ ctx: GraphicsContext, _ p: Projector) {
+        var path = Path()
+        for (a, b) in Matrix3DView.cubeEdges {
+            if let s = p.segment(a, b) { path.move(to: s.0); path.addLine(to: s.1) }
+        }
+        ctx.stroke(path, with: .color(ImageSpaceView.sourceCol.opacity(0.5)),
+                   style: StrokeStyle(lineWidth: 1.1, dash: [4, 4]))
+    }
+
+    /// Threads from x to its current position.
+    private func drawTraces(_ ctx: GraphicsContext, _ p: Projector, _ A: M3) {
+        guard morph > 0.01 else { return }
+        var path = Path()
+        for q in ImageSpaceView.traced {
+            let img: V3 = A.apply(q)
+            guard let s = p.segment(q, img) else { continue }
+            path.move(to: s.0)
+            path.addLine(to: s.1)
+        }
+        let alpha: Double = 0.05 + 0.10 * morph
+        ctx.stroke(path, with: .color(ImageSpaceView.neonHalo.opacity(alpha)), lineWidth: 0.7)
+    }
+
+    /// The moving parallelepiped.
+    private func drawImageBox(_ ctx: GraphicsContext, _ p: Projector, _ A: M3) {
+        let light: V3 = V3(0.45, -0.6, 0.85).unit
+        var faces: [(Double, Path, Double)] = []
+
+        for face in Matrix3DView.cubeFaces {
+            let world: [V3] = face.map { A.apply($0) }
+            var screen: [CGPoint] = []
+            var ok = true
+            for w in world {
+                guard let s = p.project(w) else { ok = false; break }
+                screen.append(s)
+            }
+            guard ok, screen.count == 4 else { continue }
+
+            let e1: V3 = world[1] - world[0]
+            let e2: V3 = world[2] - world[0]
+            let n: V3 = e1.cross(e2)
+            let shade: Double = n.norm < 1e-7 ? 0.6 : 0.35 + 0.65 * abs(n.unit.dot(light))
+
+            var path = Path()
+            path.move(to: screen[0])
+            for q in screen.dropFirst() { path.addLine(to: q) }
+            path.closeSubpath()
+
+            let sum: V3 = world[0] + world[1] + world[2] + world[3]
+            let centroid: V3 = 0.25 * sum
+            faces.append((p.depth(centroid), path, shade))
+        }
+
+        for f in faces.sorted(by: { $0.0 > $1.0 }) {
+            ctx.fill(f.1, with: .color(ImageSpaceView.neonHalo.opacity(0.11 * f.2)))
+            ctx.stroke(f.1, with: .color(ImageSpaceView.neonHalo.opacity(0.6)), lineWidth: 1.2)
+        }
+    }
+
+    /// Image points: filled cores plus additive halo, so collisions burn brighter.
+    private func drawImageLattice(_ ctx: GraphicsContext, _ p: Projector, _ A: M3) {
+        var pts: [(CGPoint, Double)] = []
+        pts.reserveCapacity(ImageSpaceView.lattice.count)
+        for q in ImageSpaceView.lattice {
+            let img: V3 = A.apply(q)
+            guard let s = p.project(img) else { continue }
+            pts.append((s, p.depth(img)))
+        }
+        guard !pts.isEmpty else { return }
+
+        pts.sort { $0.1 > $1.1 }
+
+        var g = ctx
+        g.blendMode = .plusLighter
+
+        let bands: Int = 5
+        let per: Int = max(1, pts.count / bands)
+        for band in 0..<bands {
+            let lo: Int = band * per
+            let hi: Int = (band == bands - 1) ? pts.count : min((band + 1) * per, pts.count)
+            guard lo < hi else { continue }
+            let t: Double = Double(band) / Double(max(bands - 1, 1))
+
+            let rHalo: CGFloat = 2.8 + 2.4 * t
+            let rCore: CGFloat = 1.1 + 1.0 * t
+            var halo = Path()
+            var core = Path()
+            for idx in lo..<hi {
+                let q: CGPoint = pts[idx].0
+                halo.addEllipse(in: CGRect(x: q.x - rHalo, y: q.y - rHalo,
+                                           width: rHalo * 2, height: rHalo * 2))
+                core.addEllipse(in: CGRect(x: q.x - rCore, y: q.y - rCore,
+                                           width: rCore * 2, height: rCore * 2))
+            }
+            g.fill(halo, with: .color(ImageSpaceView.neonHalo.opacity(0.05 + 0.09 * t)))
+            g.fill(core, with: .color(ImageSpaceView.neonCore.opacity(0.40 + 0.45 * t)))
+        }
+    }
+
+    /// The target subspace, fading in with the morph.
+    private func drawSpanRegion(_ ctx: GraphicsContext, _ p: Projector) {
+        guard morph > 0.05, rank < 3 else { return }
+        let b: [V3] = imageBasis
+        let fade: Double = morph * morph
+
+        if b.count == 2 {
+            let k: Double = 5.0
+            let u: V3 = k * b[0]
+            let w: V3 = k * b[1]
+            let mu: V3 = (-k) * b[0]
+            let mw: V3 = (-k) * b[1]
+
+            var corners: [V3] = []
+            corners.append(mu + mw)
+            corners.append(u + mw)
+            corners.append(u + w)
+            corners.append(mu + w)
+
+            var pts: [CGPoint] = []
+            for c in corners {
+                guard let s = p.project(c) else { return }
+                pts.append(s)
+            }
+            var path = Path()
+            path.move(to: pts[0])
+            for q in pts.dropFirst() { path.addLine(to: q) }
+            path.closeSubpath()
+            ctx.fill(path, with: .color(ImageSpaceView.neonHalo.opacity(0.06 * fade)))
+            ctx.stroke(path, with: .color(ImageSpaceView.neonHalo.opacity(0.28 * fade)), lineWidth: 1)
+
+        } else if b.count == 1 {
+            let e: V3 = 5.4 * b[0]
+            let s0: V3 = (-1.0) * e
+            guard let s = p.segment(s0, e) else { return }
+            var path = Path()
+            path.move(to: s.0)
+            path.addLine(to: s.1)
+            ctx.stroke(path, with: .color(ImageSpaceView.neonHalo.opacity(0.32 * fade)),
+                       style: StrokeStyle(lineWidth: 2, lineCap: .round))
+        }
+    }
+
+    private func drawColumns(_ ctx: GraphicsContext, _ p: Projector, _ A: M3) {
+        let cols: [(V3, Color, String)] = [
+            (A.c1, .red, "Ae₁"), (A.c2, .green, "Ae₂"), (A.c3, .blue, "Ae₃")
+        ]
+        for (v, color, label) in cols {
+            guard v.norm > 0.02 else { continue }
+            arrow(ctx, p, to: v, color: .black.opacity(0.6), width: 6.5)
+            arrow(ctx, p, to: v, color: color, width: 3)
+            if let tip = p.project(v) {
+                ctx.draw(Text(label).font(.system(size: 12, weight: .bold)).foregroundStyle(color),
+                         at: CGPoint(x: tip.x + 18, y: tip.y - 10))
+            }
+        }
+    }
+
+    private func arrow(_ ctx: GraphicsContext, _ p: Projector, to b: V3, color: Color, width: CGFloat) {
+        guard let s = p.segment(.zero, b) else { return }
+        var line = Path()
+        line.move(to: s.0); line.addLine(to: s.1)
+        ctx.stroke(line, with: .color(color), style: StrokeStyle(lineWidth: width, lineCap: .round))
+
+        let dx: CGFloat = s.1.x - s.0.x
+        let dy: CGFloat = s.1.y - s.0.y
+        guard (dx * dx + dy * dy).squareRoot() > 8 else { return }
+        let ang: CGFloat = atan2(dy, dx)
+        let L: CGFloat = width * 3.0
+        let spread: CGFloat = .pi / 7
+        var head = Path()
+        head.move(to: s.1)
+        head.addLine(to: CGPoint(x: s.1.x - L * cos(ang - spread), y: s.1.y - L * sin(ang - spread)))
+        head.addLine(to: CGPoint(x: s.1.x - L * cos(ang + spread), y: s.1.y - L * sin(ang + spread)))
+        head.closeSubpath()
+        ctx.fill(head, with: .color(color))
+    }
+}
+
+#Preview {
+    ImageSpaceView()
+        .preferredColorScheme(.dark)
+}

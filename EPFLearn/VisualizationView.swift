@@ -26,9 +26,20 @@ struct VisualizationView: View {
         case .taylor:       TaylorView()
         case .convergence:  ConvergenceView()
         case .trigo:
-            TrigoView(mode: .reel)
+            TrigoView()
         case .complexNumbers:
-            TrigoView(mode: .complexe)
+            ComplexeView()
+            
+
+        case .matrixOperations: MatrixOperationsView()
+        case .determinant: DeterminantView()
+        case .vectorSpaces: VectorSpaceView()
+        case .linearTransformations: Matrix3DView()
+        case .gaussianElimination: GaussView()
+        case .ker: ImageSpaceView()
+        case .image: ImageSpaceView()
+           
+                      
 
         case .sorting_zigzag: SortingView(algo: .insertion, shape: .zigzag)
         case .sorting_reverse_merge: SortingView(algo: .merge, shape: .reversed)
@@ -58,17 +69,8 @@ struct VisualizationView: View {
         case .probability: ExpectationView()
         case .expectation: ExpectationView()
         
-        // Linear Algebra visualizations
-        case .matrixOperations: MatrixOperationsView()
-        case .determinant: DeterminantView()
-        case .eigenvalues: EigenvalueVisualView()
-        case .vectorSpaces: VectorSpaceView()
-        case .linearTransformations: LinearTransformVisualView()
-        case .gaussianElimination: GaussianEliminationView()
-        case .gramSchmidt: GramSchmidtView()
-        case .svd: SVDVisualView()
-        case .diagonalization: DiagonalizationView()
-        
+            
+      
         // Programming Basics visualizations
         case .whileLoop: WhileLoopView()
         case .forLoop: ForLoopView()
@@ -100,5 +102,5 @@ struct VisualizationView: View {
 }
 
 #Preview {
-    VisualizationView(type: .search, hint: "Observe la diff entre F et G", hintRevealed: true)
+    VisualizationView(type: .variablesMemory, hint: "Observe la diff entre F et G", hintRevealed: true)
 }

@@ -146,31 +146,36 @@ struct MatrixOperationsView: View {
     
     private var multiplyVisualization: some View {
         VStack(spacing: 16) {
-            HStack(alignment: .center, spacing: 12) {
-                matrixView(rows: aRows, cols: aCols, label: "A", color: .pink)
-                Text("×").font(.title.bold()).foregroundStyle(.secondary)
-                matrixView(rows: bRows, cols: bCols, label: "B", color: .purple)
-                Text("=").font(.title.bold()).foregroundStyle(.secondary)
-                
-                if aCols == bRows {
-                    matrixView(rows: aRows, cols: bCols, label: "C", color: .green)
-                } else {
-                    Text("⚠️").font(.largeTitle)
+            VStack(spacing: 16) {
+                HStack(alignment: .center, spacing: 12) {
+                    matrixView(rows: aRows, cols: aCols, label: "A", color: .pink, highlightFirstRow: true, isValid: aCols == bRows)
+                    Text("×").font(.title.bold()).foregroundStyle(.secondary)
+                    matrixView(rows: bRows, cols: bCols, label: "B", color: .purple, highlightFirstCol: true, isValid: aCols == bRows)
+                    Text("=").font(.title.bold()).foregroundStyle(.secondary)
+                    
+                    if aCols == bRows {
+                        matrixView(rows: aRows, cols: bCols, label: "C", color: .green)
+                    } else {
+                        Text("⚠️").font(.largeTitle)
+                    }
                 }
-            }
-            
-            if aCols == bRows {
-                Text("✓ Compatible: Result is \(aRows)×\(bCols) matrix")
-                    .font(.caption)
-                    .foregroundStyle(.green)
-                    .padding(8)
-                    .background(RoundedRectangle(cornerRadius: 8).fill(Color.green.opacity(0.12)))
-            } else {
-                Text("✗ Incompatible: Columns of A (\(aCols)) ≠ Rows of B (\(bRows))")
-                    .font(.caption)
-                    .foregroundStyle(.red)
-                    .padding(8)
-                    .background(RoundedRectangle(cornerRadius: 8).fill(Color.red.opacity(0.12)))
+                
+                Group {
+                    if aCols == bRows {
+                        Text("✓ Compatible: Result is \(aRows)×\(bCols) matrix")
+                            .font(.caption)
+                            .foregroundStyle(.green)
+                            .padding(8)
+                            .background(RoundedRectangle(cornerRadius: 8).fill(Color.green.opacity(0.12)))
+                    } else {
+                        Text("✗ Incompatible: Columns of A (\(aCols)) ≠ Rows of B (\(bRows))")
+                            .font(.caption)
+                            .foregroundStyle(.red)
+                            .padding(8)
+                            .background(RoundedRectangle(cornerRadius: 8).fill(Color.red.opacity(0.12)))
+                    }
+                }
+                .frame(height: 32)
             }
             
             Text("Rule: (m×n) × (n×p) = (m×p)")
@@ -183,31 +188,36 @@ struct MatrixOperationsView: View {
     
     private var addVisualization: some View {
         VStack(spacing: 16) {
-            HStack(alignment: .center, spacing: 12) {
-                matrixView(rows: aRows, cols: aCols, label: "A", color: .pink)
-                Text("+").font(.title.bold()).foregroundStyle(.secondary)
-                matrixView(rows: bRows, cols: bCols, label: "B", color: .purple)
-                Text("=").font(.title.bold()).foregroundStyle(.secondary)
-                
-                if aRows == bRows && aCols == bCols {
-                    matrixView(rows: aRows, cols: aCols, label: "C", color: .green)
-                } else {
-                    Text("⚠️").font(.largeTitle)
+            VStack(spacing: 16) {
+                HStack(alignment: .center, spacing: 12) {
+                    matrixView(rows: aRows, cols: aCols, label: "A", color: .pink)
+                    Text("+").font(.title.bold()).foregroundStyle(.secondary)
+                    matrixView(rows: bRows, cols: bCols, label: "B", color: .purple)
+                    Text("=").font(.title.bold()).foregroundStyle(.secondary)
+                    
+                    if aRows == bRows && aCols == bCols {
+                        matrixView(rows: aRows, cols: aCols, label: "C", color: .green)
+                    } else {
+                        Text("⚠️").font(.largeTitle)
+                    }
                 }
-            }
-            
-            if aRows == bRows && aCols == bCols {
-                Text("✓ Compatible: Both matrices are \(aRows)×\(aCols)")
-                    .font(.caption)
-                    .foregroundStyle(.green)
-                    .padding(8)
-                    .background(RoundedRectangle(cornerRadius: 8).fill(Color.green.opacity(0.12)))
-            } else {
-                Text("✗ Incompatible: Matrices must have same dimensions")
-                    .font(.caption)
-                    .foregroundStyle(.red)
-                    .padding(8)
-                    .background(RoundedRectangle(cornerRadius: 8).fill(Color.red.opacity(0.12)))
+                
+                Group {
+                    if aRows == bRows && aCols == bCols {
+                        Text("✓ Compatible: Both matrices are \(aRows)×\(aCols)")
+                            .font(.caption)
+                            .foregroundStyle(.green)
+                            .padding(8)
+                            .background(RoundedRectangle(cornerRadius: 8).fill(Color.green.opacity(0.12)))
+                    } else {
+                        Text("✗ Incompatible: Matrices must have same dimensions")
+                            .font(.caption)
+                            .foregroundStyle(.red)
+                            .padding(8)
+                            .background(RoundedRectangle(cornerRadius: 8).fill(Color.red.opacity(0.12)))
+                    }
+                }
+                .frame(height: 32)
             }
             
             Text("Rule: Can only add matrices of identical size")
@@ -265,19 +275,24 @@ struct MatrixOperationsView: View {
         .background(RoundedRectangle(cornerRadius: 16).fill(Color(.secondarySystemGroupedBackground)))
     }
     
-    private func matrixView(rows: Int, cols: Int, label: String, color: Color) -> some View {
+    private func matrixView(rows: Int, cols: Int, label: String, color: Color, highlightFirstRow: Bool = false, highlightFirstCol: Bool = false, isValid: Bool = true) -> some View {
         VStack(spacing: 4) {
             Text(label)
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(color)
             
             VStack(spacing: 2) {
-                ForEach(0..<rows, id: \.self) { _ in
+                ForEach(0..<rows, id: \.self) { row in
                     HStack(spacing: 2) {
-                        ForEach(0..<cols, id: \.self) { _ in
+                        ForEach(0..<cols, id: \.self) { col in
+                            let isHighlighted = (highlightFirstRow && row == 0) || (highlightFirstCol && col == 0)
                             RoundedRectangle(cornerRadius: 3)
-                                .fill(color.opacity(0.3))
+                                .fill(isHighlighted ? (isValid ? color : color.opacity(0.5)) : color.opacity(0.3))
                                 .frame(width: 20, height: 20)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 3)
+                                        .strokeBorder(isHighlighted ? (isValid ? Color.orange : Color.gray.opacity(0.4)) : Color.clear, lineWidth: isHighlighted ? 2 : 0)
+                                )
                         }
                     }
                 }
@@ -299,4 +314,5 @@ struct MatrixOperationsView: View {
 
 #Preview {
     MatrixOperationsView()
+        .preferredColorScheme(.dark)
 }
