@@ -60,7 +60,7 @@ struct CategoryStat: Identifiable {
 struct StatisticsView: View {
     @Binding var scores: [ResultQCM]
 
-    private let allSubjects: [Subject] = [.analysis, .graphs, .arrays, .discreteMaths, .linearAlgebra]
+    private let allSubjects: [Subject] = [.analysis, .linearAlgebra, .discreteMaths, .programmingBasics, .arrays, .graphs]
 
     // Single source of truth: summed correct answers ÷ summed questions
     private func correctRate(for category: Subject) -> Double {
@@ -90,7 +90,7 @@ struct StatisticsView: View {
         NavigationStack {
             List {
                 if !categoryStats.isEmpty {
-                    Section("Success by topic") {
+                    Section("Success rate by topic") {
                         ForEach(categoryStats) { stat in
                             HStack(spacing: 16) {
                                 SubjectRing(subject: stat.subject, rate: stat.rate)

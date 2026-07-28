@@ -127,17 +127,17 @@ extension Question {
     static let bitwiseQuestions: [Question] = [
     Question(
         subject: .programmingBasics,
-        text: "In Java, what is the result of 12 & 5 (bitwise AND)?",
-        hint: "Convert to binary: 12 = 1100, 5 = 0101. AND requires both bits to be 1",
-        options: ["4", "13", "17", "8"],
+        text: "In java, how can we effectively set to 0 eight consecutive bits within an int value (32 bits) starting with an offset of k (from the LSB) ?",
+        hint: "How do we force bits to 0 ? Which operator do we use ?",
+        options: ["int res = a & (~(0xFF << k))", "int res = a & (0xFFFF0000 >> k)", "int res = a & ((0xF >> k) & (0xF >> (k+1))) ", "int res = a & (1 - (2 <<k)) "],
         correctIndex: 0,
-        explanation: "1100 & 0101 = 0100 (binary) = 4 (decimal). AND operation: 1&1=1, 1&0=0, 0&1=0, 0&0=0",
+        explanation: "first option applies a mask with a number that has ones everywhere except 8 zeros at the desired positions" ,
         visualization: .bitwiseOperations
     ),
     Question(
         subject: .programmingBasics,
         text: "What does the left shift operator (<<) do in Java?",
-        hint: "Think about multiplying by powers of 2",
+        hint: "Think about the positional importance of a bit",
         options: [
             "Divides by 2",
             "Multiplies by 2 for each position",
@@ -150,11 +150,26 @@ extension Question {
     ),
     Question(
         subject: .programmingBasics,
-        text: "In Java, what is the result of 12 | 5 (bitwise OR)?",
-        hint: "Convert to binary: 12 = 1100, 5 = 0101. OR requires at least one bit to be 1",
-        options: ["13", "17", "4", "8"],
+        text: "What is the result of the following code: int res = a & ~(a ^ a)",
+        hint: "Decompose the expression and finish by applying the & operator",
+        options: [
+            "res = a >> 1",
+            "res = ~a ",
+            "res = a ",
+            "res = a & 0xFF"
+        ],
+        correctIndex: 1,
+        explanation: "a ^ a = 0 and therefore the ~ creates a number that has only 1's, which is the identity mask for \"&\"",
+        visualization: .bitwiseOperations
+    ),
+    
+    Question(
+        subject: .programmingBasics,
+        text: "In Java, what line of code works for changing the bit from 0 to 1 or vice-versa at position k in variable a?",
+        hint: "Try a certain b that does the job in the playground, how can we describe b?",
+        options: ["int res = a^(1 << k)", "int res = a|(1 << k)", "int res = a & (-1 >> k)", "int res = ~a && (1 << k)"],
         correctIndex: 0,
-        explanation: "1100 | 0101 = 1101 (binary) = 13 (decimal). OR operation: 1|1=1, 1|0=1, 0|1=1, 0|0=0",
+        explanation: "Xor (^) is the right operator as if we already have a zero or 1 at a certain position, that bit is not flipped, otherwise it is.",
         visualization: .bitwiseOperations
     ),
 ]

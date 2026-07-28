@@ -73,7 +73,9 @@ enum MST {
             if seen.contains(key) { continue }
             seen.insert(key)
             let a = pos[e.from], b = pos[e.to]
-            let w = max(1, Int((hypot(a.x - b.x, a.y - b.y) / 38).rounded()))
+            let dist = hypot(a.x - b.x, a.y - b.y)
+            let weight = (dist / 38).rounded()
+            let w = weight.isFinite ? max(1, Int(weight)) : 1
             edges.append(STEdge(u: e.from, v: e.to, a: a, b: b, w: w))
         }
         return (pos, edges)
@@ -269,11 +271,22 @@ struct SpanningTreeLab: View {
                                     frame: f, canvasSize: proxy.size)
                     }
                 }
+                .onChange(of: proxy.size) { newSize in
+                    // Éviter les re-générations infinies : seulement si le size change significativement
+                    let changed = abs(size.width - newSize.width) > 1 || abs(size.height - newSize.height) > 1
+                    if changed && newSize.width > 0 && newSize.height > 0 {
+                        size = newSize
+                        generate()
+                    }
+                }
                 .onAppear {
-                    size = proxy.size
-                    if positions.isEmpty { generate() }
+                    if proxy.size.width > 0 && proxy.size.height > 0 {
+                        size = proxy.size
+                        generate()
+                    }
                 }
             }
+            .frame(height: 300)  // ← HAUTEUR FIXE
             .clipShape(RoundedRectangle(cornerRadius: 16))
             .overlay(RoundedRectangle(cornerRadius: 16).stroke(.white.opacity(0.1)))
 
@@ -357,7 +370,7 @@ struct SpanningTreeLab: View {
     }
 
     private func generate() {
-        guard size.width > 0 else { return }
+        guard size.width > 0 && size.height > 0 else { return }
         let g = MST.build(n: n, connected: connected, in: CGRect(origin: .zero, size: size))
         positions = g.pos
         edges = g.edges

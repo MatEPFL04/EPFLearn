@@ -67,12 +67,12 @@ struct QuizView: View {
                     }
                     
                     
-                    CategoryCard(title: "Searching & Sorting", subtitle: "Algorithms, reasoning on inputs", icon: "arrow.up.and.down.and.sparkles", color: .orange) {
+                    CategoryCard(title: "Searching & Sorting (Advanced)", subtitle: "Algorithms, reasoning on inputs", icon: "arrow.up.and.down.and.sparkles", color: .orange) {
                         startQuiz(index: 1)
                     }
           
                    
-                    CategoryCard(title: "Graphs", subtitle: "Visualizing and understanding graphs", icon: "waveform.path", color: .purple) {
+                    CategoryCard(title: "Graphs (Advanced)", subtitle: "Visualizing and understanding graphs", icon: "waveform.path", color: .purple) {
                         startQuiz(index: 2)
                     }
                     

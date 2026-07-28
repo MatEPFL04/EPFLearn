@@ -67,17 +67,64 @@ enum Graph {
                                 xRange: ClosedRange<CGFloat>,
                                 yRange: ClosedRange<CGFloat>) -> [CGPoint] {
         guard count > 0 else { return [] }
-        let w = xRange.upperBound - xRange.lowerBound
-        let h = yRange.upperBound - yRange.lowerBound
+        
+        // Protection contre les ranges invalides
+        guard xRange.lowerBound <= xRange.upperBound,
+              yRange.lowerBound <= yRange.upperBound,
+              xRange.lowerBound.isFinite, xRange.upperBound.isFinite,
+              yRange.lowerBound.isFinite, yRange.upperBound.isFinite else {
+            // Ranges invalides → grille simple centrée autour de (100, 100)
+            let side = sqrt(Double(count)).rounded(.up)
+            let spacing: CGFloat = 40
+            var pts: [CGPoint] = []
+            for i in 0..<count {
+                let row = Int(i) / Int(side)
+                let col = Int(i) % Int(side)
+                pts.append(CGPoint(x: 100 + CGFloat(col) * spacing,
+                                   y: 100 + CGFloat(row) * spacing))
+            }
+            pts.shuffle()
+            return pts
+        }
+        
+        let w = max(xRange.upperBound - xRange.lowerBound, 1)
+        let h = max(yRange.upperBound - yRange.lowerBound, 1)
 
         // Cols proportionnels au ratio largeur/hauteur -> cellules quasi carrées.
-        let aspect = Double(max(w, 1) / max(h, 1))
-        var cols = max(1, Int((Double(count) * aspect).squareRoot().rounded()))
-        cols = min(cols, count)
-        let rows = Int(ceil(Double(count) / Double(cols)))
+        let aspect = Double(w / h)
+        var cols: Int
+        var rows: Int
+        
+        if aspect.isFinite && aspect > 0 {
+            let colsCalc = (Double(count) * aspect).squareRoot().rounded()
+            cols = colsCalc.isFinite ? max(1, Int(colsCalc)) : max(1, Int(sqrt(Double(count))))
+            cols = min(cols, count)
+            rows = Int(ceil(Double(count) / Double(cols)))
+        } else {
+            // Fallback : grille carrée
+            cols = max(1, Int(ceil(sqrt(Double(count)))))
+            rows = cols
+        }
 
         let cw = w / CGFloat(cols)
         let ch = h / CGFloat(rows)
+        
+        // Protection finale contre les NaN dans les cellules
+        guard cw.isFinite && ch.isFinite && cw > 0 && ch > 0 else {
+            // Dernière ligne de défense : grille uniforme simple
+            let side = sqrt(Double(count)).rounded(.up)
+            let stepX = w / max(1, CGFloat(side))
+            let stepY = h / max(1, CGFloat(side))
+            var pts: [CGPoint] = []
+            for i in 0..<count {
+                let row = CGFloat(i) / CGFloat(side)
+                let col = CGFloat(i).truncatingRemainder(dividingBy: CGFloat(side))
+                pts.append(CGPoint(x: xRange.lowerBound + col * stepX + stepX / 2,
+                                   y: yRange.lowerBound + row * stepY + stepY / 2))
+            }
+            pts.shuffle()
+            return pts
+        }
 
         // Jitter centre +/-j : deux cellules adjacentes restent separees d'au
         // moins (1 - 2j)*taille_cellule. j = 0.22 -> garde du desordre visuel
@@ -88,8 +135,12 @@ enum Graph {
         var cells: [CGPoint] = []
         for r in 0..<rows {
             for c in 0..<cols {
-                cells.append(CGPoint(x: xRange.lowerBound + (CGFloat(c) + jitter()) * cw,
-                                     y: yRange.lowerBound + (CGFloat(r) + jitter()) * ch))
+                let x = xRange.lowerBound + (CGFloat(c) + jitter()) * cw
+                let y = yRange.lowerBound + (CGFloat(r) + jitter()) * ch
+                // Vérification finale avant d'ajouter le point
+                if x.isFinite && y.isFinite {
+                    cells.append(CGPoint(x: x, y: y))
+                }
             }
         }
         cells.shuffle()
@@ -100,7 +151,7 @@ enum Graph {
     static func generate(n: Int, extra: Int, connected: Bool = true,
                          in rect: CGRect) -> (vertices: [Vertex], edges: [Edge]) {
         let pad: CGFloat = 24
-        let yRange = (rect.minY + pad)...(rect.maxY - pad)
+        let yRange = (rect.minY + pad)...(rect.maxY + pad)
 
         var pts: [CGPoint]
         var edges: [Edge] = []
@@ -121,8 +172,15 @@ enum Graph {
             // Deux groupes : [0, split) à gauche, [split, n) à droite.
             let split = max(1, n / 2)
             let mid = rect.midX
-            let left  = scatter(split,     xRange: (rect.minX + pad)...(mid - pad), yRange: yRange)
-            let right = scatter(n - split, xRange: (mid + pad)...(rect.maxX - pad), yRange: yRange)
+            
+            // S'assurer que les ranges sont valides (lowerBound < upperBound)
+            let leftMin = rect.minX + pad
+            let leftMax = max(leftMin + 1, mid - pad)
+            let rightMin = max(leftMax + 1, mid + pad)
+            let rightMax = max(rightMin + 1, rect.maxX - pad)
+            
+            let left  = scatter(split,     xRange: leftMin...leftMax, yRange: yRange)
+            let right = scatter(n - split, xRange: rightMin...rightMax, yRange: yRange)
             pts = left + right
 
             func buildTree(_ range: Range<Int>) {

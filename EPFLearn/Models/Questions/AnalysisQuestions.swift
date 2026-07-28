@@ -175,6 +175,66 @@ extension Question {
             visualization: .darboux
         ),
     ]
+    
+    static let bijectivityQuestions: [Question] = [
+        Question(
+            subject: .analysis,
+            text: "Let f: ℝ → ℝ be defined by f(x) = x². Why is this function neither injective nor surjective?",
+            hint: "Find two preimages for the same positive number, and check if negative numbers have preimages.",
+            options: [
+                "Because f(-2) = f(2) = 4 (not injective) and no negative real number has a preimage (not surjective)",
+                "Because it does not pass through the origin of the coordinate system",
+                "Because its derivative is zero at zero",
+                "Because it is continuous on its domain"
+            ],
+            correctIndex: 0,
+            explanation: "A function is injective if each image has at most one preimage. Here f(-2) = f(2), so it is not injective. It is surjective if each element in the codomain has at least one preimage. However, a square is always positive, so negative numbers have no preimage.",
+            visualization: .bijectivity
+        ),
+        Question(
+            subject: .analysis,
+            text: "If we restrict the domain and codomain of f(x) = x² to obtain g: ℝ⁺ → ℝ⁺, what does the function become?",
+            hint: "Think about the square root function on this interval.",
+            options: [
+                "It remains neither injective nor surjective",
+                "It becomes bijective",
+                "It becomes injective but remains non-surjective",
+                "It becomes surjective but remains non-injective"
+            ],
+            correctIndex: 1,
+            explanation: "By restricting the domain to ℝ⁺, distinct elements have distinct squares (injectivity). By restricting the codomain to ℝ⁺, every positive number has a real square root (surjectivity). The function has an inverse, so it is bijective.",
+            visualization: .bijectivity
+        ),
+        Question(
+            subject: .analysis,
+            text: "A function f: A → B is said to be injective if and only if:",
+            hint: "Translate mathematically the fact that two distinct elements in the domain cannot have the same image.",
+            options: [
+                "For every y in B, there exists a unique x in A such that f(x) = y",
+                "For all x₁ and x₂ in A, f(x₁) = f(x₂) implies x₁ = x₂",
+                "For every y in B, there exists at least one x in A such that f(x) = y",
+                "For every x in A, f(x) is unique"
+            ],
+            correctIndex: 1,
+            explanation: "The logical definition of injectivity is: ∀(x₁, x₂) ∈ A², f(x₁) = f(x₂) ⇒ x₁ = x₂. Another equivalent formulation by contraposition is: if x₁ ≠ x₂, then f(x₁) ≠ f(x₂).",
+            visualization: .bijectivity
+        ),
+        Question(
+            subject: .analysis,
+            text: "Let f: ℝ → ℝ be a continuous and strictly increasing function. What can be stated with certainty?",
+            hint: "Can a strictly monotonic function pass through the same value twice?",
+            options: [
+                "It is injective but not surjective",
+                "It is exclusively surjective",
+                "It is bijective from ℝ to its image f(ℝ)",
+                "It cannot be modeled continuously"
+            ],
+            correctIndex: 2,
+            explanation: "Strict monotonicity guarantees injectivity (f(x₁) ≠ f(x₂) as soon as x₁ ≠ x₂). Without knowing the limits at infinity, we do not know if f(ℝ) covers all of ℝ, but f is necessarily a bijection from ℝ to its image set f(ℝ).",
+            visualization: .bijectivity
+        )
+    ]
+
 
     // MARK: - Derivative
     static let derivativeQuestions: [Question] = [

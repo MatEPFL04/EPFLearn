@@ -24,7 +24,7 @@ struct VennDiagramView: View {
         var caption: String {
             switch self {
             case .a, .b:
-                return "The whole set. Drag to explore."
+                return "The whole set. Drag to move, drag the knob to resize."
             case .unionAB:
                 return "In A or B (union)"
             case .interAB:
@@ -57,9 +57,11 @@ struct VennDiagramView: View {
     @State private var cA = CGPoint(x: 125, y: 150)
     @State private var cB = CGPoint(x: 195, y: 150)
     @State private var cC = CGPoint(x: 160, y: 205)
+    @State private var rA: CGFloat = 72
+    @State private var rB: CGFloat = 72
+    @State private var rC: CGFloat = 72
 
     let board: CGFloat = 320
-    let radius: CGFloat = 72
     let fill = Color.blue.opacity(0.45)
 
     private var regions: [Region] {
@@ -80,14 +82,15 @@ struct VennDiagramView: View {
                 ZStack {
                     Canvas { ctx, size in draw(&ctx, size) }
 
-                    DraggableDisc(radius: radius, board: board, center: $cA)
-                    DraggableDisc(radius: radius, board: board, center: $cB)
+                    DraggableDisc(board: board, knobAngle: .pi, center: $cA, radius: $rA)
+                    DraggableDisc(board: board, knobAngle: 0, center: $cB, radius: $rB)
                     if threeSets {
-                        DraggableDisc(radius: radius, board: board, center: $cC)
+                        DraggableDisc(board: board, knobAngle: .pi / 2, center: $cC, radius: $rC)
                     }
                 }
                 .frame(width: board, height: board)
-                .background(Color.white)
+                .coordinateSpace(name: "venn")
+                .background(Color(.secondarySystemGroupedBackground))
                 .clipShape(RoundedRectangle(cornerRadius: 12))
                 .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.gray.opacity(0.2)))
 
@@ -106,12 +109,12 @@ struct VennDiagramView: View {
         }
     }
 
-    private func disc(_ c: CGPoint) -> Path {
-        Path(ellipseIn: CGRect(x: c.x - radius, y: c.y - radius, width: 2*radius, height: 2*radius))
+    private func disc(_ c: CGPoint, _ r: CGFloat) -> Path {
+        Path(ellipseIn: CGRect(x: c.x - r, y: c.y - r, width: 2*r, height: 2*r))
     }
 
     private func draw(_ ctx: inout GraphicsContext, _ size: CGSize) {
-        let a = disc(cA), b = disc(cB), c = disc(cC)
+        let a = disc(cA, rA), b = disc(cB, rB), c = disc(cC, rC)
         let universe = Path(CGRect(x: 0, y: 0, width: size.width, height: size.height))
         // --- Remplissage de la région choisie (opacité uniforme) ---
         switch region {
@@ -167,43 +170,70 @@ struct VennDiagramView: View {
 
         // --- Étiquettes ---
         ctx.draw(Text("A").font(.headline).foregroundColor(.blue),
-                 at: CGPoint(x: cA.x - radius * 0.55, y: cA.y - radius * 0.55))
+                 at: CGPoint(x: cA.x - rA * 0.55, y: cA.y - rA * 0.55))
         ctx.draw(Text("B").font(.headline).foregroundColor(.blue),
-                 at: CGPoint(x: cB.x + radius * 0.55, y: cB.y - radius * 0.55))
+                 at: CGPoint(x: cB.x + rB * 0.55, y: cB.y - rB * 0.55))
         if threeSets {
             ctx.draw(Text("C").font(.headline).foregroundColor(.blue),
-                     at: CGPoint(x: cC.x, y: cC.y + radius * 0.6))
+                     at: CGPoint(x: cC.x, y: cC.y + rC * 0.6))
         }
         ctx.draw(Text("Ω").font(.caption).foregroundColor(.gray),
                  at: CGPoint(x: size.width - 22, y: 22))
     }
 }
 
-// Cercle transparent déplaçable au doigt, borné au plateau.
+// Cercle transparent déplaçable au doigt, borné au plateau,
+// avec une poignée sur le bord pour changer son rayon.
 struct DraggableDisc: View {
-    let radius: CGFloat
     let board: CGFloat
+    let knobAngle: Double
     @Binding var center: CGPoint
+    @Binding var radius: CGFloat
     @State private var start: CGPoint? = nil
 
+    private var knob: CGPoint {
+        CGPoint(x: center.x + radius * cos(knobAngle),
+                y: center.y + radius * sin(knobAngle))
+    }
+
     var body: some View {
-        Circle()
-            .fill(Color.white.opacity(0.001))
-            .frame(width: radius * 2, height: radius * 2)
-            .contentShape(Circle())
-            .position(center)
-            .gesture(
-                DragGesture()
-                    .onChanged { v in
-                        let base = start ?? center
-                        if start == nil { start = center }
-                        center = CGPoint(
-                            x: min(max(base.x + v.translation.width, radius), board - radius),
-                            y: min(max(base.y + v.translation.height, radius), board - radius)
-                        )
-                    }
-                    .onEnded { _ in start = nil }
-            )
+        ZStack {
+            Circle()
+                .fill(Color.white.opacity(0.001))
+                .frame(width: radius * 2, height: radius * 2)
+                .contentShape(Circle())
+                .position(center)
+                .gesture(
+                    DragGesture()
+                        .onChanged { v in
+                            let base = start ?? center
+                            if start == nil { start = center }
+                            center = CGPoint(x: base.x + v.translation.width,
+                                             y: base.y + v.translation.height)
+                            clamp()
+                        }
+                        .onEnded { _ in start = nil }
+                )
+
+            Circle()
+                .fill(Color.blue)
+                .overlay(Circle().strokeBorder(.white.opacity(0.7), lineWidth: 1.5))
+                .frame(width: 10, height: 10)
+                .position(knob)
+                .gesture(
+                    DragGesture(coordinateSpace: .named("venn"))
+                        .onChanged { v in
+                            let d = hypot(v.location.x - center.x, v.location.y - center.y)
+                            radius = min(max(d, 24), board / 2 - 4)
+                            clamp()
+                        }
+                )
+        }
+    }
+
+    private func clamp() {
+        center.x = min(max(center.x, radius), board - radius)
+        center.y = min(max(center.y, radius), board - radius)
     }
 }
 

@@ -4,9 +4,9 @@
 //
 //  Created on 20.07.2026.
 //
-
+ 
 import SwiftUI
-
+ 
 /// Interactive view demonstrating combinatorics concepts (permutations and combinations)
 struct CombinatoricsView: View {
     @State private var n: Int = 4
@@ -266,7 +266,7 @@ struct CombinatoricsView: View {
         return (1...n).reduce(1, *)
     }
 }
-
+ 
 #Preview {
     CombinatoricsView()
 }

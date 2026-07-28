@@ -2,197 +2,163 @@
 //  ForLoopView.swift
 //  EPFLearn
 //
-//  Created on 22.07.2026.
+//  One idea: watch the loop's variables change on every executed line.
+//  init sets i, the condition is checked each pass, the body updates sum,
+//  and i += 2 advances - the two boxes tell the whole story.
 //
 
 import SwiftUI
+import Combine
 
 struct ForLoopView: View {
-    @State private var currentStep = 0
-    @State private var currentLine = 0
-    @State private var i = 0
-    @State private var sum = 0
-    @State private var maxValue: Double = 5
-    
-    private var totalSteps: Int {
-        Int(maxValue) * 2 + 2  // init + (check + add) * n + end
+    @State private var step = 0
+    @State private var playing = false
+    private let timer = Timer.publish(every: 0.7, on: .main, in: .common).autoconnect()
+
+    private let code = [
+        "int sum = 0;",
+        "for (int i = 1; i <= 5; i += 2) {",
+        "    sum += i;",
+        "}",
+        "print(sum);"
+    ]
+
+    private struct Frame {
+        let line: Int
+        let i: Int?
+        let sum: Int?
+        let cond: Bool?
+        let bodyHot: Bool
+        let note: String?
     }
-    
+
+    private let frames: [Frame] = [
+        Frame(line: -1, i: nil, sum: nil, cond: nil,  bodyHot: false, note: nil),
+        Frame(line: 0,  i: nil, sum: 0,   cond: nil,  bodyHot: false, note: "sum starts at 0"),
+        Frame(line: 1,  i: 1,   sum: 0,   cond: true, bodyHot: false, note: "i = 1, check 1 <= 5"),
+        Frame(line: 2,  i: 1,   sum: 1,   cond: nil,  bodyHot: true,  note: "sum += 1  ->  1"),
+        Frame(line: 1,  i: 3,   sum: 1,   cond: true, bodyHot: false, note: "i += 2 -> 3, check 3 <= 5"),
+        Frame(line: 2,  i: 3,   sum: 4,   cond: nil,  bodyHot: true,  note: "sum += 3  ->  4"),
+        Frame(line: 1,  i: 5,   sum: 4,   cond: true, bodyHot: false, note: "i += 2 -> 5, check 5 <= 5"),
+        Frame(line: 2,  i: 5,   sum: 9,   cond: nil,  bodyHot: true,  note: "sum += 5  ->  9"),
+        Frame(line: 1,  i: 7,   sum: 9,   cond: false,bodyHot: false, note: "i += 2 -> 7, check 7 <= 5: exit"),
+        Frame(line: 4,  i: 7,   sum: 9,   cond: nil,  bodyHot: false, note: "print(sum) -> 9")
+    ]
+
+    private var total: Int { frames.count - 1 }
+    private var fr: Frame { frames[min(step, total)] }
+
+    // Completed iterations, for the history strip.
+    private let iters: [(i: Int, sum: Int)] = [(1, 1), (3, 4), (5, 9)]
+    private var bodiesDone: Int { [3, 5, 7].filter { $0 <= step }.count }
+
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                Text("For Loop").font(.largeTitle.bold())
-                
-                controlsSection
-                codeVisualization
-                variablesSection
-                arrayVisualization
+            VStack(alignment: .leading, spacing: 10) {
+                PBHeader("For Loop")
+
+                PBAdaptive {
+                    stage
+                } code: {
+                    PBCodePane(lines: paneLines, current: fr.line, accent: .green)
+                        .pbViewport()
+                }
+
+                PBStepper(step: $step, total: total, accent: .green, playing: $playing)
             }
-            .padding(20)
+            .padding(14)
         }
         .background(Color(.systemGroupedBackground))
-    }
-    
-    private var controlsSection: some View {
-        VStack(spacing: 12) {
-            HStack {
-                Text("Step \(currentStep) / \(totalSteps)")
-                    .font(.headline)
-                Spacer()
-                Button {
-                    currentStep = 0
-                    updateState()
-                } label: {
-                    Label("Reset", systemImage: "arrow.counterclockwise")
-                }
-                .buttonStyle(.bordered)
-                .tint(.blue)
-            }
-            
-            Slider(value: Binding(
-                get: { Double(currentStep) },
-                set: { currentStep = Int($0) }
-            ), in: 0...Double(totalSteps), step: 1)
-            .onChange(of: currentStep) { _ in
-                updateState()
-            }
-            
-            HStack {
-                Text("Start")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                Spacer()
-                Text("End")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-        }
-        .padding()
-        .background(RoundedRectangle(cornerRadius: 12).fill(Color(.secondarySystemGroupedBackground)))
-    }
-    
-    private var codeVisualization: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            let codeLines = [
-                "int sum = 0;",
-                "for (int i = 0; i < \(Int(maxValue)); i++) {",
-                "    sum += i;",
-                "    System.out.println(\"sum = \" + sum);",
-                "}"
-            ]
-            
-            VStack(alignment: .leading, spacing: 4) {
-                ForEach(Array(codeLines.enumerated()), id: \.offset) { index, line in
-                    HStack(spacing: 12) {
-                        Text("\(index + 1)")
-                            .font(.system(.caption, design: .monospaced))
-                            .foregroundStyle(.secondary)
-                            .frame(width: 20)
-                        
-                        Text(line)
-                            .font(.system(.callout, design: .monospaced))
-                            .foregroundStyle(currentLine == index ? .white : .primary)
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(
-                        RoundedRectangle(cornerRadius: 6)
-                            .fill(currentLine == index ? Color.green : Color.clear)
-                    )
-                }
-            }
-            .padding()
-            .background(RoundedRectangle(cornerRadius: 12).fill(Color(.secondarySystemGroupedBackground)))
+        .onReceive(timer) { _ in
+            guard playing else { return }
+            if step < total { withAnimation(.spring(duration: 0.3)) { step += 1 } }
+            else { playing = false }
         }
     }
-    
-    private var variablesSection: some View {
-        HStack(spacing: 12) {
-            VStack(spacing: 8) {
-                Text("i")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                Text("\(i)")
-                    .font(.system(size: 44, weight: .bold, design: .rounded))
-                    .foregroundStyle(.blue)
-                    .contentTransition(.numericText())
+
+    private var paneLines: [PBCodePane.Line] {
+        code.indices.map { idx in
+            var l = PBCodePane.Line(code: code[idx])
+            if idx == 1, let c = fr.cond {
+                l.badge = PBBadge(text: c ? "true" : "false", color: c ? .green : .pink)
             }
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background(RoundedRectangle(cornerRadius: 12).fill(Color.blue.opacity(0.1)))
-            
-            VStack(spacing: 8) {
-                Text("sum")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                Text("\(sum)")
-                    .font(.system(size: 44, weight: .bold, design: .rounded))
-                    .foregroundStyle(.green)
-                    .contentTransition(.numericText())
-            }
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background(RoundedRectangle(cornerRadius: 12).fill(Color.green.opacity(0.1)))
+            return l
         }
     }
-    
-    private var arrayVisualization: some View {
-        VStack(alignment: .leading, spacing: 12) {
+
+    // MARK: - Stage: displayed variables
+
+    private var stage: some View {
+        VStack(spacing: 18) {
+            HStack(spacing: 16) {
+                varBox(name: "i", value: fr.i, color: .cyan,
+                       hot: fr.line == 1)
+                varBox(name: "sum", value: fr.sum, color: .green,
+                       hot: fr.bodyHot)
+            }
+
+            history
+        }
+        .padding(20)
+        .frame(minHeight: 210, alignment: .top)
+        .pbViewport()
+        .overlay(alignment: .bottomLeading) {
+            if let note = fr.note { PBNote(text: note).padding(9) }
+        }
+        .animation(.spring(duration: 0.3), value: step)
+    }
+
+    private func varBox(name: String, value: Int?, color: Color, hot: Bool) -> some View {
+        VStack(spacing: 6) {
+            Text(name)
+                .font(.system(size: 12, weight: .bold, design: .monospaced))
+                .foregroundColor(color)
+            Text(value.map(String.init) ?? "·")
+                .font(.system(size: 40, weight: .black, design: .monospaced))
+                .foregroundColor(value == nil ? .white.opacity(0.2) : .white)
+                .contentTransition(.numericText())
+                .frame(width: 108, height: 76)
+                .background(RoundedRectangle(cornerRadius: 12)
+                    .fill(color.opacity(value == nil ? 0.05 : 0.16)))
+                .overlay(RoundedRectangle(cornerRadius: 12)
+                    .strokeBorder(color.opacity(hot ? 1 : (value == nil ? 0.2 : 0.45)),
+                                  style: StrokeStyle(lineWidth: hot ? 2.5 : 1,
+                                                     dash: value == nil ? [4] : [])))
+                .shadow(color: hot ? color.opacity(0.7) : .clear, radius: 10)
+        }
+    }
+
+    private var history: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("SUM AFTER EACH PASS")
+                .font(.system(size: 8, weight: .bold)).tracking(0.8)
+                .foregroundColor(.white.opacity(0.35))
             HStack(spacing: 8) {
-                ForEach(0..<Int(maxValue), id: \.self) { index in
-                    VStack(spacing: 4) {
-                        Text("\(index)")
-                            .font(.caption.monospaced().bold())
-                            .foregroundStyle(index <= i ? .white : .secondary)
-                        
-                        Circle()
-                            .fill(index == i ? Color.blue : (index < i ? Color.green : Color.gray.opacity(0.3)))
-                            .frame(width: 32, height: 32)
+                ForEach(0..<iters.count, id: \.self) { k in
+                    let done = k < bodiesDone
+                    HStack(spacing: 5) {
+                        Text("i=\(iters[k].i)")
+                            .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                            .foregroundColor(done ? .cyan : .white.opacity(0.25))
+                        Image(systemName: "arrow.right")
+                            .font(.system(size: 8, weight: .bold))
+                            .foregroundColor(.white.opacity(done ? 0.4 : 0.15))
+                        Text("\(iters[k].sum)")
+                            .font(.system(size: 12, weight: .bold, design: .monospaced))
+                            .foregroundColor(done ? .green : .white.opacity(0.25))
                     }
-                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, 9).padding(.vertical, 6)
+                    .background(RoundedRectangle(cornerRadius: 9)
+                        .fill(done ? Color.green.opacity(0.12) : Color.white.opacity(0.04)))
+                    .overlay(RoundedRectangle(cornerRadius: 9)
+                        .strokeBorder(done ? Color.green.opacity(0.35) : .white.opacity(0.08),
+                                      lineWidth: 1))
                 }
-            }
-            .padding()
-            .background(RoundedRectangle(cornerRadius: 12).fill(Color(.secondarySystemGroupedBackground)))
-        }
-    }
-    
-    
-    private func updateState() {
-        withAnimation(.spring(duration: 0.2)) {
-            let max = Int(maxValue)
-            
-            if currentStep == 0 {
-                // Init
-                currentLine = 0
-                sum = 0
-                i = 0
-            } else if currentStep <= max * 2 {
-                // Loop iterations
-                let iteration = (currentStep - 1) / 2
-                let inIterationStep = (currentStep - 1) % 2
-                
-                i = iteration
-                
-                if inIterationStep == 0 {
-                    // Check condition
-                    currentLine = 1
-                } else {
-                    // Add to sum
-                    currentLine = 2
-                    sum = (0...iteration).reduce(0, +)
-                }
-            } else {
-                // End
-                currentLine = 4
-                i = max
-                sum = (0..<max).reduce(0, +)
+                Spacer(minLength: 0)
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
-#Preview {
-    ForLoopView()
-}
+#Preview { ForLoopView().preferredColorScheme(.dark) }

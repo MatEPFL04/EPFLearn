@@ -49,11 +49,22 @@ struct GraphLab: View {
                     }
                     ForEach(vertices) { $0 }
                 }
+                .onChange(of: proxy.size) { newSize in
+                    // Éviter les re-générations infinies : seulement si le size change significativement
+                    let changed = abs(size.width - newSize.width) > 1 || abs(size.height - newSize.height) > 1
+                    if changed && newSize.width > 0 && newSize.height > 0 {
+                        size = newSize
+                        generate()
+                    }
+                }
                 .onAppear {
-                    size = proxy.size
-                    if vertices.isEmpty { generate() }
+                    if proxy.size.width > 0 && proxy.size.height > 0 {
+                        size = proxy.size
+                        generate()
+                    }
                 }
             }
+            .frame(height: 300)  // ← HAUTEUR FIXE POUR LE GEOMETRYREADER
             .clipShape(RoundedRectangle(cornerRadius: 16))
             .overlay(RoundedRectangle(cornerRadius: 16).stroke(.white.opacity(0.1)))
 
@@ -124,7 +135,7 @@ struct GraphLab: View {
     }
 
     private func generate() {
-        guard size.width > 0 else { return }
+        guard size.width > 0 && size.height > 0 else { return }
         let g = Graph.generate(n: n, extra: max(1, n / 2), connected: connected,
                                in: CGRect(origin: .zero, size: size))
         vertices = g.vertices

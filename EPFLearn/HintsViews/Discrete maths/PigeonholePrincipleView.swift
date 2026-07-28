@@ -1,13 +1,7 @@
-//
-//  PigeonholePrincipleView.swift
-//  EPFLearn
-//
-//  Created on 20.07.2026.
-//
-
-import SwiftUI
-
 /// Interactive demonstration of the Pigeonhole Principle
+import SwiftUI
+import Combine
+
 struct PigeonholePrincipleView: View {
     @State private var pigeons: Int = 13
     @State private var holes: Int = 10
@@ -217,7 +211,7 @@ struct PigeonholePrincipleView: View {
         }
     }
 }
-
+ 
 #Preview {
     PigeonholePrincipleView()
 }

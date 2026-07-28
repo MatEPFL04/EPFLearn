@@ -43,6 +43,7 @@ enum VisualizationType {
     case sandwich
     case complexNumbers
     case trigo
+    case bijectivity
     
     
     case matrixOperations
@@ -52,6 +53,28 @@ enum VisualizationType {
     case gaussianElimination
     case ker
     case image
+    
+    
+    case combinatorics
+    case permutations
+    case binomialCoefficients
+    case pigeonholePrinciple
+    case inclusionExclusion
+    case recurrenceRelations
+    case generatingFunctions
+    case probability
+    case expectation
+    case setOperations
+    case propositionalLogic
+    
+
+    case whileLoop
+    case forLoop
+    case ifStatement
+    case bitwiseOperations
+    case recursion
+    case variablesMemory
+    case functions
     
     
     case DFS
@@ -72,104 +95,74 @@ enum VisualizationType {
     case kadane
     case dynamicProgramming
     
-    
-    case combinatorics
-    case permutations
-    case binomialCoefficients
-    case pigeonholePrinciple
-    case inclusionExclusion
-    case recurrenceRelations
-    case generatingFunctions
-    case probability
-    case expectation
-    
-
-    case whileLoop
-    case forLoop
-    case ifStatement
-    case bitwiseOperations
-    case recursion
-    case variablesMemory
-    case functions
+ 
 }
 
 extension Question {
     
     static func sampleQuestionsAnalysis() -> [Question] {
-        return [
-            trigoQuestions.shuffled().first!,
-            complexPlaneQuestions.shuffled().first!,
-            darbouxQuestions.shuffled().first!,
-            derivativeQuestions.shuffled().first!,
-            sequenceQuestions.shuffled().first!,
-            meanTheoremQuestions.shuffled().first!,
-            TFIQuestions.shuffled().first!,
-            TAFQuestions.shuffled().first!,
-            fixedPointQuestions.shuffled().first!,
-            convergenceQuestions.shuffled().first!,
-            lhopitalQuestions.shuffled().first!,
-            sandwichQuestions.shuffled().first!,
-            taylorQuestions.shuffled().first!,
-       
+        let banks = [
+            trigoQuestions,complexPlaneQuestions,darbouxQuestions,bijectivityQuestions,
+            derivativeQuestions,sequenceQuestions,meanTheoremQuestions,TFIQuestions,TAFQuestions,
+            fixedPointQuestions,convergenceQuestions,lhopitalQuestions,sandwichQuestions,taylorQuestions
         ]
+        return banks.map { $0.shuffled().first! }.shuffled()
+        
+    }
+    
+    
+    static func sampleQuestionsLinearAlgebra() -> [Question] {
+        let banks = [
+            matrixOperationsQuestions,determinantQuestions,vectorSpaceQuestions,linearTransformQuestions,imagesQuestions,matrix3DQuestions
+        ]
+        return banks.map { $0.shuffled().first! }.shuffled()
+        
     }
     static func sampleQuestionsArrays() -> [Question] {
-        return [
-            insertionQuestions.shuffled().first!,
-            mergesortQuestions.shuffled().first!,
-            selectionQuestions.shuffled().first!,
-            bubbleQuestions.shuffled().first!,
-            DPquestions.shuffled().first!,
-            searchQuestions.shuffled().first!,
-            quicksortQuestions.shuffled().first!,
-            kadaneQuestions.shuffled().first!,
+        let banks = [
+            insertionQuestions,
+            mergesortQuestions,
+            selectionQuestions,
+            bubbleQuestions,
+            DPquestions,
+            searchQuestions,
+            quicksortQuestions,
+            kadaneQuestions
         ]
+        return banks.map { $0.shuffled().first! }.shuffled()
     }
     
     static func sampleQuestionsGraphs() -> [Question] {
-        return [
-            dfsQuestions.shuffled().first!,
-            bfsQuestions.shuffled().first!,
-            primQuestions.shuffled().first!,
-            kruskalQuestions.shuffled().first!,
-            bellmanQuestion.shuffled().first!,
-            djikistraQuestion.shuffled().first!,
+        
+        let banks = [
+            dfsQuestions,
+            bfsQuestions,
+            primQuestions,
+            kruskalQuestions,
+            bellmanQuestion,
+            djikistraQuestion
         ]
+        return banks.map { $0.shuffled().first! }.shuffled()
+            
     }
     
     static func sampleQuestionsDiscreteMaths() -> [Question] {
-        return [
-            combinatoricsQuestions.shuffled().first!,
-            permutationsQuestions.shuffled().first!,
-            binomialQuestions.shuffled().first!,
-            pigeonholeQuestions.shuffled().first!,
-            inclusionExclusionQuestions.shuffled().first!,
-            recurrenceQuestions.shuffled().first!,
-            probabilityQuestions.shuffled().first!,
-            expectationQuestions.shuffled().first!,
+        let banks = [
+            combinatoricsQuestions, permutationsQuestions, binomialQuestions,
+            pigeonholeQuestions, setOperationsQuestions,
+            recurrenceQuestions, closedFormQuestions, probabilityQuestions,
+            expectationQuestions, propositionalLogicQuestions,
         ]
+        return banks.map { $0.shuffled().first! }.shuffled()
     }
     
-    static func sampleQuestionsLinearAlgebra() -> [Question] {
-        return [
-            matrixOperationsQuestions.shuffled().first!,
-            determinantQuestions.shuffled().first!,
-            vectorSpaceQuestions.shuffled().first!,
-            linearTransformQuestions.shuffled().first!,
-            //gramSchmidtQuestions.shuffled().first!,
-            matrix3DQuestions.shuffled().first!,
-        ]
-    }
     
     static func sampleQuestionsProgrammingBasics() -> [Question] {
-        return [
-            variablesQuestions.shuffled().first!,
-            ifElseQuestions.shuffled().first!,
-            forLoopQuestions.shuffled().first!,
-            whileLoopQuestions.shuffled().first!,
-            functionQuestions.shuffled().first!,
-            bitwiseQuestions.shuffled().first!,
+        
+        let banks = [
+            variablesQuestions,ifElseQuestions,forLoopQuestions,whileLoopQuestions,functionQuestions,bitwiseQuestions
         ]
+        return banks.map { $0.shuffled().first! }.shuffled()
     }
 }
 

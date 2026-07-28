@@ -477,7 +477,7 @@ struct ImageSpaceView: View {
 
     private func drawColumns(_ ctx: GraphicsContext, _ p: Projector, _ A: M3) {
         let cols: [(V3, Color, String)] = [
-            (A.c1, .red, "Ae₁"), (A.c2, .green, "Ae₂"), (A.c3, .blue, "Ae₃")
+            (A.c1, .red, "Ae⃗₁"), (A.c2, .green, "Ae⃗₂"), (A.c3, .blue, "Ae⃗₃")
         ]
         for (v, color, label) in cols {
             guard v.norm > 0.02 else { continue }

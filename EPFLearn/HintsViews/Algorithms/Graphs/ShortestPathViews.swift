@@ -330,11 +330,22 @@ struct ShortestPathLab: View {
                                     frame: f, canvasSize: proxy.size)
                     }
                 }
+                .onChange(of: proxy.size) { newSize in
+                    // Éviter les re-générations infinies : seulement si le size change significativement
+                    let changed = abs(size.width - newSize.width) > 1 || abs(size.height - newSize.height) > 1
+                    if changed && newSize.width > 0 && newSize.height > 0 {
+                        size = newSize
+                        generate()
+                    }
+                }
                 .onAppear {
-                    size = proxy.size
-                    if positions.isEmpty { generate() }
+                    if proxy.size.width > 0 && proxy.size.height > 0 {
+                        size = proxy.size
+                        generate()
+                    }
                 }
             }
+            .frame(height: 300)  // ← HAUTEUR FIXE
             .clipShape(RoundedRectangle(cornerRadius: 16))
             .overlay(RoundedRectangle(cornerRadius: 16).stroke(.white.opacity(0.1)))
 
@@ -417,7 +428,7 @@ struct ShortestPathLab: View {
     }
 
     private func generate() {
-        guard size.width > 0 else { return }
+        guard size.width > 0 && size.height > 0 else { return }
         let g = SP.build(n: n, connected: connected, allowNegative: negAllowed,
                          in: CGRect(origin: .zero, size: size))
         positions = g.pos

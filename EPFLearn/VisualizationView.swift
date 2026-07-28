@@ -28,19 +28,42 @@ struct VisualizationView: View {
         case .trigo:
             TrigoView()
         case .complexNumbers:
-            ComplexeView()
+            ComplexPlaneView()
+        case .bijectivity:
+            InjectionSurjectionView()
             
 
         case .matrixOperations: MatrixOperationsView()
-        case .determinant: DeterminantView()
+        case .determinant: VectorSpaceView()
         case .vectorSpaces: VectorSpaceView()
         case .linearTransformations: Matrix3DView()
         case .gaussianElimination: GaussView()
         case .ker: ImageSpaceView()
         case .image: ImageSpaceView()
-           
-                      
-
+            
+   
+        case .combinatorics:        CombinatoricsView()
+        case .permutations:         CombinatoricsView()
+        case .binomialCoefficients: BinomialCoefficientsView()
+        case .pigeonholePrinciple:  PigeonholePrincipleView()
+        case .inclusionExclusion:   VennDiagramView()
+        case .setOperations:        VennDiagramView()
+        case .recurrenceRelations:  RecurrenceRelationsView()
+        case .generatingFunctions:  RecurrenceRelationsView()
+        case .probability:          ProbabilityView()
+        case .expectation:          ExpectationView()
+        case .propositionalLogic:   CNFView()
+            
+            
+        case .whileLoop: WhileLoopView()
+        case .forLoop: ForLoopView()
+        case .ifStatement: IfElseView()
+        case .bitwiseOperations: BitwiseView()
+        case .recursion: RecurrenceRelationsView()
+        case .variablesMemory: VariablesView()
+        case .functions: FunctionView()
+            
+             
         case .sorting_zigzag: SortingView(algo: .insertion, shape: .zigzag)
         case .sorting_reverse_merge: SortingView(algo: .merge, shape: .reversed)
         case .sorting_bubble: SortingView(algo: .merge, shape: .random)
@@ -49,6 +72,7 @@ struct VisualizationView: View {
         case .search: BinarySearchView()
         case .kadane: KadaneView()
         case .dynamicProgramming: FibTreeView()
+            
 
         case .DFS: DFSView(n: 6, connected: false)
         case .BFS: BFSView(n: 3, connected: true)
@@ -58,27 +82,7 @@ struct VisualizationView: View {
         case .bellmanford: DijkstraView()
         case .topologicalorder: TopoDFSView()
         
-        // Discrete Maths visualizations
-        case .combinatorics: CombinatoricsView()
-        case .permutations: CombinatoricsView()
-        case .binomialCoefficients: BinomialCoefficientsView()
-        case .pigeonholePrinciple: PigeonholePrincipleView()
-        case .inclusionExclusion: CombinatoricsView()
-        case .recurrenceRelations: RecurrenceRelationsView()
-        case .generatingFunctions: RecurrenceRelationsView()
-        case .probability: ExpectationView()
-        case .expectation: ExpectationView()
-        
-            
-      
-        // Programming Basics visualizations
-        case .whileLoop: WhileLoopView()
-        case .forLoop: ForLoopView()
-        case .ifStatement: IfElseView()
-        case .bitwiseOperations: BitwiseView()
-        case .recursion: RecurrenceRelationsView()
-        case .variablesMemory: VariablesView()
-        case .functions: FunctionView()
+       
         }
     }
 

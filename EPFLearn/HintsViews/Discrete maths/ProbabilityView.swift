@@ -2,268 +2,221 @@
 //  ProbabilityView.swift
 //  EPFLearn
 //
-//  Created on 20.07.2026.
+//  La loi de probabilité, rien d'autre : un diagramme en bâtons exact,
+//  une sélection au tap, une mini-légende.
 //
 
 import SwiftUI
 
-/// Interactive probability simulator with dice, coins, and cards
 struct ProbabilityView: View {
-    @State private var experimentType = ExperimentType.dice
-    @State private var trials: Double = 100
-    @State private var results: [Int] = []
-    @State private var isSimulating = false
-    
-    enum ExperimentType: String, CaseIterable, Identifiable {
-        case dice = "Dice"
-        case coin = "Coin"
-        case cards = "Cards"
-        
-        var id: Self { self }
+
+    // MARK: Expérience
+
+    enum Experiment: String, CaseIterable, Hashable {
+        case coin, die, twoDice, cards
+
+        var title: String {
+            switch self {
+            case .coin:    return "Pièce"
+            case .die:     return "Dé"
+            case .twoDice: return "2 dés"
+            case .cards:   return "Couleurs"
+            }
+        }
+
+        var outcomes: [Int] {
+            switch self {
+            case .coin:    return [0, 1]
+            case .die:     return Array(1...6)
+            case .twoDice: return Array(2...12)
+            case .cards:   return [0, 1, 2, 3]
+            }
+        }
+
+        var initial: Int {
+            switch self {
+            case .coin:    return 1
+            case .die:     return 6
+            case .twoDice: return 7
+            case .cards:   return 1
+            }
+        }
+
+        var tint: Color {
+            switch self {
+            case .coin:    return DMTheme.amber
+            case .die:     return DMTheme.cyan
+            case .twoDice: return DMTheme.violet
+            case .cards:   return DMTheme.rose
+            }
+        }
+
+        /// Étiquette sous le bâton.
+        func label(_ v: Int) -> String {
+            switch self {
+            case .coin: return v == 1 ? "P" : "F"
+            case .die, .twoDice: return "\(v)"
+            case .cards:
+                let suits = ["♠", "♥", "♦", "♣"]
+                return suits.indices.contains(v) ? suits[v] : "—"
+            }
+        }
+
+        /// Ce qui s'écrit dans P( … ).
+        func expr(_ v: Int) -> String {
+            switch self {
+            case .twoDice: return "S = \(v)"
+            case .die:     return "X = \(v)"
+            default:       return label(v)
+            }
+        }
+
+        func p(_ v: Int) -> Double {
+            switch self {
+            case .coin:    return 1.0 / 2.0
+            case .die:     return 1.0 / 6.0
+            case .twoDice: return Double(max(6 - abs(v - 7), 0)) / 36.0
+            case .cards:   return 1.0 / 4.0
+            }
+        }
+
+        func fraction(_ v: Int) -> String {
+            switch self {
+            case .coin:    return "1/2"
+            case .die:     return "1/6"
+            case .twoDice: return "\(max(6 - abs(v - 7), 0))/36"
+            case .cards:   return "1/4"
+            }
+        }
     }
-    
-    private var trialCount: Int { max(10, min(1000, Int(trials.rounded()))) }
-    
+
+    // MARK: State
+
+    @State private var experiment: Experiment = .twoDice
+    @State private var picked = 7
+
+    private var tint: Color { experiment.tint }
+
+    /// `picked` peut encore appartenir à l'expérience précédente le temps d'un rendu.
+    private var event: Int {
+        experiment.outcomes.contains(picked) ? picked : experiment.initial
+    }
+
+    // MARK: Body
+
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                Text("Probability").font(.largeTitle.bold())
-                
-                controlsSection
-                simulationSection
-                resultsSection
-            }
-            .padding(20)
-        }
-        .background(Color(.systemGroupedBackground))
-        .onAppear { runSimulation() }
-        .onChange(of: experimentType) { _, _ in runSimulation() }
-    }
-    
-    private var controlsSection: some View {
-        HStack(spacing: 12) {
-            Picker("Type", selection: $experimentType) {
-                ForEach(ExperimentType.allCases) { type in
-                    Text(type.rawValue).tag(type)
-                }
-            }
-            .pickerStyle(.wheel)
-            .frame(width: 100, height: 80)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-            
-            Picker("Trials", selection: $trials) {
-                ForEach(Array(stride(from: 10, through: 1000, by: 10)), id: \.self) { value in
-                    Text("\(value)").tag(Double(value))
-                }
-            }
-            .pickerStyle(.wheel)
-            .frame(width: 100, height: 80)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-            
-            Button {
-                withAnimation {
-                    isSimulating = true
-                    runSimulation()
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                        isSimulating = false
+            VStack(alignment: .leading, spacing: 16) {
+                DMSegmented(selection: $experiment, options: Experiment.allCases,
+                            label: { $0.title }, tint: tint)
+                    .onChange(of: experiment) { _, new in picked = new.initial }
+
+                DMCard(tint: tint) {
+                    VStack(alignment: .leading, spacing: 14) {
+                        readout
+                        bars
+                        legend
                     }
                 }
-            } label: {
-                Image(systemName: "play.fill")
-                    .font(.title2)
             }
-            .buttonStyle(.bordered)
-            .tint(.cyan)
-            .controlSize(.large)
+            .padding(20)
+            .animation(.spring(response: 0.32, dampingFraction: 0.85), value: experiment)
+            .animation(.spring(response: 0.28, dampingFraction: 0.8), value: picked)
         }
-        .padding()
-        .background(RoundedRectangle(cornerRadius: 12).fill(Color(.secondarySystemGroupedBackground)))
+        .background(DMAurora(tint: tint, accent: DMTheme.indigo))
     }
-    
-    private var simulationSection: some View {
-        Canvas { ctx, size in
-            drawHistogram(ctx, size: size)
+
+    // MARK: P(·) = a/b = x %
+
+    private var readout: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 7) {
+            Text("P(\(experiment.expr(event)))")
+                .font(.system(.headline, design: .rounded).weight(.heavy))
+                .foregroundStyle(tint)
+
+            Text("=")
+                .font(.system(size: 12, weight: .light))
+                .foregroundStyle(.secondary)
+
+            Text(experiment.fraction(event))
+                .font(.system(.subheadline, design: .monospaced).weight(.heavy))
+                .foregroundStyle(.primary)
+
+            Text("=")
+                .font(.system(size: 12, weight: .light))
+                .foregroundStyle(.secondary)
+
+            Text(pct(experiment.p(event)))
+                .font(.system(.subheadline, design: .monospaced).weight(.heavy))
+                .foregroundStyle(DMTheme.mint)
+
+            Spacer(minLength: 0)
         }
-        .frame(height: 200)
-        .background(RoundedRectangle(cornerRadius: 16).fill(Color(.secondarySystemGroupedBackground)))
-        .overlay {
-            if isSimulating {
-                ProgressView()
-                    .scaleEffect(1.5)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(Color(.secondarySystemGroupedBackground).opacity(0.8))
-            }
-        }
+        .lineLimit(1)
+        .minimumScaleFactor(0.7)
+        .contentTransition(.numericText())
     }
-    
-    @ViewBuilder
-    private var resultsSection: some View {
-        switch experimentType {
-        case .dice:
-            diceResults
-        case .coin:
-            coinResults
-        case .cards:
-            cardResults
-        }
-    }
-    
-    private var diceResults: some View {
-        let counts = Dictionary(grouping: results, by: { $0 }).mapValues { $0.count }
-        return LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 6), spacing: 8) {
-            ForEach(1...6, id: \.self) { face in
-                let count = counts[face] ?? 0
-                let prob = Double(count) / Double(trialCount)
-                
-                VStack(spacing: 4) {
-                    Image(systemName: "die.face.\(face)")
-                        .font(.title2)
-                        .foregroundStyle(.cyan)
-                    Text("\(count)")
-                        .font(.caption.monospacedDigit().bold())
-                    Text("\(String(format: "%.0f", prob * 100))%")
-                        .font(.caption2.monospacedDigit())
-                        .foregroundStyle(.secondary)
+
+    // MARK: Bâtons
+
+    private var bars: some View {
+        let outs = experiment.outcomes
+        let peak = outs.map { experiment.p($0) }.max() ?? 1
+        let height: CGFloat = 160
+        let dense = outs.count > 8
+
+        return HStack(alignment: .bottom, spacing: dense ? 3 : 8) {
+            ForEach(outs, id: \.self) { v in
+                let on = v == event
+                VStack(spacing: 5) {
+                    Spacer(minLength: 0)
+
+                    RoundedRectangle(cornerRadius: 5, style: .continuous)
+                        .fill(DMTheme.grad(on ? tint : tint.opacity(0.30)))
+                        .frame(height: max(3, height * CGFloat(experiment.p(v) / peak)))
+
+                    Text(experiment.label(v))
+                        .font(.system(size: dense ? 10 : 12,
+                                      weight: on ? .heavy : .medium, design: .rounded))
+                        .foregroundStyle(on ? tint : .secondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.6)
                 }
                 .frame(maxWidth: .infinity)
-                .padding(8)
-                .background(RoundedRectangle(cornerRadius: 8).fill(Color.cyan.opacity(0.08)))
+                .frame(height: height + 20)
+                .contentShape(Rectangle())
+                .onTapGesture { picked = v }
             }
         }
     }
-    
-    private var coinResults: some View {
-        let counts = Dictionary(grouping: results, by: { $0 }).mapValues { $0.count }
-        let heads = counts[1] ?? 0
-        let tails = counts[0] ?? 0
-        let headsProb = Double(heads) / Double(trialCount)
-        
-        return HStack(spacing: 12) {
-            VStack(spacing: 8) {
-                Image(systemName: "bitcoinsign.circle.fill")
-                    .font(.largeTitle)
-                    .foregroundStyle(.cyan)
-                Text("Heads")
-                    .font(.caption)
-                Text("\(heads)")
-                    .font(.title2.monospacedDigit().bold())
-                Text("\(String(format: "%.0f", headsProb * 100))%")
-                    .font(.caption.monospacedDigit())
-                    .foregroundStyle(.secondary)
-            }
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background(RoundedRectangle(cornerRadius: 12).fill(Color.cyan.opacity(0.08)))
-            
-            VStack(spacing: 8) {
-                Image(systemName: "circle.fill")
-                    .font(.largeTitle)
-                    .foregroundStyle(.gray)
-                Text("Tails")
-                    .font(.caption)
-                Text("\(tails)")
-                    .font(.title2.monospacedDigit().bold())
-                Text("\(String(format: "%.0f", (1 - headsProb) * 100))%")
-                    .font(.caption.monospacedDigit())
-                    .foregroundStyle(.secondary)
-            }
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background(RoundedRectangle(cornerRadius: 12).fill(Color.gray.opacity(0.08)))
+
+    // MARK: Mini-légende
+
+    private var legend: some View {
+        HStack(spacing: 10) {
+            swatch(DMTheme.grad(tint), "P(\(experiment.expr(event)))")
+            swatch(DMTheme.grad(tint.opacity(0.30)), "P(x)")
+
+            Spacer(minLength: 0)
+
+            Text("Σ = 1")
+                .font(.system(size: 9, weight: .bold, design: .monospaced))
+                .foregroundStyle(DMTheme.mint)
         }
     }
-    
-    private var cardResults: some View {
-        let counts = Dictionary(grouping: results, by: { $0 }).mapValues { $0.count }
-        let suitNames = ["♠️", "♥️", "♦️", "♣️"]
-        let suitColors: [Color] = [.primary, .red, .red, .primary]
-        
-        return LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 4), spacing: 8) {
-            ForEach(0..<4, id: \.self) { suit in
-                let count = counts[suit] ?? 0
-                let prob = Double(count) / Double(trialCount)
-                
-                VStack(spacing: 4) {
-                    Text(suitNames[suit])
-                        .font(.title)
-                        .foregroundStyle(suitColors[suit])
-                    Text("\(count)")
-                        .font(.caption.monospacedDigit().bold())
-                    Text("\(String(format: "%.0f", prob * 100))%")
-                        .font(.caption2.monospacedDigit())
-                        .foregroundStyle(.secondary)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(8)
-                .background(RoundedRectangle(cornerRadius: 8).fill(Color.cyan.opacity(0.08)))
-            }
+
+    private func swatch(_ style: some ShapeStyle, _ text: String) -> some View {
+        HStack(spacing: 4) {
+            Capsule().fill(style).frame(width: 13, height: 6)
+            Text(text)
+                .font(.system(size: 9, design: .monospaced))
+                .foregroundStyle(.secondary)
         }
+        .lineLimit(1)
     }
-    
-    private func runSimulation() {
-        results = []
-        for _ in 0..<trialCount {
-            switch experimentType {
-            case .dice:
-                results.append(Int.random(in: 1...6))
-            case .coin:
-                results.append(Int.random(in: 0...1))
-            case .cards:
-                results.append(Int.random(in: 0...3))
-            }
-        }
-    }
-    
-    private func drawHistogram(_ ctx: GraphicsContext, size: CGSize) {
-        let padding: CGFloat = 30
-        let plotWidth = size.width - 2 * padding
-        let plotHeight = size.height - 2 * padding
-        
-        let counts = Dictionary(grouping: results, by: { $0 }).mapValues { $0.count }
-        let maxCount = counts.values.max() ?? 1
-        
-        let barCount: Int
-        switch experimentType {
-        case .dice: barCount = 6
-        case .coin: barCount = 2
-        case .cards: barCount = 4
-        }
-        
-        let barWidth = plotWidth / CGFloat(barCount) * 0.7
-        let spacing = plotWidth / CGFloat(barCount)
-        
-        // Axes
-        var axes = Path()
-        axes.move(to: CGPoint(x: padding, y: padding))
-        axes.addLine(to: CGPoint(x: padding, y: size.height - padding))
-        axes.addLine(to: CGPoint(x: size.width - padding, y: size.height - padding))
-        ctx.stroke(axes, with: .color(.secondary.opacity(0.3)), lineWidth: 1.5)
-        
-        // Bars
-        for i in 0..<barCount {
-            let key: Int
-            switch experimentType {
-            case .dice: key = i + 1
-            case .coin: key = i
-            case .cards: key = i
-            }
-            
-            let count = counts[key] ?? 0
-            let barHeight = plotHeight * CGFloat(count) / CGFloat(maxCount)
-            let x = padding + spacing * CGFloat(i) + (spacing - barWidth) / 2
-            let y = size.height - padding - barHeight
-            
-            let bar = Path(roundedRect: CGRect(x: x, y: y, width: barWidth, height: barHeight), cornerRadius: 4)
-            ctx.fill(bar, with: .color(.cyan.opacity(0.7)))
-            
-            // Count
-            if count > 0 {
-                ctx.draw(
-                    Text("\(count)").font(.caption2.bold()).foregroundStyle(.cyan),
-                    at: CGPoint(x: x + barWidth / 2, y: y - 8)
-                )
-            }
-        }
+
+    private func pct(_ v: Double) -> String {
+        String(format: "%.1f %%", v * 100)
     }
 }
 

@@ -40,24 +40,6 @@ struct QuestionView: View {
                                 .background(.regularMaterial)
                                 .clipShape(RoundedRectangle(cornerRadius: 10))
 
-                            // Tuteur socratique — uniquement si la réponse est fausse
-                            if let selected = vm.selectedAnswer,
-                               selected != vm.currentQuestion.correctIndex {
-                                NavigationLink {
-                                    TutorView(
-                                        question: vm.currentQuestion,
-                                        studentChoice: selected
-                                    )
-                                } label: {
-                                    Label("Understand my mistake",
-                                          systemImage: "bubble.left.and.text.bubble.right")
-                                        .frame(maxWidth: .infinity)
-                                        .padding()
-                                        .background(.blue.opacity(0.12))
-                                        .clipShape(RoundedRectangle(cornerRadius: 10))
-                                }
-                            }
-
                             OptionButton(text: "Next question", state: .idle,
                                          action: { vm.nextQuestion() })
                         }
