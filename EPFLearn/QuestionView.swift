@@ -52,9 +52,7 @@ struct QuestionView: View {
 
                 VisualizationView(
                     type: vm.currentQuestion.visualization,
-                    hint: vm.currentQuestion.hint,
-                    hintRevealed: vm.hasAnswered
-                )
+                    hint: vm.currentQuestion.hint)
                 .id(vm.currentQuestion.id)
                 .opacity(showVisualization ? 1 : 0)
                 .allowsHitTesting(showVisualization)

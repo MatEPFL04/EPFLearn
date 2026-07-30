@@ -1,3 +1,7 @@
+//
+//  InjectionSurjectionView.swift
+//  EPFLearn
+//
 
 import SwiftUI
 
@@ -55,8 +59,10 @@ struct InjectionSurjectionView: View {
     @State private var selectedCase: Int = 0
     @State private var level: Double = 1.0        // height of the horizontal line
 
-    private let graphSize: CGFloat = 300
-    private let scale: Double = 36.0
+    @State private var graphSize: CGFloat = 300
+
+    private let baseScale: Double = 36
+    private var scale: Double { baseScale * Double(graphSize) / 300 }
 
     private var current: MapCase { mapCases[selectedCase] }
     private var cs: MathCoordinateSpace { MathCoordinateSpace(size: graphSize, scale: scale) }
@@ -149,7 +155,7 @@ struct InjectionSurjectionView: View {
                 .font(.system(size: 14, weight: .medium, design: .monospaced))
 
             ZStack {
-                GridDrawing(step: 18)
+                GridDrawing(step: CGFloat(scale) / 2)
                     .stroke(Color.blue.opacity(0.18), lineWidth: 0.5)
                 AxisDrawing(axis: .horizontal).stroke(Color.blue.opacity(0.6), lineWidth: 1)
                 AxisDrawing(axis: .vertical).stroke(Color.blue.opacity(0.6), lineWidth: 1)
@@ -231,6 +237,7 @@ struct InjectionSurjectionView: View {
             .frame(width: graphSize)
         }
         .padding()
+        .adaptivePlot($graphSize)
         .animation(.easeInOut(duration: 0.25), value: selectedCase)
         .onChange(of: selectedCase) { _, _ in
             // Keep the horizontal line inside the new codomain.

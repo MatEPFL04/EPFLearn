@@ -30,13 +30,14 @@ struct Question: Identifiable {
 
 enum VisualizationType {
     
-    case derivative
     case darboux
+    case derivative
     case sequence
     case meanTheorem
     case TFI
-    case fixedPoint
     case TAF
+    case fixedPoint
+    
     case taylor
     case convergence
     case lhopital
@@ -86,10 +87,7 @@ enum VisualizationType {
     case topologicalorder
     
     
-    case sorting_basic
-    case sorting_zigzag
-    case sorting_reverse_merge
-    case sorting_bubble
+    case sorting
     case quickSort
     case search
     case kadane

@@ -9,18 +9,33 @@ import SwiftUI
 struct VisualizationView: View {
     let type: VisualizationType
     let hint: String
-    let hintRevealed: Bool
 
     @ViewBuilder
     private var vizContent: some View {
         switch type {
-        case .darboux:      DarbouxView()
-        case .sequence:     SequenceView()
-        case .derivative:   DerivateView()
-        case .meanTheorem:  MeanThmView()
-        case .TFI:          TFIView()
-        case .fixedPoint:   FixedPointView()
-        case .TAF:          TAFView()
+            
+        case .darboux:
+            DarbouxView(initial: .sine)
+            
+        case .sequence:
+            SequenceView(.inverseN)
+            
+        case .derivative:
+            DerivateView(initial: .sine)
+            
+        case .meanTheorem:
+            MeanThmView(.cos3x)
+            
+        case .TFI:
+            TFIView()
+            
+        case .TAF:
+            TAFView(2)
+            
+        case .fixedPoint:
+            FixedPointView(1)
+            
+     
         case .lhopital:     LHopitalView()
         case .sandwich:     SandwichView()
         case .taylor:       TaylorView()
@@ -34,8 +49,8 @@ struct VisualizationView: View {
             
 
         case .matrixOperations: MatrixOperationsView()
-        case .determinant: VectorSpaceView()
-        case .vectorSpaces: VectorSpaceView()
+        case .determinant: VectorSpaceView(is3D: false)
+        case .vectorSpaces: VectorSpaceView(is3D: true)
         case .linearTransformations: Matrix3DView()
         case .gaussianElimination: GaussView()
         case .ker: ImageSpaceView()
@@ -64,22 +79,24 @@ struct VisualizationView: View {
         case .functions: FunctionView()
             
              
-        case .sorting_zigzag: SortingView(algo: .insertion, shape: .zigzag)
-        case .sorting_reverse_merge: SortingView(algo: .merge, shape: .reversed)
-        case .sorting_bubble: SortingView(algo: .merge, shape: .random)
-        case .quickSort: QuickSortView()
-        case .sorting_basic: SortingView(algo: .merge, shape: .random)
-        case .search: BinarySearchView()
-        case .kadane: KadaneView()
-        case .dynamicProgramming: FibTreeView()
+        case .sorting:
+            SortingView(algo: .merge, shape: .random)
+        case .quickSort:
+            QuickSortView()
+        case .search:
+            BinarySearchView()
+        case .kadane:
+            KadaneView()
+        case .dynamicProgramming:
+            FibTreeView()
             
 
         case .DFS: DFSView(n: 6, connected: false)
         case .BFS: BFSView(n: 3, connected: true)
         case .prim: PrimView()
         case .kruskal: KruskalView()
-        case .djikistra: BellmanFordView()
-        case .bellmanford: DijkstraView()
+        case .djikistra: DijkstraView()
+        case .bellmanford: BellmanFordView()
         case .topologicalorder: TopoDFSView()
         
        
@@ -87,24 +104,29 @@ struct VisualizationView: View {
     }
 
     var body: some View {
-        ScrollView {
-            vizContent
-        }
-        .safeAreaInset(edge: .bottom) {
-            if !hint.isEmpty {
-                Text(hint)
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(nil)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding()
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(.regularMaterial)
+            GeometryReader { proxy in
+                ScrollView {
+                    vizContent
+                        .frame(maxWidth: .infinity)
+                }
+                .clipped()
+                .environment(\.plotWidth, proxy.size.width)
+                .safeAreaInset(edge: .bottom) {
+                    if !hint.isEmpty {
+                        Text(hint)
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(nil)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .padding()
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(.regularMaterial)
+                    }
+                }
             }
         }
-    }
 }
 
 #Preview {
-    VisualizationView(type: .variablesMemory, hint: "Observe la diff entre F et G", hintRevealed: true)
+    VisualizationView(type: .variablesMemory, hint: "Observe la diff entre F et G")
 }

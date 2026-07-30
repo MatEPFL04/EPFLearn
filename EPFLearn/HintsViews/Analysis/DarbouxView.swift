@@ -154,24 +154,32 @@ struct FunctionDrawing: Shape {
                 integrF: { _ in .nan },
                 scale: scale
             )
+        case .constant:
+            return FunctionDrawing(
+                f:      { _ in 5 },
+                integrF: { x in 5 * x },
+                scale: scale
+            )
         }
     }
 }
 
 enum MathFunctionType: String, CaseIterable {
+    case constant  = "f(x) = 5"
     case affine    = "f(x) = 2x + 5"
     case cubic     = "f(x) = x³"
     case sine      = "f(x) = sin(x)"
     case cosine    = "f(x) = cos(x)"
-    case dirichlet = "f(x) = 1 si x∈ℚ, 0 sinon"
+    case dirichlet = "f(x) = 1 if x ∈ ℚ, 0 otherwise"
 }
 
 struct DarbouxView: View {
-    @State private var scale: Double = 10
+    private let baseScale: Double = 10
+    private var scale: Double { baseScale * Double(graphSize) / 300 }
     @State private var sectionCount: Double = 20
     @State private var selectedFunction = MathFunctionType.sine
 
-    let graphSize: CGFloat = 300
+    @State private var graphSize: CGFloat = 300
 
     var graphRect: CGRect {
         CGRect(x: 0, y: 0, width: graphSize, height: graphSize)
@@ -181,6 +189,10 @@ struct DarbouxView: View {
         let cs = MathCoordinateSpace(size: graphSize, scale: scale)
         return (cs.toMath(x: 0), cs.toMath(x: graphSize))
     }
+    
+    init(initial: MathFunctionType = .sine) {
+            _selectedFunction = State(initialValue: initial)
+        }
 
     var body: some View {
         // step = largeur en pixels d'une subdivision, dérivée du nombre de
@@ -225,7 +237,7 @@ struct DarbouxView: View {
             VStack(alignment: .leading, spacing: 6) {
                 let n = Int(sectionCount)
                 if selectedFunction == .dirichlet {
-                    Text("Intégrale : n'existe pas (f n'est pas Riemann-intégrable)")
+                    Text("Integral: does not exist (f is not Riemann integrable)")
                         .foregroundStyle(.orange)
                 } else {
                     Text("Integral: \(currentFunction.integralValue(in: graphRect), specifier: "%.2f")")
@@ -243,18 +255,16 @@ struct DarbouxView: View {
                 Text("Number of sections")
                     .font(.caption.weight(.medium))
                     .foregroundStyle(.blue)
-                Picker("Sections", selection: $sectionCount) {
-                    ForEach(2...100, id: \.self) { value in
-                        Text("\(value)").tag(Double(value))
-                    }
-                }
-                .pickerStyle(.wheel)
-                .frame(height: 100)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+                Slider(value: $sectionCount, in: 2...100, step: 1)
+                    .tint(.blue)
+                Text("\(Int(sectionCount)) sections")
+                    .font(.caption.monospacedDigit())
+                    .foregroundStyle(.secondary)
             }
             .frame(width: graphSize - 40)
         }
         .padding()
+        .adaptivePlot($graphSize)
     }
 }
 #Preview {

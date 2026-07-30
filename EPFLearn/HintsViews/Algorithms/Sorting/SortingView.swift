@@ -104,10 +104,13 @@ struct SortingView: View {
                     .font(.caption).foregroundStyle(.secondary)
             }
 
-            Picker("Algorithm", selection: $algo) {
-                ForEach(Algo.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+            Picker("Algorithme", selection: $algo) {
+                ForEach(Algo.allCases, id: \.self) { algorithm in
+                    Text(algorithm.rawValue).tag(algorithm)
+                }
             }
             .pickerStyle(.segmented)
+            .labelsHidden()
             .onChange(of: algo) { frames = []; step = 0 }   // même tableau → on peut comparer
 
             HStack(spacing: 12) {
@@ -118,10 +121,13 @@ struct SortingView: View {
                 }
             }
 
-            Picker("Shape", selection: $shape) {
-                ForEach(Shape.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+            Picker("Forme", selection: $shape) {
+                ForEach(Shape.allCases, id: \.self) { shapeOption in
+                    Text(shapeOption.rawValue).tag(shapeOption)
+                }
             }
             .pickerStyle(.menu)
+            .labelsHidden()
             .onChange(of: shape) { rebuild() }
 
             if shape == .reversed || shape == .rotated || shape == .ksorted {

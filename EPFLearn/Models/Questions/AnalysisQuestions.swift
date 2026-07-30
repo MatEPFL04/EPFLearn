@@ -1,141 +1,137 @@
-
+//
+//  AnalysisQuestions.swift
+//  LearnViz
+//
 
 extension Question {
- 
+
+    // MARK: - Complex plane
+
     static let complexPlaneQuestions: [Question] = [
         Question(
             subject: .analysis,
-            text: "You set r₁ = 0 (so z₁ = 0), θ₂ = π/3, r₂ = 3, and switch to × mode. What does the app show for arg(z₁ × z₂)?",
-            hint: "What actually is z₁ × z₂ here?",
+            text: "In × mode, what single geometric operation takes z₁ to z₁ × z₂?",
+            hint: "Flip between + and × with the same z₂ and compare how the result moves: one slides, the other turns and stretches.",
             options: [
-                "θ₁ + θ₂, same as any other product",
-                "θ₂, since z₁ contributes nothing",
-                "Undefined — z₁ × z₂ = 0, and the argument of 0 has no meaning",
-                "0, by convention"
-            ],
-            correctIndex: 2,
-            explanation: "z₁ × z₂ = 0 · z₂ = 0 regardless of θ₂. The argument (direction) of a complex number is only defined when its modulus is nonzero.",
-            visualization: .complexNumbers
-        ),
-        Question(
-            subject: .analysis,
-            text: "For which z₁, z₂ (both nonzero) does |z₁ + z₂| = |z₁| + |z₂| hold exactly?",
-            hint: "Try setting θ₁ = θ₂ in + mode and watch what the parallelogram construction degenerates into",
-            options: [
-                "Only when z₁ and z₂ are complex conjugates",
-                "Only when θ₁ = θ₂ (z₂ is a positive real multiple of z₁)",
-                "Only when θ₂ = θ₁ + π",
-                "This holds for any z₁, z₂"
+                "A translation by z₂",
+                "A rotation by θ₂ followed by a scaling by r₂",
+                "A reflection across the direction of z₂",
+                "A projection onto z₂"
             ],
             correctIndex: 1,
-            explanation: "This is the equality case of the triangle inequality. It holds only when z₁ and z₂ point in exactly the same direction — otherwise |z₁+z₂| < |z₁|+|z₂| strictly, because the parallelogram construction only flattens into a straight segment when there's no angle between the two vectors.",
+            explanation: "Moduli multiply and arguments add: |z₁z₂| = r₁r₂ and arg = θ₁ + θ₂. Addition is the parallelogram, multiplication is rotate then stretch.",
             visualization: .complexNumbers
         ),
         Question(
             subject: .analysis,
-            text: "Starting from any z₁ and z₂ in × mode, you replace θ₂ by θ₂ + π and leave r₂ unchanged. What happens to z₁ × z₂?",
-            hint: "Try it in the visualisation, if in doubt",
+            text: "For nonzero z₁, z₂, when does |z₁ + z₂| = |z₁| + |z₂| hold exactly?",
+            hint: "In + mode, turn θ₂ until it matches θ₁ and watch the parallelogram flatten into a single segment.",
+            options: [
+                "Only when z₁ and z₂ are conjugates",
+                "Only when θ₁ = θ₂, so z₂ is a positive multiple of z₁",
+                "Only when θ₂ = θ₁ + π",
+                "For any z₁ and z₂"
+            ],
+            correctIndex: 1,
+            explanation: "This is the equality case of the triangle inequality. Any angle between the two vectors gives the parallelogram real width, and the sum comes out strictly shorter.",
+            visualization: .complexNumbers
+        ),
+        Question(
+            subject: .analysis,
+            text: "In × mode you replace θ₂ by θ₂ + π and leave r₂ alone. What happens to z₁ × z₂?",
+            hint: "Push θ₂ half a turn and watch whether the product changes length or only direction.",
             options: [
                 "Its modulus doubles",
-                "It rotates by π (points the opposite way), same modulus",
+                "It flips to the opposite direction, same modulus",
                 "It becomes purely imaginary",
-                "Nothing changes, since only the modulus of the product depends on r₁ and r₂"
+                "Nothing changes, since the modulus only depends on r₁ and r₂"
             ],
             correctIndex: 1,
-            explanation: "Adding π to θ₂ multiplies z₂ by e^{iπ} = −1, so z₁ × z₂ simply flips to the opposite direction (its argument shifts by π) while |z₁ × z₂| = r₁r₂ stays exactly the same. A common mistake is assuming shifting the angle also changes the modulus.",
+            explanation: "Adding π multiplies z₂ by e^(iπ) = −1. The argument shifts by π while |z₁ × z₂| = r₁r₂ stays put.",
             visualization: .complexNumbers
         ),
         Question(
             subject: .analysis,
-            text: "θ₁ = 3π/4 and θ₂ = 3π/2 in × mode. The app normalizes displayed angles to [0, 2π). What argument will it actually display for z₁ × z₂?",
-            hint: "First, find the expression of z₁ × z₂, then use the fact that a simple complex exponential is 2π-periodic. ",
-            options: [
-                "9π/4",
-                "π/4",
-                "5π/4",
-                "−3π/4"
-            ],
+            text: "θ₁ = 3π/4, θ₂ = 3π/2 in × mode. The app normalizes angles to [0, 2π). What argument does it display?",
+            hint: "Set both angles, read the value the app prints, then work out what it did to the raw sum.",
+            options: ["9π/4", "π/4", "5π/4", "−3π/4"],
             correctIndex: 1,
-            explanation: "3π/4 + 3π/2 = 9π/4. Since 9π/4 exceeds 2π, subtract 2π (= 8π/4) to bring it back into range: 9π/4 − 2π = π/4.",
+            explanation: "3π/4 + 3π/2 = 9π/4, which sits past 2π. Subtracting 2π brings it back to π/4.",
             visualization: .complexNumbers
         ),
     ]
-    
+
+
+
     static let trigoQuestions: [Question] = [
-        
-                Question(
-                    subject: .analysis,
-                    text: "As θ increases through π/2 (from slightly below to slightly above), what happens to tan θ, and what does that reveal about cos θ and sin θ individually?",
-                    hint: "Check whether cos θ and sin θ themselves jump at π/2, or only their ratio does",
-                    options: [
-                        "tan θ jumps from a huge positive value to a huge negative value, even though cos θ and sin θ are both perfectly continuous there",
-                        "tan θ passes smoothly through 0",
-                        "tan θ is continuous at π/2 because sin θ = 1 there",
-                        "cos θ and sin θ both jump discontinuously at π/2"
-                    ],
-                    correctIndex: 0,
-                    explanation: "cos θ and sin θ are continuous everywhere,nothing jumps in the numerator or denominator individually. But cos θ crosses zero at π/2, so the ratio sin θ / cos θ blows up: +∞ approaching from below, −∞ from above. ",
-                    visualization: .trigo
-                ),
-                Question(
-                    subject: .analysis,
-                    text: "tan θ = tan(θ + π) for any θ where both are defined, even though the point on the circle is completely different. What does this tell you about the period of tan, compared to sin and cos?",
-                    hint: "Check what happens to cos θ and sin θ individually when you add π — do they change sign?",
-                    options: [
-                        "tan has period π, exactly half the period of sin and cos",
-                        "tan has the same period 2π as sin and cos",
-                        "tan has period π/2",
-                        "tan isn't periodic at all"
-                    ],
-                    correctIndex: 0,
-                    explanation: "Adding π flips the sign of both cos θ and sin θ: cos(θ+π) = −cos θ, sin(θ+π) = −sin θ. Their ratio is unchanged, so tan(θ+π) = tan θ. The point on the circle is the antipodal one (completely different position), yet tan reads the same — its true period is π, not 2π like sin and cos.",
-                    visualization: .trigo
-                ),
-                Question(
-                    subject: .analysis,
-                    text: "For θ ∈ [0, 2π], how many values satisfy both sin(θ) = cos(θ) and tan(θ/4) > 0?",
-                    hint: "Find where sin(θ) = cos(θ) first, then check the sign of tan(θ/4) for those angles.",
-                    options: ["1", "2", "3", "4"],
-                    correctIndex: 1,
-                    explanation: "The equation sin(θ) = cos(θ) yields two solutions in [0, 2π]: θ = π/4 and θ = 5π/4. Next, we test tan(θ/4) for both: 1) For θ = π/4, tan(π/16) > 0 because π/16 is in Quadrant I. 2) For θ = 5π/4, tan(5π/16) > 0 because 5π/16 is also in Quadrant I. Since both values satisfy the second condition, there are exactly 2 valid solutions.",
-                    visualization: .trigo
-                ),
-                Question(
-                    subject: .analysis,
-                    text: "For θ ∈ [0, 2π], how many separate intervals of solutions satisfy the inequality |sin θ| > |cos θ|?",
-                    hint: "On the unit circle, look for the regions where the vertical coordinate is strictly longer than the horizontal coordinate.",
-                    options: [
-                        "1 interval, covering a quarter of the circle.",
-                        "2 intervals, covering a quarter of the circle.",
-                        "2 intervals, covering half of the circle.",
-                        "4 intervals, covering three quarter of the circle."
-                    ],
-                    correctIndex: 2,
-                    explanation: "The condition |sin θ| > |cos θ| means the y-coordinate has a greater absolute value than the x-coordinate. This happens in the regions steeper than the 45-degree diagonal lines. Visually, this creates two large continuous arcs centered around the vertical axis: the top arc (π/4, 3π/4) and the bottom arc (5π/4, 7π/4). Within the domain [0, 2π], these form exactly 2 separate intervals that combined cover half of the circle.",
-                    visualization: .trigo
-                )
+        Question(
+            subject: .analysis,
+            text: "For θ ∈ [0, 2π], how many values satisfy both sin θ = −cos θ and tan(θ/2) > 0?",
+            hint: "Sweep θ and stop where the two bars have equal length but opposite signs. Then set θ to half of each and read the sign of tan.",
+            options: ["1", "2", "3", "4"],
+            correctIndex: 0,
+            explanation: "sin θ = −cos θ gives tan θ = −1, so θ = 3π/4 or 7π/4. Halving them: 3π/8 sits in the first quadrant where tan > 0, but 7π/8 lands in the second where tan < 0. Only one survives.",
+            visualization: .trigo
+        ),
+        Question(
+            subject: .analysis,
+            text: "For θ ∈ [0, 2π], how many values satisfy both sin θ = cos θ and tan(θ/4) > 0?",
+            hint: "Sweep θ and stop where the two coordinate bars have equal length and equal sign, then check which quadrant a quarter of each angle lands in.",
+            options: ["1", "2", "3", "4"],
+            correctIndex: 1,
+            explanation: "sin θ = cos θ at θ = π/4 and θ = 5π/4. Their quarters, π/16 and 5π/16, both sit in the first quadrant where tan is positive. Two solutions.",
+            visualization: .trigo
+        ),
+        Question(
+            subject: .analysis,
+            text: "For θ ∈ [0, 2π], how many intervals satisfy |sin θ| > |cos θ|?",
+            hint: "Sweep θ and mark where the vertical bar is taller than the horizontal one. The switch happens on the diagonals.",
+            options: [
+                "1 interval, a quarter of the circle",
+                "2 intervals, a quarter of the circle",
+                "2 intervals, half the circle",
+                "4 intervals, three quarters of the circle"
+            ],
+            correctIndex: 2,
+            explanation: "The vertical coordinate wins between the 45° diagonals: the arc (π/4, 3π/4) at the top and (5π/4, 7π/4) at the bottom. Two arcs covering half the circle.",
+            visualization: .trigo
+        ),
+        Question(
+            subject: .analysis,
+            text: "For θ ∈ [0, 2π], on what fraction of the circle is sin θ > 3 cos θ?",
+            hint: "Find the two angles where the vertical bar is exactly three times the horizontal one, and look at where they sit relative to each other on the circle.",
+            options: [
+                "A quarter",
+                "A third",
+                "Half",
+                "It depends on the factor 3"
+            ],
+            correctIndex: 2,
+            explanation: "The two boundary angles are diametrically opposite, so the line joining them cuts the circle into two equal arcs and the inequality holds on one of them. The factor 3 tilts that line but never changes the split: any k gives half.",
+            visualization: .trigo
+        ),
     ]
-    
-    
+
+
     static let darbouxQuestions: [Question] = [
         Question(
             subject: .analysis,
-            text: "On a symmetric interval around 0, as n → ∞, what happens to the Darboux sums S⁻ and S⁺ for f(x) = cos(x)?",
-            hint: "Play with the slider and watch what happens as the subdivision gets finer",
+            text: "For f(x) = cos(x) on a symmetric interval around 0, what happens to S⁻ and S⁺ as n → ∞?",
+            hint: "Select 'f(x) = cos(x)' from the function picker, then push the subdivision slider up and watch how the area values move.",
             options: [
-                "S⁻ and S⁺ both diverge to +∞",
-                "S⁻ and S⁺ both converge to ∫I cos(x) dx, where I is a symmetric interval around 0",
-                "S⁻ converges to 0 and S⁺ converges to a nonzero value",
-                "S⁺ − S⁻ stays constant no matter the subdivision"
+                "Both diverge to +∞",
+                "Both converge to ∫I cos(x) dx",
+                "S⁻ goes to 0 and S⁺ to something nonzero",
+                "S⁺ − S⁻ stays constant"
             ],
             correctIndex: 1,
-            explanation: "As n → ∞, each sub-interval's width shrinks to 0. S⁻ and S⁺ always sandwich the integral, and their gap shrinks to 0 too: both converge to the value of the integral. This is the Riemann integrability criterion.",
+            explanation: "The two sums always trap the integral, and their gap shrinks with the width of the pieces because cos is Riemann-integrable.",
             visualization: .darboux
         ),
         Question(
             subject: .analysis,
-            text: "f(x) = 1 if x is rational, 0 otherwise (Dirichlet function). What are S⁻ and S⁺ on [0,2], no matter how we subdivide?",
-            hint: "Every interval, no matter how small, contains both rationals and irrationals",
+            text: "f(x) = 1 on rationals, 0 elsewhere. What are S⁻ and S⁺ on [0, 2] for any subdivision?",
+            hint: "Select 'f(x) = 1 if x ∈ ℚ, 0 otherwise' (the Dirichlet function), then refine the subdivision as far as the slider allows: every piece, however thin, still contains both rationals and irrationals.",
             options: [
                 "S⁻ = 0 and S⁺ = 2",
                 "S⁻ = S⁺ = 1/2",
@@ -143,687 +139,694 @@ extension Question {
                 "It depends on how fine the subdivision is"
             ],
             correctIndex: 0,
-            explanation: "Every sub-interval contains both irrationals (where f=0) and rationals (where f=1). So inf = 0 and sup = 1 on every piece, no matter the subdivision. S⁻ = 0 and S⁺ = 1 always. The Dirichlet function is not Riemann integrable.",
+            explanation: "Every piece has infimum 0 and supremum 1, so S⁻ = 0 and S⁺ = 1 × 2 = 2 whatever the subdivision. The gap never closes, so the function is not Riemann integrable.",
             visualization: .darboux
         ),
         Question(
             subject: .analysis,
-            text: "We refine a subdivision P by adding a point to get P'. What happens?",
-            hint: "Adding a point shrinks the sub-intervals: the infimums go up, the supremums go down (check the visualization)",
+            text: "You refine a subdivision P into P′ by adding one point. What happens to the sums?",
+            hint: "Select 'f(x) = sin(x)', then add a single point with the slider and compare each staircase before and after.",
             options: [
-                "S⁻(P') ≤ S⁻(P) and S⁺(P') ≥ S⁺(P)",
-                "S⁻(P') ≥ S⁻(P) and S⁺(P') ≤ S⁺(P)",
-                "S⁻ and S⁺ stay the same",
+                "S⁻(P′) ≤ S⁻(P) and S⁺(P′) ≥ S⁺(P)",
+                "S⁻(P′) ≥ S⁻(P) and S⁺(P′) ≤ S⁺(P)",
+                "Both stay the same",
                 "It depends on how smooth f is"
             ],
             correctIndex: 1,
-            explanation: "Refining a subdivision can only help: S⁻ goes up (infimum over smaller intervals) and S⁺ goes down.",
+            explanation: "Smaller pieces can only raise an infimum and lower a supremum. Refining pushes S⁻ up and S⁺ down.",
             visualization: .darboux
         ),
         Question(
             subject: .analysis,
-            text: "For a constant function f(x) = c on [a,b], what are the Darboux sums S⁻ and S⁺ for any subdivision?",
-            hint: "On every sub-interval the min and the max of f are the same.",
+            text: "For a constant f(x) = c on [a, b], what are S⁻ and S⁺?",
+            hint: "Select 'f(x) = 5' (the constant function) and move the slider: the two staircases sit on top of each other from the very first step.",
             options: [
                 "S⁻ = S⁺ = c(b − a), for every subdivision",
                 "S⁻ = 0 and S⁺ = c(b − a)",
-                "They depend on how fine the subdivision is",
+                "They depend on the subdivision",
                 "S⁻ = S⁺ = c"
             ],
             correctIndex: 0,
-            explanation: "On each sub-interval the infimum and supremum of f are both c, so every lower and upper rectangle has height c. Both sums equal c times the total width: S⁻ = S⁺ = c(b − a), whatever the subdivision. The gap is 0 from the start — the exact opposite of the Dirichlet function, where the gap never closes.",
+            explanation: "Infimum and supremum are both c on every piece, so both sums equal c(b − a). The gap is zero from the start, the exact opposite of the Dirichlet case.",
             visualization: .darboux
         ),
     ]
-    
+
+
     static let bijectivityQuestions: [Question] = [
         Question(
             subject: .analysis,
-            text: "Let f: ℝ → ℝ be defined by f(x) = x². Why is this function neither injective nor surjective?",
-            hint: "Find two preimages for the same positive number, and check if negative numbers have preimages.",
+            text: "Why is f: ℝ → ℝ, f(x) = x² neither injective nor surjective?",
+            hint: "Slide a horizontal line to height 4 and count the crossings, then drop it to height −1.",
             options: [
-                "Because f(-2) = f(2) = 4 (not injective) and no negative real number has a preimage (not surjective)",
-                "Because it does not pass through the origin of the coordinate system",
-                "Because its derivative is zero at zero",
-                "Because it is continuous on its domain"
+                "f(−2) = f(2) = 4, and no negative number has a preimage",
+                "It does not pass through the origin",
+                "Its derivative vanishes at 0",
+                "It is continuous on its domain"
             ],
             correctIndex: 0,
-            explanation: "A function is injective if each image has at most one preimage. Here f(-2) = f(2), so it is not injective. It is surjective if each element in the codomain has at least one preimage. However, a square is always positive, so negative numbers have no preimage.",
+            explanation: "Two preimages for 4 kills injectivity. No square is negative, so −1 has no preimage at all.",
             visualization: .bijectivity
         ),
         Question(
             subject: .analysis,
-            text: "If we restrict the domain and codomain of f(x) = x² to obtain g: ℝ⁺ → ℝ⁺, what does the function become?",
-            hint: "Think about the square root function on this interval.",
+            text: "Restricting f(x) = x² to g: ℝ⁺ → ℝ⁺ turns it into what?",
+            hint: "Only look at what is in the zone where x > 0 and y > 0, are all values reached exactly once ?",
             options: [
-                "It remains neither injective nor surjective",
-                "It becomes bijective",
-                "It becomes injective but remains non-surjective",
-                "It becomes surjective but remains non-injective"
+                "Still neither injective nor surjective",
+                "Bijective",
+                "Injective but not surjective",
+                "Surjective but not injective"
             ],
             correctIndex: 1,
-            explanation: "By restricting the domain to ℝ⁺, distinct elements have distinct squares (injectivity). By restricting the codomain to ℝ⁺, every positive number has a real square root (surjectivity). The function has an inverse, so it is bijective.",
+            explanation: "On ℝ⁺ every height y ≥ 0 is hit exactly once. One preimage always, so g is a bijection with the square root as inverse.",
             visualization: .bijectivity
         ),
         Question(
             subject: .analysis,
-            text: "A function f: A → B is said to be injective if and only if:",
-            hint: "Translate mathematically the fact that two distinct elements in the domain cannot have the same image.",
+            text: "f: A → B is injective if and only if:",
+            hint: "Think about what the horizontal line in the graph translates to",
             options: [
-                "For every y in B, there exists a unique x in A such that f(x) = y",
-                "For all x₁ and x₂ in A, f(x₁) = f(x₂) implies x₁ = x₂",
-                "For every y in B, there exists at least one x in A such that f(x) = y",
+                "For every y in B there is a unique x with f(x) = y",
+                "For all x₁, x₂ in A, f(x₁) = f(x₂) implies x₁ = x₂",
+                "For every y in B there is at least one x with f(x) = y",
                 "For every x in A, f(x) is unique"
             ],
             correctIndex: 1,
-            explanation: "The logical definition of injectivity is: ∀(x₁, x₂) ∈ A², f(x₁) = f(x₂) ⇒ x₁ = x₂. Another equivalent formulation by contraposition is: if x₁ ≠ x₂, then f(x₁) ≠ f(x₂).",
+            explanation: "∀(x₁, x₂) ∈ A², f(x₁) = f(x₂) ⇒ x₁ = x₂. By contraposition: distinct inputs give distinct outputs.",
             visualization: .bijectivity
         ),
         Question(
             subject: .analysis,
-            text: "Let f: ℝ → ℝ be a continuous and strictly increasing function. What can be stated with certainty?",
-            hint: "Can a strictly monotonic function pass through the same value twice?",
+            text: "f: ℝ → ℝ is continuous and strictly increasing. What is certain?",
+            hint: "Think graphically about injectivity with an horizontal line",
             options: [
-                "It is injective but not surjective",
-                "It is exclusively surjective",
-                "It is bijective from ℝ to its image f(ℝ)",
-                "It cannot be modeled continuously"
+                "Injective but not surjective",
+                "Surjective only",
+                "Bijective from ℝ onto its image f(ℝ)",
+                "It cannot be modelled continuously"
             ],
             correctIndex: 2,
-            explanation: "Strict monotonicity guarantees injectivity (f(x₁) ≠ f(x₂) as soon as x₁ ≠ x₂). Without knowing the limits at infinity, we do not know if f(ℝ) covers all of ℝ, but f is necessarily a bijection from ℝ to its image set f(ℝ).",
+            explanation: "Strict monotonicity gives injectivity. Without the limits at infinity we cannot claim f(ℝ) is all of ℝ, but f is a bijection onto its image.",
             visualization: .bijectivity
-        )
+        ),
     ]
 
-
-    // MARK: - Derivative
     static let derivativeQuestions: [Question] = [
         Question(
             subject: .analysis,
-            text: "For which family of functions is the difference quotient (f(x+h)-f(x))/h exactly equal to f'(x) for every h ≠ 0?",
-            hint: "Think of functions whose secant line always matches the tangent line — try eliminating options using the graph.",
+            text: "For which functions is (f(x+h) − f(x))/h exactly f'(x) for every h ≠ 0?",
+            hint: "Select 'x/2 + 3' (the affine function), then open h as wide as it goes and see how the secant stays glued to the tangent. Try the other presets too.",
             options: [
                 "Constant functions only",
                 "Polynomials of degree ≤ 2",
                 "All differentiable functions",
-                "Affine functions f(x) = ax + b",
+                "Affine functions f(x) = ax + b"
             ],
-            correctIndex: 3
-            ,
-            explanation: "For f(x) = ax+b, (f(x+h)-f(x))/h = a = f'(x) exactly. For any polynomial of degree ≥ 2, there's a leftover term in h that only vanishes in the limit.",
+            correctIndex: 3,
+            explanation: "For ax + b the quotient is a whatever h is. Degree 2 or more leaves a term in h that only vanishes in the limit.",
             visualization: .derivative
         ),
         Question(
             subject: .analysis,
-            text: "On the graph, the tangent line at x₀ and the curve look almost identical near x₀. What property exactly captures this?",
-            hint: "The derivative is more than just a slope — it's a local approximation",
+            text: "f is odd. You read the secant slope at x, then at −x. What do you find?",
+            hint: "Select '6 sin(x/2)' (an odd function), put the secant at a point, then at its mirror image across the origin, and compare the two tilts.",
             options: [
-                "f(x₀+h) = f(x₀) + f'(x₀)·h for every h",
-                "f(x₀+h) = f(x₀) + f'(x₀)·h + o(h) as h → 0",
-                "f(x₀+h) - f(x₀) = f'(x₀) for every small h",
-                "f and its tangent line have the same maximum"
+                "Opposite slopes, since f is odd",
+                "Equal slopes, so the two tangents are parallel",
+                "Slopes that are opposite only when x > 0",
+                "Nothing predictable without the formula"
             ],
             correctIndex: 1,
-            explanation: "f being differentiable at x₀ means exactly that f(x₀+h) = f(x₀) + f'(x₀)·h + o(h): the gap between the curve and the tangent is negligible compared to h. That's why they look indistinguishable when you zoom in — but they never actually coincide unless f is affine.",
+            explanation: "f(−x) = −f(x) differentiates to −f'(−x) = −f'(x), so f'(−x) = f'(x). The derivative of an odd function is even, and the two tangents come out parallel even though the curve looks flipped.",
             visualization: .derivative
         ),
         Question(
             subject: .analysis,
-            text: "On the graph, |x| has a sharp corner at x=0. What does this mean analytically?",
-            hint: "Compute the difference quotient of |x| at 0 from the right and from the left",
+            text: "|x| has a corner at 0. What does that mean analytically?",
+            hint: "Select '|x|' (absolute value), then bring the secant to 0 from the right, then from the left, and read the two slopes.",
             options: [
                 "|x| is not continuous at 0",
-                "The limit of the difference quotient depends on the sign of h: it's 1 for h>0 and -1 for h<0",
+                "The quotient is 1 for h > 0 and −1 for h < 0",
                 "|x| is differentiable at 0 with f'(0) = 0",
-                "The difference quotient diverges to +∞"
+                "The quotient diverges to +∞"
             ],
             correctIndex: 1,
-            explanation: "For h > 0: (|h|-0)/h = 1. For h < 0: (-h)/h = -1. The left and right limits both exist but disagree — so the limit of the difference quotient doesn't exist. |x| is continuous but not differentiable at 0: the corner in the graph is exactly the signature of this.",
+            explanation: "Both one sided limits exist and disagree, so the limit of the quotient does not. |x| is continuous at 0 but not differentiable there.",
             visualization: .derivative
         ),
         Question(
             subject: .analysis,
-            text: "On the graph, you drag the secant line and watch its slope. If f is even, what can we say about f'?",
-            hint: "Think about the curve's symmetry — how does the secant at -x relate to the one at x?",
+            text: "If f is even, what can we say about f'?",
+            hint: "Select 'x⁴/500 − 3x²/10' (an even function), place the secant at x, then at −x, and compare the two slopes.",
             options: [
-                "f' is also even",
+                "f' is even too",
                 "f' is odd",
-                "f' is even only if f is a polynomial",
-                "We can't say anything without computing"
+                "f' is even only for polynomials",
+                "Nothing without computing"
             ],
             correctIndex: 1,
-            explanation: "If f is even, f(-x) = f(x). Differentiating: -f'(-x) = f'(x), so f'(-x) = -f'(x) — f' is odd. On the graph: the secant at -x is the mirror image of the secant at x, with opposite slope. So the tangent at 0 of an even function is always horizontal.",
+            explanation: "f(−x) = f(x) differentiates to −f'(−x) = f'(x), so f' is odd. One consequence: an even function always has a horizontal tangent at 0.",
             visualization: .derivative
         ),
     ]
 
-    // MARK: - Sequences
+
     static let sequenceQuestions: [Question] = [
+    
+        Question(
+                subject: .analysis,
+                text: "On uₙ = 1/n you keep only the terms whose index is a perfect square. Where does that subsequence go?",
+                hint: "Select '1/n' from the sequence picker, slide n forward and check whether any selection of the dots could avoid the dashed line.",
+                options: [
+                    "To 0",
+                    "Away from 0, since perfect squares are sparse",
+                    "It depends on the pattern of indices chosen",
+                    "It does not converge"
+                ],
+                correctIndex: 0,
+                explanation: "The whole sequence converges to 0, so every subsequence converges to 0 as well. Picking sparse indices only makes it arrive faster, never elsewhere. This is the contrast with cos(nπ/2), where the choice of indices decides the limit.",
+                visualization: .sequence
+            ),
+        Question(
+                subject: .analysis,
+                text: "uₙ = (−1)ⁿ·n/(n+1) has +1 and −1 as subsequential limits. How many terms are actually equal to 1?",
+                hint: "Select '(−1)ⁿ · n/(n+1)', then slide to any even n and read uₙ in the readout, then compare it with the dashed line above it.",
+                options: [
+                    "Exactly one",
+                    "None",
+                    "Infinitely many, every even one",
+                    "All of them past a certain rank"
+                ],
+                correctIndex: 1,
+                explanation: "n/(n+1) is strictly below 1 for every n, so the dots creep toward the dashed line without ever touching it. A limit of a subsequence need not be a value the sequence takes.",
+                visualization: .sequence
+            ),
+        Question(
+                subject: .analysis,
+                text: "uₙ = cos(nπ/2). How many distinct limits can convergent subsequences reach?",
+                hint: "Select 'cos(nπ/2)', then slide n forward and count how many dashed lines the colours settle onto.",
+                options: [
+                    "None, since uₙ diverges",
+                    "Exactly 1",
+                    "Exactly 3",
+                    "Infinitely many"
+                ],
+                correctIndex: 2,
+                explanation: "The terms cycle through 1, 0, −1, 0. Three values recur infinitely often, giving three constant subsequences.",
+                visualization: .sequence
+            ),
         Question(
             subject: .analysis,
-            text: "Let uₙ = cos(nπ/2). How many distinct limits can we get from convergent subsequences?",
-            hint: "List the values uₙ actually takes",
+            text: "On (−1)ⁿ·n/(n+1), how far apart are two consecutive terms when n is large?",
+            hint: "Select '(−1)ⁿ · n/(n+1)', then read uₙ and uₙ₊₁ in the readout for a small n, then for the largest n the slider allows.",
             options: [
-                "None — since uₙ diverges, no subsequence converges",
-                "Exactly 1",
-                "Exactly 3",
-                "Infinitely many"
+                "They get closer and closer",
+                "The gap stays near 1",
+                "The gap grows toward 2",
+                "The gap keeps changing with no pattern"
             ],
             correctIndex: 2,
-            explanation: "uₙ cycles through 1, 0, −1, 0, ... Three values show up infinitely often → three constant subsequences → three distinct limits.",
-            visualization: .sequence
-        ),
-        Question(
-            subject: .analysis,
-            text: "Bolzano-Weierstrass applies to uₙ = (-1)ⁿ. What does it guarantee?",
-            hint: "Is the sequence bounded?",
-            options: [
-                "It diverges, so the theorem doesn't apply",
-                "There exists at least one convergent subsequence",
-                "It converges to 0",
-                "There is a unique convergent subsequence"
-            ],
-            correctIndex: 1,
-            explanation: "uₙ = (-1)ⁿ is bounded, so B-W applies. There are two convergent subsequences: even indices → 1, odd indices → -1. B-W guarantees at least one, not uniqueness.",
-            visualization: .sequence
-        ),
-        Question(
-            subject: .analysis,
-            text: "uₙ is decreasing and bounded below by m. The subsequence u_{3n} converges to L. What is lim uₙ?",
-            hint: "A monotone bounded sequence converges — does the subsequence tell us the limit?",
-            options: [
-                "We can't conclude without knowing u_{3n+1} and u_{3n+2}",
-                "uₙ converges to L",
-                "uₙ converges to m",
-                "uₙ converges to L only if L = m"
-            ],
-            correctIndex: 1,
-            explanation: "uₙ decreasing and bounded below converges to some limit ℓ. Every subsequence of a convergent sequence converges to the same limit, so u_{3n} → ℓ. We're told u_{3n} → L, so ℓ = L. No need to check u_{3n+1} or u_{3n+2} — monotonicity does all the work.",
-            visualization: .sequence
-        ),
-        Question(
-            subject: .analysis,
-            text: "uₙ is increasing and u_{2n} ≤ M for every n. Can we bound u_{2n+1}?",
-            hint: "uₙ increasing: where does u_{2n+1} sit compared to u_{2n} and u_{2n+2}?",
-            options: [
-                "No, odd terms are independent from even ones",
-                "Yes: u_{2n+1} ≤ u_{2n+2} ≤ M",
-                "Yes, but only if uₙ is also bounded below",
-                "No, we'd need the explicit formula for uₙ"
-            ],
-            correctIndex: 1,
-            explanation: "uₙ increasing ⟹ u_{2n+1} ≤ u_{2n+2}. And u_{2n+2} is an even-indexed term, so u_{2n+2} ≤ M. So u_{2n+1} ≤ M without any extra assumption. Both odd and even terms of uₙ are bounded by M, so uₙ converges.",
+            explanation: "One term sits just under 1 and the next just above −1, so the gap approaches 2. Consecutive terms never settle near each other, which is exactly what stops the sequence from converging.",
             visualization: .sequence
         ),
     ]
+    
 
     static let meanTheoremQuestions: [Question] = [
         Question(
             subject: .analysis,
-            text: "On the graph, the rectangles (with height given by the Mean Value Theorem point) look poorly matched to f. What can we say about their total area?",
-            hint: "How is cₖ chosen?",
+            text: "The rectangles look badly matched to f. What is their total area?",
+            hint: "Select 'x² / 4' and look inside one rectangle: compare the sliver sticking out above the curve with the gap left below it.",
             options: [
-                "The area is an approximation of ∫f",
-                "The area is exactly ∫f, no matter the subdivision",
-                "The area is exact only if the rectangles touch the curve",
-                "The area is exact only when δ → 0"
+                "An approximation of ∫f",
+                "Exactly ∫f, for any subdivision",
+                "Exact only if the rectangles touch the curve",
+                "Exact only as δ → 0"
             ],
             correctIndex: 1,
-            explanation: "The Mean Value Theorem guarantees f(cₖ)·δ = ∫[xₖ,xₖ₊₁] f exactly. The rectangle's height exactly compensates for where it overshoots and undershoots the curve.",
+            explanation: "The theorem picks cₖ so that f(cₖ)δ equals the integral on that piece exactly. Overshoot and undershoot cancel out.",
             visualization: .meanTheorem
         ),
         Question(
-            subject: .analysis,
-            text: "The Mean Value Theorem for integrals says: if f is continuous on [a,b], there exists c ∈ ]a,b[ such that...",
-            hint: "It's the height of the rectangle whose area equals ∫f",
-            options: [
-                "f(c) = (f(a) + f(b)) / 2",
-                "f(c) · (b-a) = ∫[a,b] f",
-                "f'(c) = (f(b)-f(a)) / (b-a)",
-                "∫[a,c] f = ∫[c,b] f"
-            ],
-            correctIndex: 1,
-            explanation: "f(c) is the average value of f on [a,b]. Option C is the Mean Value Theorem for derivatives, not the integral version.",
-            visualization: .meanTheorem
-        ),
+                subject: .analysis,
+                text: "You double the number of sections. What happens to the total area of the rectangles?",
+                hint: "Select 'sin(x)', then drag the sections slider from 2 to 60 and watch the blue total, not its outline.",
+                options: [
+                    "It grows toward the area under the curve",
+                    "It stays exactly the same",
+                    "It shrinks toward the area under the curve",
+                    "It oscillates as sections are added"
+                ],
+                correctIndex: 1,
+                explanation: "Each rectangle already matches its own piece exactly, so cutting a piece in two just splits an exact area into two exact areas. There is nothing to converge to.",
+                visualization: .meanTheorem
+            ),
         Question(
-            subject: .analysis,
-            text: "f is continuous and positive on [a,b], and ∫[a,b] f = M·(b-a). What does M represent?",
-            hint: "What does the theorem say?",
-            options: [
-                "The maximum of f on [a,b]",
-                "The average value of f on [a,b]",
-                "The value of f at the midpoint of [a,b]",
-                "The derivative of f at some point in ]a,b["
-            ],
-            correctIndex: 1,
-            explanation: "M = (1/(b-a)) ∫[a,b] f is by definition the average value of f. The theorem says there's a point c where f(c) = M.",
-            visualization: .meanTheorem
-        ),
+                subject: .analysis,
+                text: "f is odd and the interval is symmetric around 0. What is the total area of the rectangles?",
+                hint: "Select 'sin(x)' (an odd function), set sections to 2: one rectangle hangs below the axis, the other rises above it.",
+                options: [
+                    "Twice the area of the right one",
+                    "Zero",
+                    "The area of the right one only",
+                    "Undefined, since one rectangle is below the axis"
+                ],
+                correctIndex: 1,
+                explanation: "Oddness makes the left rectangle drop below the axis by exactly what the right one rises above it. The areas carry a sign and cancel, matching an integral of 0.",
+                visualization: .meanTheorem
+            ),
         Question(
-            subject: .analysis,
-            text: "f is continuous on [a,b] and strictly increasing. Does the theorem guarantee a unique c?",
-            hint: "Can a strictly increasing function hit the same value twice?",
-            options: [
-                "No, the theorem never says anything about uniqueness",
-                "Yes, because f injective never takes the same value twice",
-                "No, there can always be several",
-                "Yes, but only if f is differentiable"
-            ],
-            correctIndex: 1,
-            explanation: "The theorem guarantees at least one c such that f(c) = μ. If f is strictly increasing, it's injective, so this c is unique. Without strict monotonicity, several c's are possible — for example sin(2x) on [0, π] has average 0, reached at both π/4 and 3π/4.",
-            visualization: .meanTheorem
-        ),
+                subject: .analysis,
+                text: "For which kind of f is c unique in every piece, whatever the subdivision?",
+                hint: "Try 'x³/8 + x/2' (strictly increasing) at 20 sections and look for the curve that never comes back to a height it already left. Compare with the other functions.",
+                options: [
+                    "Any continuous f",
+                    "Any strictly monotone f",
+                    "Any positive f",
+                    "Any differentiable f"
+                ],
+                correctIndex: 1,
+                explanation: "The theorem alone only gives existence. Strict monotonicity makes f injective, so it reaches its average height exactly once per piece. A curve that turns back on itself can hit that height several times.",
+                visualization: .meanTheorem
+            ),
     ]
-
+    
+    
     static let TFIQuestions: [Question] = [
         Question(
             subject: .analysis,
-            text: "Let f, g be continuous on [a,b]. Which condition guarantees f = g on [a,b]?",
-            hint: "Think about the Fundamental Theorem of Calculus... What do you get by differentiating ∫[a,x] f?",
+            text: "Before the break point the two curves lie on top of each other. Why are F and G equal there?",
+            hint: "Slide x to the left of the dashed line and compare the red shaded region with the blue one.",
             options: [
-                "∫[a,b] f = ∫[a,b] g",
-                "∫[a,x] f = ∫[a,x] g for every x ∈ [a,b]",
-                "∫[a,b] f² = ∫[a,b] g²",
-                "∫[a,b] |f| = ∫[a,b] |g|"
+                "Because both areas are positive",
+                "Because f and g agree on the whole stretch travelled so far",
+                "Because F and G are both continuous",
+                "Because the areas happen to cancel"
             ],
             correctIndex: 1,
-            explanation: "Option A is false: f(x)=x and g(x)=-x on [-1,1] give ∫f = ∫g = 0 but f ≠ g. Option B is true: if F(x) = ∫[a,x] f = ∫[a,x] g = G(x) for every x, then differentiating gives F'(x) = f(x) = G'(x) = g(x) by the Fundamental Theorem. Options C and D are false: f and -f have the same integrals of f² and |f|.",
+            explanation: "F(x) and G(x) collect the area under f and under g from 0 up to x. As long as the two curves have not parted anywhere in that stretch, they are collecting the same thing.",
             visualization: .TFI
         ),
         Question(
             subject: .analysis,
-            text: "Let F(x) = ∫[0,x] f with f continuous. What is F'(x)?",
-            hint: "This is the direct statement of the Fundamental Theorem",
+            text: "Just past the break point f and g differ. What do F and G do at that instant?",
+            hint: "Park x right on the dashed line, then nudge it a little to the right and watch the two numbers.",
             options: [
-                "F'(x) = f(x) - f(0)",
-                "F'(x) = f(x)",
-                "F'(x) = ∫[0,x] f'",
-                "F'(x) = f(x²) · 2x"
+                "They jump apart by the gap between f and g",
+                "They drift apart, slowly at first",
+                "They stay equal, since only the curves changed",
+                "F stops growing"
             ],
             correctIndex: 1,
-            explanation: "The Fundamental Theorem: F(x) = ∫[a,x] f is differentiable and F'(x) = f(x). Integrating then differentiating just gives back f.",
+            explanation: "The gap between F and G is the area collected between the two curves. Right at the break point that area is zero, and it only builds up as x moves on. Two functions can separate instantly while their integrals separate gradually.",
             visualization: .TFI
         ),
         Question(
             subject: .analysis,
-            text: "f is continuous on [a,b], f ≥ 0, and ∫[a,x] f = 0 for every x ∈ [a,b]. What can we conclude?",
-            hint: "Differentiate both sides — what does the theorem tell you?",
+            text: "What controls how fast the gap between F and G grows at a given x?",
+            hint: "Slide x slowly through a stretch where the red curve is far above the blue one, then through a stretch where they nearly touch. Compare how quickly the two numbers run apart.",
             options: [
-                "f = 0 only at a",
-                "∫[a,b] f = 0 but f could be nonzero elsewhere",
-                "f = 0 on all of [a,b]",
-                "We can only conclude this if f is differentiable"
+                "The gap already accumulated so far",
+                "The vertical distance between f and g at that x",
+                "The distance from x to the break point",
+                "Nothing, the gap grows at a steady rate"
             ],
-            correctIndex: 2,
-            explanation: "Let F(x) = ∫[a,x] f. By assumption F ≡ 0, so F' ≡ 0. But the theorem gives F'(x) = f(x) for every x. So f = 0 on [a,b]. The condition f ≥ 0 isn't even needed here — differentiating F does all the work.",
+            correctIndex: 1,
+            explanation: "F − G collects the area between the curves, so its rate of growth at x is exactly the height between them at x. Where they are far apart the numbers run away fast, where they nearly touch the gap barely moves even though it is already large.",
             visualization: .TFI
         ),
         Question(
             subject: .analysis,
-            text: "f is continuous on ℝ and F(x) = ∫[x, 2x] f. What is F'(x)?",
-            hint: "Split into two integrals with a fixed lower bound, then differentiate each",
+            text: "For a given a > 0, F(a) = G(a), does it imply that f(x) = g(x) for all x in [0,a] ?",
+            hint: "How is the condition of function equality transferred in terms of the areas ?",
             options: [
-                "F'(x) = f(2x) − f(x)",
-                "F'(x) = 2f(2x) − f(x)",
-                "F'(x) = f(2x)",
-                "F'(x) = 2f(2x)"
+                "Yes it does, as both F(a)= G(a), all areas are equal up to a, hence the functions are equal.",
+                "No, it doesn't, as F(a) = G(a) happens only if f(x) = g(x) for all real values.",
+                "Yes it does, because the fundamental theorem of calculus guarantees pointwise equality from global area equality.",
+                "No, it doesn't. The signed areas under f and g over [0, a] can balance out to be equal at x = a, even if the functions fluctuate and differ throughout the interval."
             ],
-            correctIndex: 1,
-            explanation: "F(x) = ∫[0,2x] f − ∫[0,x] f. Using the theorem plus the chain rule: (∫[0,2x] f)' = f(2x)·2, and (∫[0,x] f)' = f(x)·1. So F'(x) = 2f(2x) − f(x). The trap is forgetting the factor 2 from the upper bound.",
+            correctIndex: 3,
+            explanation: "The gap collects signed area, so a stretch where f sits under g subtracts from it and can wipe it out. That is why F(b) = G(b) at one single b proves nothing, while F = G at every x forces f = g.",
             visualization: .TFI
-        ),
-    ]
+        )
 
-    // MARK: - Mean Value Theorem (derivative)
+    ]
+    
+    
+    // MARK: - Mean value theorem for derivatives
+
     static let TAFQuestions: [Question] = [
         Question(
             subject: .analysis,
-            text: "How many points C does the Mean Value Theorem guarantee?",
-            hint: "Re-read the exact statement of the theorem",
-            options: [
-                "Exactly one",
-                "At least one",
-                "At most one",
-                "As many as the zeros of f"
-            ],
+            text: "How many points c does the mean value theorem guarantee?",
+            hint: "Select 'cos(πx)' and count how many tangents come out parallel to the chord.",
+            options: ["Exactly one", "At least one", "At most one", "As many as f has zeros"],
             correctIndex: 1,
-            explanation: "The Mean Value Theorem guarantees at least one C — not uniqueness. For sin(2πx), several such points can exist at once.",
+            explanation: "At least one. Uniqueness is never claimed, and sin(2πx) shows several at once.",
             visualization: .TAF
         ),
+        
+        Question(
+                subject: .analysis,
+                text: "f is differentiable on ℝ and has a constant derivative f'(x). According to the Mean Value Theorem , what happens on any interval ]a, b[?",
+                hint: "Select '0.5x + 0.2 (Affine)': what does it mean for the slope of the tangent if the derivative never changes?",
+                options: [
+                    "Only the midpoint c = (a+b)/2 satisfies the Mean Value Theorem.",
+                    "Every single point c in ]a, b[ satisfies the MVT equation.",
+                    "No point c satisfies the theorem because the function has no curvature.",
+                    "The Mean Value Theorem fails because the chord and the tangent are merged."
+                ],
+                correctIndex: 1,
+                explanation: "Since f'(x) = k everywhere, the instantaneous slope is always k. The average slope (blue chord) is also k. Therefore, f'(c) = (f(b)-f(a))/(b-a) is true for every point c in the interval.",
+                visualization: .TAF
+            ),
+        Question(
+               subject: .analysis,
+               text: "What happens to the Mean Value Theorem if the function has a sharp corner inside the interval [a, b]?",
+               hint: "Select '|x|' and think about what differentiability means and how every steepness is explored between a and b.",
+               options: [
+                   "The theorem still holds as long as the function remains continuous.",
+                   "The theorem can fail completely because f'(x) is not defined at the corner.",
+                   "The theorem only holds if the sharp corner is exactly at the midpoint.",
+                   "The chord slope doubles to compensate for the corner."
+               ],
+               correctIndex: 1,
+               explanation: "The Mean Value Theorem strictly requires the function to be differentiable on the open interval ]a, b[. A sharp corner means the derivative does not exist at that point, which can prevent you from finding any parallel tangent.",
+               visualization: .TAF
+           ),
+        
         Question(
             subject: .analysis,
-            text: "What are the hypotheses of the Mean Value Theorem?",
-            hint: "What do the functions shown have in common?",
+            text: "If you select the cos(πx) preset and adjust the sliders to a = -1.00 and b = 1.00, what specific case of the Mean Value Theorem do you observe?",
+            hint: "Select 'cos(πx)' and set a = -1.00 and b = 1.00. Look at the slope of the blue dashed chord when A and B are at the same height.",
             options: [
-                "f continuous on [a,b] and differentiable on ]a,b[",
-                "f twice differentiable on [a,b]",
-                "f(a) = f(b)",
-                "f monotone on [a,b]"
-            ],
-            correctIndex: 0,
-            explanation: "The Mean Value Theorem only requires f continuous on [a,b] and differentiable on ]a,b[.",
-            visualization: .TAF
-        ),
-        Question(
-            subject: .analysis,
-            text: "f is differentiable on ℝ and f'(x) = 0 everywhere. What can we conclude?",
-            hint: "Apply the theorem on any [a,b]",
-            options: [
-                "f is periodic",
-                "f is constant",
-                "f is zero",
-                "f is affine"
+                "The Mean Value Theorem cannot be applied here.",
+                "Rolle's Theorem, because f(a) = f(b), guaranteeing a point where c where f'(c) = 0",
+                "The Fundamental Theorem of Calculus.",
+                "A case where no point c can be found because the slope is zero."
             ],
             correctIndex: 1,
-            explanation: "For any a < b, the theorem gives f(b)-f(a) = f'(c)·(b-a) = 0. So f(b) = f(a) for all a,b: f is constant.",
-            visualization: .TAF
-        ),
-        Question(
-            subject: .analysis,
-            text: "f is differentiable on ]a,b[ with |f'(x)| ≤ M everywhere. What can we bound?",
-            hint: "Apply the theorem and take absolute values",
-            options: [
-                "|f(b) - f(a)| ≤ M",
-                "|f(b) - f(a)| ≤ M · (b-a)",
-                "|f(b) - f(a)| ≤ M · (b-a)²",
-                "|f(b)| ≤ M · |f(a)|"
-            ],
-            correctIndex: 1,
-            explanation: "The theorem gives f(b)-f(a) = f'(c)·(b-a), so |f(b)-f(a)| = |f'(c)|·(b-a) ≤ M·(b-a). This is the mean value inequality, very useful for controlling regularity.",
+            explanation: "When f(a) = f(b), the slope of the chord is 0. The Mean Value Theorem then guarantees at least one point c where f'(c) = 0. This is exactly Rolle's Theorem.",
             visualization: .TAF
         ),
     ]
+
+    
+    // MARK: - Fixed points
 
     static let fixedPointQuestions: [Question] = [
         Question(
             subject: .analysis,
-            text: "On the graph, f(A) > A and f(B) < B, with f continuous. What can we conclude?",
-            hint: "Set g(x) = f(x) - x and apply the Intermediate Value Theorem",
+            text: "f is continuous with f(a) > a and f(b) < b. What follows?",
+            hint: "Select 'f(x) = 1 − x²' and watch where the curve sits relative to the diagonal at a and at b. It has to get from one side to the other.",
             options: [
-                "f has exactly one fixed point between A and B",
-                "f has at least one fixed point between A and B",
-                "f has no fixed point since it's decreasing",
-                "We can't conclude anything without knowing f'(x)"
+                "Exactly one fixed point between a and b",
+                "At least one fixed point between a and b",
+                "No fixed point, since f is decreasing",
+                "Nothing without knowing f'"
             ],
             correctIndex: 1,
-            explanation: "g(x) = f(x)−x satisfies g(A) > 0 and g(B) < 0. By the Intermediate Value Theorem there's a c with g(c) = 0, i.e. f(c) = c. Not necessarily unique — try the 4th function.",
+            explanation: "Since the curve starts above the diagonal at a and ends below it at b, it must cross the diagonal at least once.",
             visualization: .fixedPoint
         ),
         Question(
-            subject: .analysis,
-            text: "f is continuous and maps [0,1] into [0,1]. What is guaranteed?",
-            hint: "Sketch f — can it avoid the diagonal y=x?",
-            options: [
-                "f has exactly one fixed point",
-                "f has at least one fixed point in [0,1]",
-                "f has a fixed point only if f is increasing",
-                "Nothing, without extra assumptions"
-            ],
-            correctIndex: 1,
-            explanation: "g(x) = f(x)-x satisfies g(0) = f(0) ≥ 0 and g(1) = f(1)-1 ≤ 0. The Intermediate Value Theorem gives a c with f(c) = c.",
-            visualization: .fixedPoint
-        ),
+               subject: .analysis,
+               text: "If a continuous function f maps the closed interval from 0 to 1 into itself, what property is always guaranteed?",
+               hint: "Select 'f(x) = 1 − x'. The curve is perfectly boxed inside the unit square, forcing it to interact with the diagonal.",
+               options: [
+                   "Exactly one fixed point.",
+                   "At least one fixed point within the interval.",
+                   "A fixed point exists if and only if f is strictly increasing.",
+                   "Nothing can be guaranteed without knowing the explicit boundary values."
+               ],
+               correctIndex: 1,
+               explanation: "A continuous curve trapped inside a square box from x = 0 to x = 1 cannot go from the left side to the right side without crossing the diagonal line.",
+               visualization: .fixedPoint
+           ),
+        Question(
+              subject: .analysis,
+              text: "If a continuous function f is strictly decreasing on an interval, what can be concluded about the maximum number of fixed points it can possess on that interval?",
+              hint: "Select 'f(x) = 1 − x' (strictly decreasing). Think about how many times a strictly falling curve can intersect a strictly rising diagonal line.",
+              options: [
+                  "It can have multiple fixed points if the slope is very steep.",
+                  "It is guaranteed to have exactly one fixed point.",
+                  "It can have at most one fixed point.",
+                  "It cannot have any fixed points because the trends are opposite."
+              ],
+              correctIndex: 2,
+              explanation: "A strictly decreasing curve can cross the strictly increasing diagonal line at most once. If it crosses, that fixed point is unique.",
+              visualization: .fixedPoint
+          ),
         Question(
             subject: .analysis,
-            text: "f is continuous and strictly decreasing on [a,b] → [a,b]. How many fixed points?",
-            hint: "Is g(x) = f(x) − x strictly monotone?",
+            text: "How does adding large oscillations to a function affect the number of fixed points on an interval?",
+            hint: "Select 'f(x) = 1 − x + sin osc' and notice how the wave shape forces the curve to meet the diagonal at several distinct places.",
             options: [
-                "At least one, maybe several",
-                "Exactly one",
-                "None — a decreasing f can't cross y = x",
-                "Depends on the value of f(a)"
+                "It always reduces the number of fixed points to zero.",
+                "It can force the curve to cross the diagonal multiple times, creating several fixed points.",
+                "It has absolutely no effect on the number of intersections.",
+                "It guarantees that there will be an infinite number of fixed points."
             ],
             correctIndex: 1,
-            explanation: "g(x) = f(x) − x is strictly decreasing (f decreasing) minus strictly increasing (−x): so g is strictly decreasing. It can only cross zero once. The Intermediate Value Theorem gives existence, strict monotonicity gives uniqueness.",
+            explanation: "When a function oscillates strongly up and down, it can snake across the diagonal line multiple times, creating more than one fixed point.",
             visualization: .fixedPoint
-        ),
-        Question(
-            subject: .analysis,
-            text: "Does f(x) = x² have a fixed point on [0,1]?",
-            hint: "Look for solutions of x² = x on [0,1]",
-            options: [
-                "No, x² < x on ]0,1[ so no intersection with y = x",
-                "Yes, exactly one: x = 1",
-                "Yes, two: x = 0 and x = 1",
-                "Yes, but only if we extend past 1"
-            ],
-            correctIndex: 2,
-            explanation: "x² = x ⟺ x(x−1) = 0 ⟺ x = 0 or x = 1. Both are in [0,1]. The Intermediate Value Theorem only guaranteed at least one — here we get two, at the endpoints. On the open interval ]0,1[, x² < x so no other fixed point.",
-            visualization: .fixedPoint
-        ),
+        )
+
+        
     ]
 
     // MARK: - Convergence
+
     static let convergenceQuestions: [Question] = [
         Question(
             subject: .analysis,
-            text: "For uₙ = sin(n²)/√n, a student claims: 'sin(n²) oscillates, so uₙ diverges.' Is this right?",
-            hint: "Try to sandwich uₙ between two simple sequences",
+            text: "Select '1/n' and set ε = 0.100. Where does the vertical dashed line 'N' appear?",
+            hint: "Adjust the ε slider until it reads exactly 0.100, then look for the vertical dashed line labeled 'N' on the graph.",
             options: [
-                "Yes, if sin(n²) doesn't converge, uₙ can't converge",
-                "No — we can sandwich uₙ and show uₙ → 0",
-                "We can't conclude without the exact values of sin(n²)",
-                "Yes, because uₙ isn't monotone"
+                "At n = 1",
+                "At n = 10 or n = 11",
+                "At n = 100",
+                "There is no N line visible"
             ],
             correctIndex: 1,
-            explanation: "|sin(n²)| ≤ 1 so -1/√n ≤ uₙ ≤ 1/√n. Since ±1/√n → 0, the Sandwich Theorem gives uₙ → 0.",
+            explanation: "For uₙ = 1/n to stay within ε = 0.1 of L = 0, we need 1/n < 0.1, so n > 10. The N line marks where all remaining terms stay inside the band.",
             visualization: .convergence
         ),
         Question(
             subject: .analysis,
-            text: "For uₙ = sin(n)/n with ε = 0.1, a student finds N = 30 and concludes convergence. Is this enough?",
-            hint: "The definition of convergence quantifies over every ε > 0",
+            text: "Select '(−1)ⁿ/n' and shrink ε from 1.000 down to 0.050. What happens to the N line?",
+            hint: "Start with a large ε, watch where the N line sits, then drag the slider left to make ε smaller. Observe the N line moving.",
             options: [
-                "Yes — N = 30 works even if smaller N's exist",
-                "No — we need the smallest possible N",
-                "No — checking a single ε is not enough",
-                "Yes — sin(n)/n is bounded so it converges"
+                "N moves left (smaller n)",
+                "N moves right (larger n)",
+                "N stays fixed",
+                "N disappears"
             ],
-            correctIndex: 2,
-            explanation: "For that fixed ε, N = 30 is valid. But convergence requires that for every ε > 0 such an N exists. Checking ε = 0.1 is just one case.",
+            correctIndex: 1,
+            explanation: "Smaller ε means a tighter band, so you need more terms to get close enough to 0. The N line retreats to the right as the tolerance shrinks.",
             visualization: .convergence
         ),
         Question(
             subject: .analysis,
-            text: "uₙ = n·sin(1/n). What does this sequence converge to?",
-            hint: "Substitute x = 1/n and think of a well-known limit as x → 0",
+            text: "Select '(−1)ⁿ' and set ε = 0.500. What color are the dots?",
+            hint: "Pick the last sequence in the list and adjust ε to 0.500. Look at whether dots are green/purple (inside) or red/orange (outside the band).",
             options: [
-                "0",
-                "1",
-                "+∞",
-                "It diverges"
+                "All green, the sequence converges",
+                "Mixed colors, some inside and some outside no matter how large n gets",
+                "All red for small n, then all green after some N",
+                "The sequence isn't shown"
             ],
             correctIndex: 1,
-            explanation: "n·sin(1/n) = sin(1/n)/(1/n) → 1 as n → ∞, since this is just the classic limit sin(x)/x → 1 as x → 0.",
+            explanation: "(−1)ⁿ oscillates between +1 and −1 forever. No matter the ε, half the dots lie outside the band around L = 0. The verdict says 'no N exists'.",
             visualization: .convergence
         ),
         Question(
             subject: .analysis,
-            text: "uₙ converges to L. What can we say about any subsequence uφ(n)?",
-            hint: "Convergence of a sequence carries over to its subsequences",
+            text: "Select 'sin(n)/n' and set ε ≈ 0.150. Click through several dots with your cursor. What do you observe?",
+            hint: "Adjust ε to around 0.150, then tap or hover over different dots to read their distance |uₙ − L|. Compare early dots (n < 10) with later ones (n > 25).",
             options: [
-                "uφ(n) converges to some limit that depends on φ",
-                "uφ(n) converges to L",
-                "uφ(n) is bounded but not necessarily convergent",
-                "uφ(n) converges to L only if φ is strictly increasing"
+                "All dots have the same distance from L",
+                "Early dots can be outside the band, later dots stay inside",
+                "The dots oscillate wildly with no pattern",
+                "sin(n)/n does not converge, so all dots are red"
             ],
             correctIndex: 1,
-            explanation: "If uₙ → L, then every subsequence also converges to L. This is immediate: for every ε > 0 there's N such that n ≥ N ⟹ |uₙ - L| < ε, and φ(n) ≥ n ≥ N when φ is strictly increasing.",
+            explanation: "sin(n) oscillates between ±1, but dividing by n forces the terms toward 0. Early terms can be large, but past N they all fit inside the ε band.",
             visualization: .convergence
         ),
     ]
+
+    // MARK: - L'Hôpital
 
     static let lhopitalQuestions: [Question] = [
         Question(
             subject: .analysis,
-            text: "Why can we write lim(x→0) sin(x)/x = cos(0)/1 = 1?",
-            hint: "Zoom in on the graph — what do the two curves become near 0?",
+            text: "Select 'sin(x)/x' and zoom in fully. What happens to the two curves near x = 0?",
+            hint: "Pick the first function pair and drag the zoom slider all the way to the right. Watch how the red and blue curves behave as you zoom in on the origin.",
             options: [
-                "Because sin(0) = 0 and we simplify",
-                "Near 0, sin(x) ≈ sin'(0)·x and x ≈ 1·x, so the x cancels and we're left with sin'(0)/1",
-                "Because sin(x) = x for all x",
-                "Because the limit of a ratio equals the ratio of the limits"
+                "They stay curved and separate",
+                "They both flatten into straight lines with the same slope",
+                "Only sin(x) becomes a line",
+                "They spiral around each other"
             ],
             correctIndex: 1,
-            explanation: "L'Hôpital's rule: if f(0)=g(0)=0, then lim f/g = f'(0)/g'(0). Zooming in, each curve looks like its tangent line, the x cancels, leaving f'(0)/g'(0) = cos(0)/1 = 1.",
+            explanation: "Near 0, sin(x) ≈ x (both have slope 1). Zoomed in, each curve becomes its tangent line. The ratio of the slopes is 1/1 = 1, which is the limit.",
             visualization: .lhopital
         ),
         Question(
             subject: .analysis,
-            text: "lim(x→a) f'/g' doesn't exist. Can we conclude that lim f/g doesn't exist either?",
-            hint: "L'Hôpital says: if f'/g' converges, then f/g does too. What does it say in the other direction?",
+            text: "Select 'sin(2x)/sin(3x)' and zoom in. Compare the slopes of the two tangent lines at x = 0.",
+            hint: "Choose the second function pair and zoom all the way in. Read the 'slope' values shown in the legend below the graph.",
             options: [
-                "Yes, if f'/g' diverges then f/g diverges too",
-                "No — L'Hôpital only works in one direction, f/g can still converge",
-                "Yes, both limits always exist or fail to exist together",
-                "No, but only if g'(a) = 0"
+                "Both slopes are 1",
+                "f has slope 2, g has slope 3",
+                "f has slope 3, g has slope 2",
+                "The slopes oscillate and cannot be read"
             ],
             correctIndex: 1,
-            explanation: "L'Hôpital is a one-way implication: lim f'/g' = L ⟹ lim f/g = L. The converse is false. f/g can converge without f'/g' converging — in that case L'Hôpital simply doesn't apply, it says nothing.",
+            explanation: "sin(2x) has derivative 2cos(2x) → 2 at 0. sin(3x) has derivative 3cos(3x) → 3 at 0. The limit is f′(0)/g′(0) = 2/3 ≈ 0.667.",
             visualization: .lhopital
         ),
         Question(
             subject: .analysis,
-            text: "lim(x→0) (1 - cos(x))/x². Applying L'Hôpital once gives sin(x)/2x, still 0/0. What do we do?",
-            hint: "The rule can be applied more than once",
+            text: "Select 'x²sin(1/x) / sin(x)'. What happens when you zoom in on the red curve?",
+            hint: "Pick the third function pair and zoom all the way in. Watch the red curve (f) closely as you increase the zoom — does it ever flatten into a line?",
             options: [
-                "We conclude the limit is 0",
-                "We apply L'Hôpital a second time: cos(x)/2 → 1/2",
-                "We can't apply L'Hôpital anymore",
-                "We go back to the definition"
+                "It flattens like the others",
+                "It keeps oscillating wildly no matter how much you zoom",
+                "It becomes a horizontal line",
+                "It disappears"
             ],
             correctIndex: 1,
-            explanation: "We apply L'Hôpital a second time: (sin x)' / (2x)' = cos(x)/2 → 1/2. The rule can be applied as many times as needed while the form stays indeterminate.",
+            explanation: "x²sin(1/x) oscillates infinitely often near 0. No zoom reveals a tangent line because f′(0) doesn't exist. L'Hôpital cannot be applied — the legend says 'no slope'.",
             visualization: .lhopital
         ),
         Question(
             subject: .analysis,
-            text: "lim(x→+∞) x·e^(-x). How do we rewrite this to apply L'Hôpital?",
-            hint: "We need a 0/0 or ∞/∞ form",
+            text: "For 'sin(2x)/sin(3x)', what does the green text below the graph tell you?",
+            hint: "Select the second function pair and read the colored text that appears below the zoom slider. This is the answer L'Hôpital gives.",
             options: [
-                "We can't, this isn't an indeterminate form",
-                "Write it as x/eˣ (form ∞/∞), then L'Hôpital gives 1/eˣ → 0",
-                "Write it as eˣ/x (form ∞/∞), then L'Hôpital gives eˣ → +∞",
-                "Expand eˣ as a series"
+                "The limit is 1",
+                "The limit is 2/3 ≈ 0.667",
+                "The limit is 3/2 = 1.5",
+                "L'Hôpital gives no answer"
             ],
             correctIndex: 1,
-            explanation: "x·e^(-x) = x/eˣ is a ∞/∞ form. L'Hôpital: (x)'/(eˣ)' = 1/eˣ → 0. The exponential beats the polynomial.",
+            explanation: "The green readout shows f′(0)/g′(0) = 2/3 = 0.667. The graph confirms this visually: the red curve climbs twice as fast as the blue one climbs three times as fast.",
             visualization: .lhopital
         ),
     ]
+
+    // MARK: - Squeeze theorem
 
     static let sandwichQuestions: [Question] = [
         Question(
             subject: .analysis,
-            text: "uₙ = sin(n²)/√n. A student says sin(n²) oscillates, so uₙ diverges. Is this correct?",
-            hint: "Sandwich sin(n²) between constants",
+            text: "Select '(−1)ⁿ/n' and slide n from 1 to 40. What happens to the gap between the two bounds?",
+            hint: "Watch the yellow band (the 'jaw') closing as n increases. Compare the width at n = 4 versus n = 30.",
             options: [
-                "Yes, since sin(n²) doesn't converge, uₙ doesn't either",
-                "No — -1/√n ≤ uₙ ≤ 1/√n and both bounds → 0",
-                "We can't conclude",
-                "Yes, uₙ isn't monotone so it diverges"
+                "It stays constant at 2",
+                "It shrinks, approaching zero",
+                "It grows wider as n increases",
+                "It oscillates without pattern"
             ],
             correctIndex: 1,
-            explanation: "|sin(n²)| ≤ 1 so -1/√n ≤ uₙ ≤ 1/√n. Both bounds ±1/√n → 0, so the Sandwich Theorem gives uₙ → 0.",
+            explanation: "The bounds are ±1/n, so the gap is 2/n. As n grows, this shrinks to 0, trapping the oscillating middle sequence.",
             visualization: .sandwich
         ),
         Question(
             subject: .analysis,
-            text: "uₙ → L and vₙ → L. We know uₙ ≤ wₙ ≤ vₙ only for even n, nothing for odd n. Can we conclude wₙ → L?",
-            hint: "The Sandwich Theorem needs the sandwich to hold from some point onward — not just on a subsequence",
+            text: "Compare 'sin(n²)/√n' and 'cos(n)/n²'. Which one gets squeezed to zero faster?",
+            hint: "Switch between the two presets and watch how quickly the yellow band collapses. Look at the width readout around n = 20.",
             options: [
-                "Yes — sandwiching half the terms is enough asymptotically",
-                "No — the sandwich must hold for all n past some point, not just on even indices",
-                "Yes, if in addition w_{2n+1} is bounded",
-                "No, but at least w_{2n} → L"
+                "sin(n²)/√n, because the bound is ±1/√n",
+                "cos(n)/n², because the bound is ±1/n²",
+                "They converge at the same rate",
+                "Neither converges to zero"
             ],
             correctIndex: 1,
-            explanation: "The Sandwich Theorem requires the sandwich for all n ≥ N₀, not just on a subsequence. We can conclude w_{2n} → L, but wₙ itself entirely escapes the theorem — the odd terms are uncontrolled.",
+            explanation: "1/n² shrinks much faster than 1/√n. At n = 20, the ±1/n² envelope is nearly 40 times tighter than ±1/√n.",
             visualization: .sandwich
         ),
         Question(
             subject: .analysis,
-            text: "Can we apply the Sandwich Theorem if uₙ → 0 and vₙ → 1 with uₙ ≤ wₙ ≤ vₙ?",
-            hint: "What's the condition on the bounds' limits?",
+            text: "On '(−1)ⁿ/n', does the middle sequence (blue dots) ever touch the upper or lower bound?",
+            hint: "Slide n through all values from 1 to 40 and watch closely. The bounds are ±1/n and the sequence is (−1)ⁿ/n.",
             options: [
-                "Yes, wₙ → 1/2",
-                "Yes, wₙ converges to some limit between 0 and 1",
-                "No — the Squeeze Theorem requires both bounds to converge to the same limit",
-                "No — the Squeeze Theorem only applies to positive sequences"
+                "Yes, at every n",
+                "Yes, but only at odd n",
+                "No, it stays strictly inside except at n = 1",
+                "Yes, it touches at n = 1 only"
             ],
-            correctIndex: 2,
-            explanation: "The Sandwich Theorem requires uₙ → L and vₙ → L with the same L. If the bounds have different limits, we can't conclude anything about wₙ.",
+            correctIndex: 3,
+            explanation: "At n = 1, (−1)¹/1 = −1 exactly touches the lower bound. For all n > 1, the sequence equals one of the bounds exactly: it alternates between touching the upper and lower curves.",
             visualization: .sandwich
         ),
         Question(
             subject: .analysis,
-            text: "wₙ = (2 + sin(n)) / n. Find a sandwich and conclude.",
-            hint: "Sandwich sin(n) and divide by n",
+            text: "Select 'sin(n²)/√n'. Why can this sequence converge even though sin(n²) never settles?",
+            hint: "Watch the blue dots oscillate wildly inside the yellow band. Focus on the band's width, not the oscillation pattern.",
             options: [
-                "wₙ diverges because sin(n) oscillates",
-                "wₙ → 0 by the Squeeze Theorem: 1/n ≤ wₙ ≤ 3/n",
-                "wₙ → 1 because sin(n)/n → 0",
-                "wₙ → 2 because sin(n) is negligible"
+                "Because sin(n²) eventually becomes periodic",
+                "Because the bounds ±1/√n trap it and force it toward 0, regardless of the oscillation",
+                "Because sin(n²) approaches zero as n grows",
+                "It doesn't converge; the visualization is misleading"
             ],
             correctIndex: 1,
-            explanation: "-1 ≤ sin(n) ≤ 1 so 1 ≤ 2+sin(n) ≤ 3, giving 1/n ≤ wₙ ≤ 3/n. Since 1/n → 0 and 3/n → 0, wₙ → 0 by the Sandwich Theorem.",
+            explanation: "The squeeze theorem doesn't care about the chaos in the middle. As long as −1/√n ≤ sin(n²)/√n ≤ 1/√n and both bounds go to 0, the middle is forced to 0 too.",
             visualization: .sandwich
         ),
     ]
 
+    // MARK: - Taylor
+
     static let taylorQuestions: [Question] = [
         Question(
             subject: .analysis,
-            text: "On what interval does the order-3 Taylor approximation of sin(x) stay within 0.1 of the real value?",
-            hint: "T₃(x) = x − x³/6 — look at where the error curve crosses the threshold",
-            options: ["[-π/4, π/4]", "[-π/2, π/2]", "[-π, π]", "[-2, 2]"],
+            text: "For f(x) = sin(x), where does the error |f(x) − T₃(x)| first cross the threshold of 0.1?",
+            hint: "Select 'sin(x)' and set the order to 3. Look at the bottom graph (red error curve) and find where it crosses the dashed red line at height 0.1.",
+            options: ["Around ±π/4", "Around ±π/2", "Around ±π", "Around ±2"],
             correctIndex: 1,
-            explanation: "The error |sin(x) − (x − x³/6)| exceeds 0.1 around ±π/2. Beyond that, the missing order-5 term becomes too large.",
+            explanation: "The error passes 0.1 around ±π/2, where the missing x⁵ term starts to weigh. The bottom graph shows this visually.",
             visualization: .taylor
         ),
         Question(
             subject: .analysis,
-            text: "What is the order-n Taylor expansion of f at 0?",
-            hint: "It's a polynomial — what's its key property at 0?",
+            text: "As you increase the order from 1 to 6, what happens to the contact between f and Tₙ near x = 0?",
+            hint: "Select any function and drag the order slider from 1 to 6. Watch the top graph where the orange curve (Taylor polynomial) meets the blue curve (f) at the center.",
             options: [
-                "The degree-n polynomial minimizing the error on [-1,1]",
-                "The degree-n polynomial matching f at 0 up to the n-th derivative",
-                "The best affine approximation of f",
-                "The interpolating polynomial through n+1 points of f"
+                "The curves separate more",
+                "The contact gets tighter and tighter at x = 0",
+                "The curves cross more times far from 0",
+                "Nothing changes if f is already linear"
             ],
             correctIndex: 1,
-            explanation: "Tₙ is the unique polynomial of degree ≤ n such that Tₙ⁽ᵏ⁾(0) = f⁽ᵏ⁾(0) for k = 0,...,n. It matches f at 0, at every order up to n.",
+            explanation: "Higher order means matching more derivatives at 0. The orange curve hugs the blue one tighter near the center, though they may still separate far away.",
             visualization: .taylor
         ),
         Question(
             subject: .analysis,
-            text: "f is even and infinitely differentiable at 0. What can we say about its Taylor series?",
-            hint: "Compute f'(0) using f(-x) = f(x)",
+            text: "For f(x) = cos(x), which powers appear in the Taylor polynomial?",
+            hint: "Select 'cos(x)' and read the orange polynomial text below the top graph. Adjust the order from 1 to 6 and watch which powers appear.",
             options: [
-                "Its Taylor series only has even powers",
-                "Its Taylor series only has odd powers",
-                "Its Taylor series alternates even and odd signs",
-                "We can't say anything without computing the derivatives"
+                "Even powers only (x⁰, x², x⁴, x⁶)",
+                "Odd powers only (x, x³, x⁵)",
+                "All powers alternating signs",
+                "Only constant and linear terms"
             ],
             correctIndex: 0,
-            explanation: "f even ⟹ f'(0) = 0. Indeed f'(x) = lim (f(x+h)−f(x))/h, and parity forces f'(0) = −f'(0), so f'(0) = 0. Similarly every odd-order derivative of f is odd, so it vanishes at 0. All odd Taylor coefficients are zero — only even powers remain.",
+            explanation: "cos is even, so all odd derivatives vanish at 0. The polynomial shows only even powers: T₆(x) = 1 − x²/2 + x⁴/24 − x⁶/720.",
             visualization: .taylor
         ),
         Question(
             subject: .analysis,
-            text: "What is the order-2 Taylor expansion of cos(x) at 0?",
-            hint: "cos(0)=1, cos'(0)=0, cos''(0)=-1",
-            options: [
-                "1 + x²/2",
-                "1 - x²/2",
-                "1 - x + x²/2",
-                "x - x³/6"
-            ],
+            text: "What is T₂(x) for f(x) = cos(x)?",
+            hint: "Select 'cos(x)' and set the order slider to 2. Read the orange polynomial displayed below the top graph.",
+            options: ["1 + x²/2", "1 − x²/2", "1 − x + x²/2", "x − x³/6"],
             correctIndex: 1,
-            explanation: "T₂(x) = cos(0) + cos'(0)·x + cos''(0)·x²/2! = 1 + 0 - x²/2 = 1 - x²/2. The x term disappears since cos is even.",
+            explanation: "cos(0) = 1, cos′(0) = 0, cos″(0) = −1, so T₂(x) = 1 − x²/2. The view shows this directly.",
             visualization: .taylor
         ),
     ]
 }
- 

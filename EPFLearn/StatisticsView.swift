@@ -1,5 +1,5 @@
 //
-//  WelcomeView.swift
+//  StatisticsView.swift
 //  EPFLearn
 //
 import SwiftUI
@@ -57,8 +57,53 @@ struct CategoryStat: Identifiable {
     let attempts: Int
 }
 
+// One attempt = one row (bars + label)
+struct AttemptRow: View {
+    let number: Int
+    let result: ResultQCM
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text("Try \(number)")
+                    .font(.caption)
+                    .fontWeight(.bold)
+                    .foregroundStyle(.secondary)
+
+                Spacer()
+
+                Text(result.category.displayName)
+                    .font(.caption2)
+                    .fontWeight(.semibold)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(result.category.color.opacity(0.15))
+                    .foregroundStyle(result.category.color)
+                    .cornerRadius(8)
+            }
+
+            HStack(spacing: 4) {
+                ForEach(0..<result.nbQuestions, id: \.self) { i in
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(result.correctAnswers.contains(i) ? Color.green : Color.red)
+                        .frame(height: 12)
+                }
+            }
+
+            Text("\(result.nbCorrectAnswers) / \(result.nbQuestions) correct answers")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+        }
+        .padding(.vertical, 6)
+    }
+}
+
 struct StatisticsView: View {
     @Binding var scores: [ResultQCM]
+
+    // How many attempts stay visible before collapsing
+    private let previewCount = 5
+    @State private var showAllAttempts = false
 
     private let allSubjects: [Subject] = [.analysis, .linearAlgebra, .discreteMaths, .programmingBasics, .arrays, .graphs]
 
@@ -86,6 +131,23 @@ struct StatisticsView: View {
         }
     }
 
+    // Most recent first, keeping the original "Try n" numbering
+    private struct Attempt: Identifiable {
+        let id: Int
+        let number: Int
+        let result: ResultQCM
+    }
+
+    private var attempts: [Attempt] {
+        Array(scores.enumerated())
+            .reversed()
+            .map { Attempt(id: $0.offset, number: $0.offset + 1, result: $0.element) }
+    }
+
+    private var visibleAttempts: [Attempt] {
+        showAllAttempts ? attempts : Array(attempts.prefix(previewCount))
+    }
+
     var body: some View {
         NavigationStack {
             List {
@@ -108,40 +170,36 @@ struct StatisticsView: View {
                     }
                 }
 
-                Section("Attempts") {
-                    ForEach(Array(scores.enumerated()), id: \.offset) { index, result in
-                        VStack(alignment: .leading, spacing: 10) {
+                Section {
+                    ForEach(visibleAttempts) { attempt in
+                        AttemptRow(number: attempt.number, result: attempt.result)
+                    }
+
+                    if scores.count > previewCount {
+                        Button {
+                            withAnimation(.easeInOut(duration: 0.25)) {
+                                showAllAttempts.toggle()
+                            }
+                        } label: {
                             HStack {
-                                Text("Try \(index + 1)")
-                                    .font(.caption)
-                                    .fontWeight(.bold)
-                                    .foregroundStyle(.secondary)
-
+                                Text(showAllAttempts
+                                     ? "Show less"
+                                     : "Show all \(scores.count) attempts")
                                 Spacer()
-
-                                Text(result.category.displayName)
-                                    .font(.caption2)
-                                    .fontWeight(.semibold)
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(result.category.color.opacity(0.15))
-                                    .foregroundStyle(result.category.color)
-                                    .cornerRadius(8)
+                                Image(systemName: showAllAttempts ? "chevron.up" : "chevron.down")
+                                    .font(.caption.weight(.bold))
                             }
-
-                            HStack(spacing: 4) {
-                                ForEach(0..<result.nbQuestions, id: \.self) { i in
-                                    RoundedRectangle(cornerRadius: 3)
-                                        .fill(result.correctAnswers.contains(i) ? Color.green : Color.red)
-                                        .frame(height: 12)
-                                }
-                            }
-
-                            Text("\(result.nbCorrectAnswers) / \(result.nbQuestions) correct answers")
-                                .font(.caption2)
+                            .font(.subheadline.weight(.semibold))
+                        }
+                    }
+                } header: {
+                    HStack {
+                        Text("Attempts")
+                        Spacer()
+                        if !scores.isEmpty {
+                            Text("\(scores.count)")
                                 .foregroundStyle(.secondary)
                         }
-                        .padding(.vertical, 6)
                     }
                 }
             }

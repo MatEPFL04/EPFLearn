@@ -63,7 +63,9 @@ struct ConvergenceView: View {
             }
 
             Picker("Suite", selection: $index) {
-                ForEach(convCases) { Text($0.name).tag($0.id) }
+                ForEach(convCases) { suite in
+                    Text(suite.name).tag(suite.id)
+                }
             }
             .pickerStyle(.segmented)
             .labelsHidden()
@@ -104,17 +106,17 @@ struct ConvergenceView: View {
         if !c.converges {
             if allInside {
                 SeqReadout(badge: "ε ≥ 1", badgeColor: SeqPalette.ghost,
-                           detail: "la bande avale tout — mais ça marcherait pour n'importe quelle « limite »")
+                           detail: "La bande avale tout — mais ça marcherait pour n'importe quelle « limite »")
             } else {
-                SeqReadout(badge: "aucun N", badgeColor: SeqPalette.outside,
-                           detail: "des termes restent dehors quel que soit le rang choisi")
+                SeqReadout(badge: "Aucun N", badgeColor: SeqPalette.outside,
+                           detail: "Des termes restent dehors quel que soit le rang choisi")
             }
         } else if let n = critN {
             SeqReadout(badge: "N = \(n)", badgeColor: SeqPalette.limit,
                        detail: "∀n ≥ \(n),  |uₙ − L| < ε")
         } else {
             SeqReadout(badge: "N > \(totalN)", badgeColor: SeqPalette.bound,
-                       detail: "le rang existe, mais au-delà des \(totalN) termes tracés — augmente ε")
+                       detail: "Le rang existe, mais au-delà des \(totalN) termes tracés — augmente ε")
         }
     }
 

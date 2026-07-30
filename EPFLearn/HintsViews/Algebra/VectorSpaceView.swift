@@ -22,12 +22,17 @@ struct VectorSpaceView: View {
     /// Coefficients of the dependency equation λ₁v₁ + λ₂v₂ + λ₃v₃ = 0
     @State private var lambda = V3(0, 0, 0)
 
-    @State private var is3D = true
+    @State private var is3D: Bool
     @State private var presetIndex = 0
 
     // Camera (3D only)
     @State private var azimuth: Double = -0.9
     @State private var elevation: Double = 0.42
+    
+    /// Initialize with 2D or 3D mode
+    init(is3D: Bool = true) {
+        self._is3D = State(initialValue: is3D)
+    }
     @State private var distance: Double = 8.5
     @State private var orbitAnchor: (Double, Double)? = nil
 
@@ -146,11 +151,12 @@ struct VectorSpaceView: View {
         HStack(alignment: .center, spacing: 12) {
             VStack(alignment: .leading, spacing: 6) {
                 sectionLabel("SPACE")
-                Picker("", selection: $is3D) {
+                Picker("Espace", selection: $is3D) {
                     Text("ℝ²").tag(false)
                     Text("ℝ³").tag(true)
                 }
                 .pickerStyle(.segmented)
+                .labelsHidden()
                 Text(is3D ? "three vectors, three coordinates"
                           : "two vectors, two coordinates")
                     .font(.system(size: 9.5))
@@ -160,7 +166,7 @@ struct VectorSpaceView: View {
 
             VStack(alignment: .leading, spacing: 0) {
                 sectionLabel("EXAMPLES")
-                Picker("", selection: $presetIndex) {
+                Picker("Exemples", selection: $presetIndex) {
                     ForEach(VectorSpaceView.presets.indices, id: \.self) { i in
                         Text(VectorSpaceView.presets[i].name)
                             .font(.system(size: 13, weight: .medium))
@@ -168,6 +174,7 @@ struct VectorSpaceView: View {
                     }
                 }
                 .pickerStyle(.wheel)
+                .labelsHidden()
                 .frame(height: 76)
                 .clipped()
                 .onChange(of: presetIndex) { applyPreset() }

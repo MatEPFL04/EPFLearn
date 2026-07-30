@@ -53,7 +53,7 @@ struct LHopitalView: View {
         minZoom * pow(maxZoom / minZoom, zoomT)
     }
 
-    let graphSize: CGFloat = 300
+    @State private var graphSize: CGFloat = 300
 
     private var current: LHopitalCase { lhopitalCases[selected] }
 
@@ -140,6 +140,7 @@ struct LHopitalView: View {
                 .multilineTextAlignment(.center)
         }
         .padding()
+        .adaptivePlot($graphSize)
     }
 }
 

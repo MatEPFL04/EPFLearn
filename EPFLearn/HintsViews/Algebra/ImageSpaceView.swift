@@ -238,7 +238,7 @@ struct ImageSpaceView: View {
             }
 
             VStack(alignment: .leading, spacing: 0) {
-                Text("EXAMPLES")
+                Text("Examples")
                     .font(.system(size: 9, weight: .bold))
                     .tracking(0.7)
                     .foregroundStyle(.secondary)

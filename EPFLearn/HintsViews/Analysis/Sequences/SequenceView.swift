@@ -1,13 +1,15 @@
 //
 //  SequenceView.swift
-//  EPFLearn
+//  LearnViz
 //
-//  Sous-suites : convergence, limites multiples, ou aucune limite finie.
-//  Le scrub remplace le Play/Pause — on avance dans la suite au doigt, sans
-//  Timer qui tourne en fond.
+//  Subsequences: one limit, several, infinitely many, or none.
+//  Scrubbing replaces play/pause: the user walks through the terms by finger,
+//  with no Timer running in the background.
 //
 
 import SwiftUI
+
+// MARK: - Model
 
 private struct SubDef: Identifiable {
     let id: Int
@@ -17,13 +19,15 @@ private struct SubDef: Identifiable {
     let limit: Double?
 }
 
-private struct SeqDef: Identifiable {
-    let id: Int
-    let name: String
+private struct SeqDef {
     let f: (Int) -> Double
     let first: Int
     let count: Int
+    let initialShown: Int
     let yRange: ClosedRange<Double>
+    /// Drawn as a translucent band when the set of subsequential limits is a
+    /// whole interval rather than a handful of values.
+    let limitBand: ClosedRange<Double>?
     let summary: String
     let subs: [SubDef]
 }
@@ -34,53 +38,140 @@ private let subColors: [Color] = [
     Color(red: 0.90, green: 0.35, blue: 0.60)
 ]
 
-private let sequences: [SeqDef] = [
+/// Named presets so a question can target one sequence without relying on an
+/// array index. Adding a case never shifts the others.
+enum SequencePreset: String, CaseIterable, Identifiable {
+    case inverseN
+    case cosQuarterTurn
+    case alternatingRatio
+    case sineOfN
+    case alternatingGrowth
 
-    SeqDef(id: 0, name: "1/n", f: { 1 / Double($0) }, first: 1, count: 24,
-           yRange: -0.12...1.15,
-           summary: "La suite converge elle-même : toute sous-suite converge vers la même limite.",
-           subs: [SubDef(id: 0, color: subColors[0], belongs: { _ in true }, label: "→ 0", limit: 0)]),
+    var id: Self { self }
 
-    SeqDef(id: 1, name: "cos(nπ/2)", f: { cos(Double($0) * .pi / 2) }, first: 0, count: 24,
-           yRange: -1.2...1.2,
-           summary: "Bornée et périodique : trois sous-suites convergent, vers trois limites différentes. La suite, elle, diverge.",
-           subs: [
-            SubDef(id: 0, color: subColors[0], belongs: { $0 % 4 == 0 }, label: "→ 1", limit: 1),
-            SubDef(id: 1, color: subColors[1], belongs: { $0 % 2 == 1 }, label: "→ 0", limit: 0),
-            SubDef(id: 2, color: subColors[2], belongs: { $0 % 4 == 2 }, label: "→ −1", limit: -1)
-           ]),
+    var displayName: String {
+        switch self {
+        case .inverseN:          return "1/n"
+        case .cosQuarterTurn:    return "cos(nπ/2)"
+        case .alternatingRatio:  return "(−1)ⁿ · n/(n+1)"
+        case .sineOfN:           return "sin(n)"
+        case .alternatingGrowth: return "(−1)ⁿ(n+1)"
+        }
+    }
 
-    SeqDef(id: 2, name: "(−1)ⁿ(n+1)", f: { ($0 % 2 == 0 ? 1.0 : -1.0) * Double($0 + 1) },
-           first: 0, count: 16, yRange: -17...17,
-           summary: "Non bornée : Bolzano–Weierstrass ne s'applique pas. Aucune sous-suite ne converge vers une limite finie.",
-           subs: [])
-]
+    fileprivate var definition: SeqDef {
+        switch self {
+
+        case .inverseN:
+            return SeqDef(
+                f: { 1 / Double($0) },
+                first: 1, count: 24, initialShown: 6,
+                yRange: -0.12...1.15,
+                limitBand: nil,
+                summary: "The sequence converges, so every subsequence converges to the same limit.",
+                subs: [
+                    SubDef(id: 0, color: subColors[0], belongs: { _ in true },
+                           label: "→ 0", limit: 0)
+                ]
+            )
+
+        case .cosQuarterTurn:
+            return SeqDef(
+                f: { cos(Double($0) * .pi / 2) },
+                first: 0, count: 24, initialShown: 6,
+                yRange: -1.2...1.2,
+                limitBand: nil,
+                summary: "Bounded and periodic. Three subsequences converge, to three different limits, while the sequence itself has none.",
+                subs: [
+                    SubDef(id: 0, color: subColors[0], belongs: { $0 % 4 == 0 },
+                           label: "→ 1", limit: 1),
+                    SubDef(id: 1, color: subColors[1], belongs: { $0 % 2 == 1 },
+                           label: "→ 0", limit: 0),
+                    SubDef(id: 2, color: subColors[2], belongs: { $0 % 4 == 2 },
+                           label: "→ −1", limit: -1)
+                ]
+            )
+
+        case .alternatingRatio:
+            // Two limits, like a plain (−1)ⁿ, but neither is ever reached: the
+            // terms only creep toward ±1 from the inside.
+            return SeqDef(
+                f: { ($0 % 2 == 0 ? 1.0 : -1.0) * Double($0) / Double($0 + 1) },
+                first: 1, count: 24, initialShown: 6,
+                yRange: -1.25...1.25,
+                limitBand: nil,
+                summary: "Bounded, with two subsequential limits. Neither +1 nor −1 is ever attained: the terms only approach them.",
+                subs: [
+                    SubDef(id: 0, color: subColors[0], belongs: { $0 % 2 == 0 },
+                           label: "→ 1", limit: 1),
+                    SubDef(id: 1, color: subColors[2], belongs: { $0 % 2 == 1 },
+                           label: "→ −1", limit: -1)
+                ]
+            )
+
+        case .sineOfN:
+            // No periodicity: n radians never lands on the same spot twice, and
+            // the terms end up dense in [−1, 1]. Every point of that interval is
+            // the limit of some subsequence.
+            return SeqDef(
+                f: { sin(Double($0)) },
+                first: 1, count: 60, initialShown: 40,
+                yRange: -1.2...1.2,
+                limitBand: -1...1,
+                summary: "Bounded, so Bolzano-Weierstrass applies and convergent subsequences exist. But no pattern of indices singles one out: every point of [−1, 1] is the limit of some subsequence.",
+                subs: []
+            )
+
+        case .alternatingGrowth:
+            return SeqDef(
+                f: { ($0 % 2 == 0 ? 1.0 : -1.0) * Double($0 + 1) },
+                first: 0, count: 16, initialShown: 6,
+                yRange: -17...17,
+                limitBand: nil,
+                summary: "Unbounded, so Bolzano-Weierstrass does not apply. No subsequence converges to a finite limit.",
+                subs: []
+            )
+        }
+    }
+}
+
+// MARK: - View
 
 struct SequenceView: View {
 
-    @State private var index = 0
-    @State private var shown = 6
+    @State private var preset: SequencePreset
+    @State private var shown: Int
 
-    private var seq: SeqDef { sequences[index] }
+    init(_ initial: SequencePreset = .inverseN) {
+        _preset = State(initialValue: initial)
+        _shown  = State(initialValue: initial.definition.initialShown)
+    }
+
+    private var seq: SeqDef { preset.definition }
     private var lastN: Int { seq.first + seq.count - 1 }
+    private var currentN: Int { seq.first + shown - 1 }
     private func sub(for n: Int) -> SubDef? { seq.subs.first { $0.belongs(n) } }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
 
             VStack(alignment: .leading, spacing: 2) {
-                Text("Sous-suites").font(.headline)
-                Text("uₙ = \(seq.name)")
+                Text("Subsequences").font(.headline)
+                Text("uₙ = \(preset.displayName)")
                     .font(.system(size: 12, design: .monospaced))
                     .foregroundStyle(.secondary)
             }
 
-            Picker("Suite", selection: $index) {
-                ForEach(sequences) { Text($0.name).tag($0.id) }
+            Picker("Sequence", selection: $preset) {
+                ForEach(SequencePreset.allCases) { option in
+                    Text(option.displayName).tag(option)
+                }
             }
-            .pickerStyle(.segmented)
+            .pickerStyle(.menu)
             .labelsHidden()
-            .onChange(of: index) { shown = 6 }
+            .onChange(of: preset) { _, new in
+                shown = new.definition.initialShown
+            }
 
             SeqPlotCanvas(
                 nRange: seq.first...lastN,
@@ -103,16 +194,29 @@ struct SequenceView: View {
             }
 
             HStack(spacing: 8) {
-                Text("n").font(.caption.bold()).foregroundStyle(SeqPalette.term).frame(width: 16)
-                Slider(value: .init(get: { Double(shown) }, set: { shown = Int($0) }),
-                       in: 1...Double(seq.count), step: 1)
-                    .tint(SeqPalette.term)
-                Text("\(seq.first + shown - 1)")
+                Text("n")
+                    .font(.caption.bold())
+                    .foregroundStyle(SeqPalette.term)
+                    .frame(width: 16)
+                Slider(
+                    value: .init(get: { Double(shown) },
+                                 set: { shown = Int($0) }),
+                    in: 1...Double(seq.count),
+                    step: 1
+                )
+                .tint(SeqPalette.term)
+                Text("\(currentN)")
                     .font(.system(.caption2, design: .monospaced))
                     .foregroundStyle(.secondary)
                     .frame(width: 34, alignment: .trailing)
             }
             .padding(.horizontal, 8)
+
+            SeqReadout(
+                badge: "n = \(currentN)",
+                badgeColor: sub(for: currentN)?.color ?? SeqPalette.term,
+                detail: "uₙ = \(String(format: "%.4f", seq.f(currentN)))"
+            )
 
             Text(seq.summary)
                 .font(.caption)
@@ -124,11 +228,25 @@ struct SequenceView: View {
         .frame(maxWidth: 640)
     }
 
-    // MARK: Tracé
+    // MARK: - Drawing
 
     private func draw(_ ctx: inout GraphicsContext, _ s: SeqSpace) {
-        // Les limites des sous-suites, visibles dès le départ : c'est vers
-        // elles que les couleurs vont converger.
+
+        // A whole interval of subsequential limits: shade it, rather than draw
+        // an impossible number of dashed lines.
+        if let band = seq.limitBand {
+            let top    = s.y(band.upperBound)
+            let bottom = s.y(band.lowerBound)
+            let rect = CGRect(x: s.left, y: top,
+                              width: s.right - s.left, height: bottom - top)
+            ctx.fill(Path(rect), with: .color(SeqPalette.limit.opacity(0.10)))
+            ctx.label("every point is a limit",
+                      at: CGPoint(x: s.left + 68, y: top + 10),
+                      size: 9, SeqPalette.limit, bold: true)
+        }
+
+        // Subsequence limits, visible from the start: the colours are heading
+        // toward them.
         for sub in seq.subs {
             guard let l = sub.limit else { continue }
             let y = s.y(l)
@@ -153,8 +271,8 @@ struct SequenceView: View {
             let color = sub(for: n)?.color ?? Color(white: 0.6)
 
             if off {
-                // Terme sorti du cadre : une flèche vaut mieux qu'un point
-                // écrasé contre le bord.
+                // A term outside the frame: an arrow reads better than a dot
+                // squashed against the edge.
                 var tri = Path()
                 let dir: CGFloat = v > seq.yRange.upperBound ? -1 : 1
                 tri.move(to: CGPoint(x: s.x(n), y: y + dir * 7))
@@ -164,7 +282,7 @@ struct SequenceView: View {
                 ctx.fill(tri, with: .color(color))
             } else {
                 ctx.dot(CGPoint(x: s.x(n), y: y), color,
-                        radius: sub(for: n) != nil ? 4 : 2.6)
+                        radius: n == currentN ? 5 : (sub(for: n) != nil ? 4 : 2.6))
             }
         }
     }
@@ -172,4 +290,5 @@ struct SequenceView: View {
 
 #Preview {
     ScrollView { SequenceView() }
+        .preferredColorScheme(.dark)
 }

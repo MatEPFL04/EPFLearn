@@ -1,7 +1,12 @@
+//
+//  FibTreeView.swift
+//  EPFLearn
+//
 
 import SwiftUI
 import Combine
 
+// MARK: - Maths
 
 private func fib(_ n: Int) -> Int {
     if n < 2 { return n }
@@ -10,8 +15,8 @@ private func fib(_ n: Int) -> Int {
     return b
 }
 
-private func totalCalls(_ n: Int) -> Int { 2 * fib(n + 1) - 1 }           // nb de nœuds (naïf)
-private func distinctSub(_ n: Int) -> Int { n <= 1 ? 1 : n + 1 }          // sous-problèmes distincts
+private func totalCalls(_ n: Int) -> Int { 2 * fib(n + 1) - 1 }   // nb de nœuds (naïf)
+private func distinctSub(_ n: Int) -> Int { n <= 1 ? 1 : n + 1 }  // sous-problèmes distincts
 
 private func colorFor(_ value: Int, max: Int) -> Color {
     Color(hue: Double(value) / Double(max + 1), saturation: 0.62, brightness: 0.92)
@@ -52,8 +57,8 @@ private struct FibTree {
     let distinct: Int
 }
 
-// Coordonnées normalisées -> écran (comme ArrayView / FunctionDrawing mappent vers rect)
 private enum FibLayout {
+    /// Coordonnées normalisées -> rect du Canvas (largeur dynamique, plus de taille figée).
     static func place(leafX: Double, depth: Int, maxLeaf: Double, maxDepth: Int, in rect: CGRect) -> CGPoint {
         let mx: CGFloat = 16, mt: CGFloat = 18, mb: CGFloat = 14
         let lx = CGFloat(leafX), ml = CGFloat(Swift.max(maxLeaf, 1))
@@ -79,7 +84,7 @@ private func makeTree(n: Int) -> FibTree {
     }
     let root = build(n, depth: 0)
 
-    // Position x : feuilles décalées d'un demi-pas (comme ArrayView : i + 0.5) → arbre centré
+    // Position x : feuilles décalées d'un demi-pas → arbre centré
     var leaf = 0.0
     func assignX(_ node: FibNode) {
         if node.children.isEmpty { node.x = leaf + 0.5; leaf += 1 }
@@ -90,7 +95,7 @@ private func makeTree(n: Int) -> FibTree {
     }
     assignX(root)
 
-    // Annotation : simule l'exécution pré-fixe gauche→droite pour repérer cache / élagage
+    // Annotation : simule l'exécution préfixe gauche→droite pour repérer cache / élagage
     var seen = Set<Int>()
     var order = 0
     var memoOrder = 0
@@ -130,39 +135,11 @@ private func makeTree(n: Int) -> FibTree {
     return FibTree(
         nodes: nodes,
         byID: Dictionary(uniqueKeysWithValues: nodes.map { ($0.id, $0) }),
-        maxLeaf: Swift.max(leaf, 1),        // = nb de feuilles → marges symétriques
+        maxLeaf: Swift.max(leaf, 1),
         maxDepth: Swift.max(n, 1),
         totalNodes: order,
         distinct: memoOrder
     )
-}
-
-// MARK: - Arêtes (Shape, dans l'esprit d'ArrayView)
-
-private struct FibEdges: Shape {
-    let tree: FibTree
-    let memoized: Bool
-    let revealed: Int
-    let drawFaded: Bool   // true : arêtes vers les cache hits ; false : arêtes pleines
-
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        for node in tree.nodes {
-            guard nodeVisibility(node, memoized: memoized, revealed: revealed).shown else { continue }
-            let from = FibLayout.place(leafX: node.leafX, depth: node.depth,
-                                       maxLeaf: tree.maxLeaf, maxDepth: tree.maxDepth, in: rect)
-            for cid in node.childIDs {
-                guard let child = tree.byID[cid] else { continue }
-                let cv = nodeVisibility(child, memoized: memoized, revealed: revealed)
-                guard cv.shown, cv.faded == drawFaded else { continue }
-                let to = FibLayout.place(leafX: child.leafX, depth: child.depth,
-                                         maxLeaf: tree.maxLeaf, maxDepth: tree.maxDepth, in: rect)
-                path.move(to: from)
-                path.addLine(to: to)
-            }
-        }
-        return path
-    }
 }
 
 // MARK: - Vue
@@ -174,113 +151,204 @@ struct FibTreeView: View {
     @State private var revealed = 0
     @State private var isPlaying = false
 
-    private let viewW: CGFloat = 320
-    private let viewH: CGFloat = 240
-    private let timer = Timer.publish(every: 0.2, on: .main, in: .common).autoconnect()
+    private let timer = Timer.publish(every: 0.08, on: .main, in: .common).autoconnect()
 
+    private var tree: FibTree { makeTree(n: Int(n)) }
     private var maxReveal: Int { memoized ? distinctSub(Int(n)) : totalCalls(Int(n)) }
 
     var body: some View {
-        let tree = makeTree(n: Int(n))
-        let rect = CGRect(x: 0, y: 0, width: viewW, height: viewH)
-        let leaves = fib(Int(n) + 1)
-        let dia: CGFloat = min(20, max(5, (viewW - 32) / CGFloat(max(leaves, 1)) * 0.85))
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                Text("Dynamic Programming").font(.largeTitle.bold())
 
-        return Form {
-            Section {
-                Text("fib(n) = fib(n−1) + fib(n−2)")
-                    .font(.system(.subheadline, design: .monospaced))
-
-                ZStack {
-                    Color.black
-                    FibEdges(tree: tree, memoized: memoized, revealed: revealed, drawFaded: false)
-                        .stroke(Color.white.opacity(0.28), lineWidth: 1)
-                    FibEdges(tree: tree, memoized: memoized, revealed: revealed, drawFaded: true)
-                        .stroke(Color.white.opacity(0.12), lineWidth: 1)
-
-                    ForEach(tree.nodes) { node in
-                        let v = nodeVisibility(node, memoized: memoized, revealed: revealed)
-                        if v.shown {
-                            let p = FibLayout.place(leafX: node.leafX, depth: node.depth,
-                                                    maxLeaf: tree.maxLeaf, maxDepth: tree.maxDepth, in: rect)
-                            ZStack {
-                                Circle()
-                                    .fill(v.faded ? Color.white.opacity(0.18) : colorFor(node.value, max: Int(n)))
-                                    .overlay(Circle().stroke(Color.white.opacity(v.faded ? 0.12 : 0.25), lineWidth: 0.5))
-                                    .frame(width: dia, height: dia)
-                                if dia >= 10 && !v.faded {
-                                    Text("\(node.value)")
-                                        .font(.system(size: dia * 0.55, weight: .bold))
-                                        .foregroundStyle(.black)   // chiffres lisibles sur les cercles clairs
-                                }
-                            }
-                            .position(p)
-                        }
-                    }
-                }
-                .frame(width: viewW, height: viewH)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.white.opacity(0.15), lineWidth: 0.5))
-
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 10) {
-                        ForEach(0...Int(n), id: \.self) { v in
-                            HStack(spacing: 3) {
-                                Circle().fill(colorFor(v, max: Int(n))).frame(width: 9, height: 9)
-                                Text("f\(v)").font(.system(size: 10))
-                            }
-                        }
-                    }
-                    .padding(.vertical, 2)
-                }
+                treeSection
+                costSection
+                controlsSection
+                explanationSection
             }
-
-            Section("Coût") {
-                VStack {
-                    HStack {
-                        Text("Recursive (calls without memo)")
-                        Spacer()
-                        Text("\(tree.totalNodes)").bold().foregroundStyle(.red)
-                    }
-                    HStack {
-                        Text("Distinct subproblems"); Spacer()
-                        Text("\(tree.distinct)").bold().foregroundStyle(.green)
-                    }
-                }
-            }
-
-            Section {
-                Picker("Mode", selection: $memoized) {
-                    Text("Non-memoized").tag(false)
-                    Text("Memoized").tag(true)
-                }
-                .pickerStyle(.segmented)
-
-                VStack(alignment: .leading) {
-                    Text("n = \(Int(n))  —  \(tree.totalNodes) nœuds")
-                    Slider(value: $n, in: 1...8, step: 1) { editing in
-                        if !editing { revealed = 0; isPlaying = true }   // relâché → relance
-                    }
-                }
-                Button(isPlaying ? "Pause" : "Replay") {
-                    if isPlaying { isPlaying = false } else { revealed = 0; isPlaying = true }
-                }
-                .buttonStyle(.borderedProminent)
-            }
+            .padding(20)
         }
-        .preferredColorScheme(.dark)
+        .background(Color(.systemGroupedBackground))
         .onAppear { revealed = maxReveal }
-        .onChange(of: memoized) { revealed = 0; isPlaying = true }    // bascule de mode → relance en direct
+        .onChange(of: memoized) { revealed = 0; isPlaying = true }    // bascule de mode → relance
         .onChange(of: n) { isPlaying = false; revealed = maxReveal }  // pendant le drag : redimensionne en direct
         .onReceive(timer) { _ in
-            guard isPlaying, revealed < maxReveal else { isPlaying = false; return }
-            let stepSize = max(1, maxReveal / 50)   // ~50 frames quelle que soit la taille → durée constante
+            guard isPlaying else { return }
+            guard revealed < maxReveal else { isPlaying = false; return }
+            let stepSize = max(1, maxReveal / 40)   // ~40 frames quelle que soit la taille → durée constante
             revealed = min(revealed + stepSize, maxReveal)
         }
+    }
+
+    // MARK: Arbre
+
+    private var treeSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("fib(n) = fib(n−1) + fib(n−2)")
+                .font(.system(.subheadline, design: .monospaced))
+                .foregroundStyle(.secondary)
+
+            Canvas { ctx, size in draw(ctx, size: size) }
+                .frame(maxWidth: .infinity)
+                .frame(height: 240)
+                .background(RoundedRectangle(cornerRadius: 12).fill(Color.black))
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+
+            legend
+        }
+        .padding()
+        .background(RoundedRectangle(cornerRadius: 16).fill(Color(.secondarySystemGroupedBackground)))
+    }
+
+    /// Légende : au plus 9 pastilles (n ≤ 8), donc un simple HStack suffit — pas de ScrollView imbriquée.
+    private var legend: some View {
+        HStack(spacing: 8) {
+            ForEach(0...Int(n), id: \.self) { v in
+                HStack(spacing: 3) {
+                    Circle().fill(colorFor(v, max: Int(n))).frame(width: 9, height: 9)
+                    Text("f\(v)").font(.system(size: 10)).foregroundStyle(.secondary)
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// Tout est dessiné dans un Canvas : une seule passe, taille adaptative, pas de centaines de sous-vues.
+    private func draw(_ ctx: GraphicsContext, size: CGSize) {
+        let tree = self.tree
+        let rect = CGRect(origin: .zero, size: size)
+        let leaves = CGFloat(max(tree.maxLeaf, 1))
+        let dia = min(22, max(4, (size.width - 32) / leaves * 0.85))
+
+        func point(_ node: LayoutNode) -> CGPoint {
+            FibLayout.place(leafX: node.leafX, depth: node.depth,
+                            maxLeaf: tree.maxLeaf, maxDepth: tree.maxDepth, in: rect)
+        }
+
+        // Arêtes
+        var solid = Path()
+        var faded = Path()
+        for node in tree.nodes {
+            guard nodeVisibility(node, memoized: memoized, revealed: revealed).shown else { continue }
+            let from = point(node)
+            for cid in node.childIDs {
+                guard let child = tree.byID[cid] else { continue }
+                let cv = nodeVisibility(child, memoized: memoized, revealed: revealed)
+                guard cv.shown else { continue }
+                let to = point(child)
+                if cv.faded { faded.move(to: from); faded.addLine(to: to) }
+                else { solid.move(to: from); solid.addLine(to: to) }
+            }
+        }
+        ctx.stroke(solid, with: .color(.white.opacity(0.28)), lineWidth: 1)
+        ctx.stroke(faded, with: .color(.white.opacity(0.12)), lineWidth: 1)
+
+        // Nœuds
+        for node in tree.nodes {
+            let v = nodeVisibility(node, memoized: memoized, revealed: revealed)
+            guard v.shown else { continue }
+            let p = point(node)
+            let box = CGRect(x: p.x - dia / 2, y: p.y - dia / 2, width: dia, height: dia)
+            let circle = Path(ellipseIn: box)
+
+            ctx.fill(circle, with: .color(v.faded ? .white.opacity(0.18)
+                                                 : colorFor(node.value, max: Int(n))))
+            ctx.stroke(circle, with: .color(.white.opacity(v.faded ? 0.12 : 0.25)), lineWidth: 0.5)
+
+            if dia >= 12 && !v.faded {
+                var label = ctx.resolve(Text("\(node.value)")
+                    .font(.system(size: dia * 0.55, weight: .bold)))
+                label.shading = .color(.black)   // lisible sur les cercles clairs
+                ctx.draw(label, at: p, anchor: .center)
+            }
+        }
+    }
+
+    // MARK: Coût
+
+    private var costSection: some View {
+        VStack(spacing: 12) {
+            costRow(title: "Recursive (calls without memo)",
+                    value: tree.totalNodes, color: .red, icon: "arrow.triangle.branch")
+            Divider()
+            costRow(title: "Distinct subproblems",
+                    value: tree.distinct, color: .green, icon: "square.stack.3d.up")
+        }
+        .padding()
+        .background(RoundedRectangle(cornerRadius: 16).fill(Color(.secondarySystemGroupedBackground)))
+    }
+
+    private func costRow(title: String, value: Int, color: Color, icon: String) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon)
+                .font(.title3)
+                .foregroundStyle(color)
+                .frame(width: 32)
+            Text(title).font(.subheadline)
+            Spacer()
+            Text("\(value)")
+                .font(.title3.bold().monospacedDigit())
+                .foregroundStyle(color)
+                .contentTransition(.numericText())
+        }
+    }
+
+    // MARK: Contrôles
+
+    private var controlsSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Picker("Mode", selection: $memoized) {
+                Text("Non-memoized").tag(false)
+                Text("Memoized").tag(true)
+            }
+            .pickerStyle(.segmented)
+
+            VStack(alignment: .leading, spacing: 6) {
+                HStack {
+                    Text("n = \(Int(n))").font(.subheadline.weight(.medium))
+                    Spacer()
+                    Text("\(min(revealed, maxReveal)) / \(maxReveal)")
+                        .font(.caption.monospacedDigit())
+                        .foregroundStyle(.secondary)
+                }
+                Slider(value: $n, in: 1...8, step: 1) { editing in
+                    if !editing { revealed = 0; isPlaying = true }   // relâché → relance l'animation
+                }
+            }
+
+            Button {
+                if isPlaying { isPlaying = false }
+                else { revealed = 0; isPlaying = true }
+            } label: {
+                Label(isPlaying ? "Pause" : "Replay",
+                      systemImage: isPlaying ? "pause.fill" : "play.fill")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent)
+        }
+        .padding()
+        .background(RoundedRectangle(cornerRadius: 16).fill(Color(.secondarySystemGroupedBackground)))
+    }
+
+    // MARK: Explication
+
+    private var explanationSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(memoized ? "Avec mémoïsation" : "Sans mémoïsation")
+                .font(.headline)
+            Text(memoized
+                 ? "Chaque valeur n'est calculée qu'une seule fois : les branches grisées sont des cache hits, l'arbre se réduit à n+1 appels → O(n)."
+                 : "Les mêmes sous-problèmes sont recalculés encore et encore : le nombre d'appels explose de façon exponentielle → O(φⁿ).")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 16).fill(Color(.secondarySystemGroupedBackground)))
     }
 }
 
 #Preview {
-    FibTreeView()
-        .preferredColorScheme(.dark)
+    // Reproduit le contexte réel : VisualizationView enveloppe déjà la vue dans une ScrollView.
+    ScrollView { FibTreeView() }
 }

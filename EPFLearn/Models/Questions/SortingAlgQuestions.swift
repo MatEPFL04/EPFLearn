@@ -15,7 +15,7 @@ extension Question {
             options: ["Θ(n)", "Θ(n log n)", "Θ(n²)", "Θ(n √n)"],
             correctIndex: 2,
             explanation: "The ascending half is free, but the descending half of length n/2 is reverse-sorted, giving ≈ (n/2)²/2 = Θ(n²) inversions. A sorted prefix never rescues insertion sort if the suffix is adversarial.",
-            visualization: .sorting_basic
+            visualization: .sorting
         ),
         Question(
             subject: .arrays,
@@ -29,7 +29,7 @@ extension Question {
             ],
             correctIndex: 0,
             explanation: "Initialization: A[0] is trivially sorted. At the end of each iteration, A[j] is correctly inserted, and the new array A[0..j] is sorted.",
-            visualization: .sorting_basic
+            visualization: .sorting
         ),
         Question(
             subject: .arrays,
@@ -43,7 +43,7 @@ extension Question {
             ],
             correctIndex: 3,
             explanation: "If we use \"Rotated\" and a disorder of ~n/2, we can invalidate option 3, as the running time is clearly quadratic",
-            visualization: .sorting_basic
+            visualization: .sorting
         ),
         Question(
             subject: .arrays,
@@ -52,7 +52,7 @@ extension Question {
             options: ["Θ(n)", "Θ(n log n)", "Θ(n²)", "Θ(n √n)"],
             correctIndex: 0,
             explanation: "Each adjacent swap creates exactly one inversion, and there are n/2 of them, so Θ(n) inversions total. Insertion sort runs in Θ(n + inversions) = Θ(n). It looks shuffled but every element is at most one slot from home, the visualization shows each element settling in a single shift.",
-            visualization: .sorting_zigzag
+            visualization: .sorting
         ),
     ]
 
@@ -64,7 +64,7 @@ extension Question {
             options: ["1", "2", "3", "4"],
             correctIndex: 2,
             explanation: "Right before the second-to-last call, the indices up to the middle will be sorted.",
-            visualization: .sorting_basic
+            visualization: .sorting
         ),
         Question(
             subject: .arrays,
@@ -73,7 +73,7 @@ extension Question {
             options: ["2", "n/2", "n/2 + 1", "n"],
             correctIndex: 2,
             explanation: "The sorted left half is 1 run. The right half is still in its original order: in the worst case (strictly decreasing) every element is its own run of length 1, giving n/2 runs. Total = n/2 + 1. The minimum, by contrast, would be 2 if the right half happened to already be sorted.",
-            visualization: .sorting_reverse_merge
+            visualization: .sorting
         ),
         Question(
             subject: .arrays,
@@ -87,7 +87,7 @@ extension Question {
             ],
             correctIndex: 1,
             explanation: "The final merge combines the two fully sorted halves of size ≈ n/2 into the complete sorted array. All the work below just produced these two sorted halves.",
-            visualization: .sorting_basic
+            visualization: .sorting
         ),
         Question(
             subject: .arrays,
@@ -96,7 +96,7 @@ extension Question {
             options: ["n/2", "n − 1", "n log n", "n²"],
             correctIndex: 1,
             explanation: "Each comparison places one element; the very last element needs no comparison (the other side is already empty). The worst case is when the two halves interleave perfectly: n−1 comparisons. If one half lies entirely below the other, its remaining elements are copied for free.",
-            visualization: .sorting_basic
+            visualization: .sorting
         ),
     ]
 
@@ -199,7 +199,7 @@ extension Question {
             options: ["Θ(n²) always", "Θ(n·k)", "Θ(n + k)", "Θ(n log k)"],
             correctIndex: 1,
             explanation: "Each element travels at most k positions, so Θ(n·k) total. At k=1 it's linear (the zigzag case), at k=n it degrades to Θ(n²). This single parameter k spans the whole range.",
-            visualization: .sorting_zigzag
+            visualization: .sorting
         ),
     ]
 
@@ -289,7 +289,7 @@ extension Question {
             ],
             correctIndex: 0,
             explanation: "One pass finds no inversions, the flag stays false, and the algorithm stops. So 0 swaps and exactly 1 pass: the optimized bubble sort is Θ(n) on sorted input.",
-            visualization: .sorting_bubble
+            visualization: .sorting
         ),
         Question(
             subject: .arrays,
@@ -303,7 +303,7 @@ extension Question {
             ],
             correctIndex: 2,
             explanation: "Bubble sort only moves a left-bound element one step per pass, so the 1 needs n-1 swaps to crawl to the front. A single badly-placed small element forces near-worst-case behavior.",
-            visualization: .sorting_bubble
+            visualization: .sorting
         ),
         Question(
             subject: .arrays,
@@ -317,7 +317,7 @@ extension Question {
             ],
             correctIndex: 1,
             explanation: "Selection sort performs at most n−1 swaps (one per position), while bubble sort can do up to Θ(n²) swaps. When writes dominate cost, selection wins despite both being Θ(n²) in comparisons.",
-            visualization: .sorting_bubble
+            visualization: .sorting
         ),
         Question(
             subject: .arrays,
@@ -331,7 +331,7 @@ extension Question {
             ],
             correctIndex: 1,
             explanation: "The 0 at the end moves left only one slot per pass → ≈ n passes. The max at the front bubbles fully to the right in one pass, leaving a sorted array. Identical-looking single-element displacements, wildly different costs, bubble sort is directionally asymmetric.",
-            visualization: .sorting_bubble
+            visualization: .sorting
         ),
     ]
 
@@ -348,7 +348,7 @@ extension Question {
             ],
             correctIndex: 1,
             explanation: "Comparisons are always Θ(n²). For swaps on a reversed array, each swap places both the minimum and (often) its mirror simultaneously, so only about n/2 swaps are needed, not n−1. A nice case where the swap count is even lower than the generic bound.",
-            visualization: .sorting_basic
+            visualization: .sorting
         ),
         Question(
             subject: .arrays,
@@ -362,7 +362,7 @@ extension Question {
             ],
             correctIndex: 1,
             explanation: "Selection sort always scans the whole unsorted part to find the minimum: Θ(n²) comparisons even on sorted input. But the minimum is always already in place, so 0 swaps. It never adapts to order the comparisons are unavoidable.",
-            visualization: .sorting_basic
+            visualization: .sorting
         ),
         Question(
             subject: .arrays,
@@ -376,7 +376,7 @@ extension Question {
             ],
             correctIndex: 1,
             explanation: "Selection sort swaps the found minimum into place at most once per outer iteration, so at most n−1 swaps ever, regardless of order. That write-minimal guarantee is its main practical advantage over bubble or insertion sort.",
-            visualization: .sorting_basic
+            visualization: .sorting
         ),
         Question(
             subject: .arrays,
@@ -390,7 +390,7 @@ extension Question {
             ],
             correctIndex: 1,
             explanation: "The first swap puts 1 in front but throws n into position 1. Each subsequent pass then has to move n further right one slot at a time, costing a swap nearly every pass — about n−1 total. A single misplaced large value is surprisingly expensive in swaps for selection sort.",
-            visualization: .sorting_basic
+            visualization: .sorting
         ),
     ]
 

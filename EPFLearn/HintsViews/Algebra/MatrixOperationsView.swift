@@ -46,12 +46,13 @@ struct MatrixOperationsView: View {
     private var operationPickerSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Operation").font(.subheadline.weight(.medium))
-            Picker("Operation", selection: $operation) {
+            Picker("Opération", selection: $operation) {
                 ForEach(Operation.allCases) { op in
                     Text(op.rawValue).tag(op)
                 }
             }
             .pickerStyle(.wheel)
+            .labelsHidden()
             .frame(height: 120)
             .clipShape(RoundedRectangle(cornerRadius: 12))
         }

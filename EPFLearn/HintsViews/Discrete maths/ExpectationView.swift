@@ -334,16 +334,20 @@ struct ExpectationView: View {
                     }
                 }
                 .pickerStyle(.wheel)
+                .labelsHidden()
                 .frame(height: 100)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
             }
 
             VStack(alignment: .leading, spacing: 8) {
                 Text("Probability law").font(.subheadline.weight(.medium))
-                Picker("Law", selection: $shape) {
-                    ForEach(DistributionShape.allCases) { Text($0.rawValue).tag($0) }
+                Picker("Loi de probabilité", selection: $shape) {
+                    ForEach(DistributionShape.allCases) { distribution in
+                        Text(distribution.rawValue).tag(distribution)
+                    }
                 }
                 .pickerStyle(.wheel)
+                .labelsHidden()
                 .frame(height: 100)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
 
@@ -375,12 +379,13 @@ struct ExpectationView: View {
                 Label("Draws", systemImage: "die.face.5")
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(.orange)
-                Picker("Draws", selection: $draws) {
+                Picker("Tirages", selection: $draws) {
                     ForEach(Array(stride(from: 0, through: maxDraws, by: 10)), id: \.self) { value in
                         Text("\(value)").tag(Double(value))
                     }
                 }
                 .pickerStyle(.wheel)
+                .labelsHidden()
                 .frame(height: 100)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
             }
