@@ -121,13 +121,6 @@ struct Projector {
     }
 }
 
-// MARK: - Presets
-
-struct MatrixPreset {
-    let name: String
-    let matrix: M3?      // nil = "Custom", leaves the matrix untouched
-}
-
 // MARK: - Main view
 
 struct Matrix3DView: View {
@@ -135,15 +128,12 @@ struct Matrix3DView: View {
     @State private var matrix = M3.identity
     @State private var vector = V3(1, 1, 1)
     @State private var presetIndex = 0
+    @State private var morph: Double = 1
 
     // Camera
     @State private var azimuth: Double = -0.9
     @State private var elevation: Double = 0.42
     @State private var distance: Double = 8.5
-    @State private var orbitAnchor: (Double, Double)? = nil
-
-    // Interpolation identity → matrix
-    @State private var morph: Double = 1
 
     /// Matrix actually rendered (morph between I and the chosen matrix).
     private var live: M3 { M3.lerp(.identity, matrix, morph) }
@@ -154,11 +144,41 @@ struct Matrix3DView: View {
     static let avSceneColor = Color(red: 1.00, green: 0.80, blue: 0.26)
     static let avUIColor = Color(red: 0.72, green: 0.50, blue: 0.00)
 
+    /// Same order in every algebra view: header, viewport, transformation
+    /// slider, matrix panel, then whatever is specific to the view.
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 10) {
-                viewport
-                controlDeck
+                AlgebraHeader(
+                    title: "A Linear Map in Space",
+                    subtitle: "Edit the matrix and watch the unit cube become its image."
+                )
+
+                AlgebraViewport(
+                    azimuth: $azimuth,
+                    elevation: $elevation,
+                    distance: $distance,
+                    distanceRange: 4.5...16,
+                    home: (azimuth: -0.9, elevation: 0.42, distance: 8.5),
+                    accent: .cyan,
+                    render: { ctx, size in render(ctx, size: size) },
+                    hud: { hud },
+                    legend: { legend }
+                )
+
+                MorphCard(morph: $morph, accent: .cyan)
+
+                // Presets only: the nine cells live in the equation card just
+                // below, where they sit next to v⃗ and Av⃗ and actually mean
+                // something. Two editors for one matrix was pure duplication.
+                MatrixControlPanel(
+                    matrix: $matrix,
+                    presetIndex: $presetIndex,
+                    onPresetChange: applyPreset,
+                    pickerHeight: 88,
+                    showEditor: false
+                )
+
                 equationCard
             }
             .padding(14)
@@ -166,110 +186,42 @@ struct Matrix3DView: View {
         .background(Color(.systemGroupedBackground))
     }
 
-    // MARK: - 3D viewport
-
-    private var viewport: some View {
-        ZStack(alignment: .topLeading) {
-            Canvas { ctx, size in
-                render(ctx, size: size)
-            }
-            .frame(height: 360)
-            .background(
-                LinearGradient(colors: [Color(red: 0.10, green: 0.11, blue: 0.16),
-                                        Color(red: 0.04, green: 0.05, blue: 0.08)],
-                               startPoint: .top, endPoint: .bottom)
-            )
-            .clipShape(RoundedRectangle(cornerRadius: 16))
-            .contentShape(RoundedRectangle(cornerRadius: 16))
-            .highPriorityGesture(orbitGesture)
-            .onTapGesture(count: 2) {
-                withAnimation(.easeInOut(duration: 0.45)) {
-                    azimuth = -0.9; elevation = 0.42; distance = 8.5
-                }
-            }
-
-            hud.padding(10)
-        }
-        .overlay(alignment: .bottomTrailing) { zoomSlider.padding(9) }
-    }
-
-    private var orbitGesture: some Gesture {
-        DragGesture(minimumDistance: 2)
-            .onChanged { g in
-                if orbitAnchor == nil { orbitAnchor = (azimuth, elevation) }
-                guard let a = orbitAnchor else { return }
-                azimuth = a.0 - Double(g.translation.width) * 0.008
-                elevation = min(max(a.1 + Double(g.translation.height) * 0.006, -1.45), 1.45)
-            }
-            .onEnded { _ in orbitAnchor = nil }
-    }
+    // MARK: - Viewport overlays
 
     private var hud: some View {
         let d = live.det
         let color: Color = abs(d) < 0.02 ? .orange : (d < 0 ? .pink : .cyan)
-        return VStack(alignment: .leading, spacing: 1) {
-            Text("det A = \(fmt(d, 3))")
-                .font(.system(size: 13, weight: .bold, design: .monospaced))
-                .foregroundStyle(color)
-            Text(detComment(d))
-                .font(.system(size: 9.5))
-                .foregroundStyle(.white.opacity(0.55))
-        }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 5)
-        .background(.black.opacity(0.35), in: RoundedRectangle(cornerRadius: 8))
+        return AlgebraHUD(headline: "det A = \(fmt(d, 3))",
+                          detail: detComment(d),
+                          color: color)
     }
 
-    private var zoomSlider: some View {
-        HStack(spacing: 5) {
-            Image(systemName: "plus.magnifyingglass").font(.system(size: 9))
-            Slider(value: $distance, in: 4.5...16).frame(width: 88)
-            Image(systemName: "minus.magnifyingglass").font(.system(size: 9))
+    private var legend: some View {
+        HStack(spacing: 11) {
+            HStack(spacing: 5) {
+                Rectangle()
+                    .fill(Matrix3DView.vSceneColor.opacity(0.7))
+                    .frame(width: 12, height: 2)
+                Text("v").font(.system(size: 10, weight: .bold, design: .monospaced))
+                    .foregroundStyle(Matrix3DView.vSceneColor)
+            }
+            HStack(spacing: 5) {
+                Rectangle()
+                    .fill(Matrix3DView.avSceneColor)
+                    .frame(width: 12, height: 3)
+                Text("Av").font(.system(size: 10, weight: .bold, design: .monospaced))
+                    .foregroundStyle(Matrix3DView.avSceneColor)
+            }
         }
-        .foregroundStyle(.white.opacity(0.7))
-        .tint(.cyan)
-        .padding(.horizontal, 8)
-        .padding(.vertical, 2)
-        .background(.black.opacity(0.3), in: Capsule())
+        .padding(.horizontal, 9)
+        .padding(.vertical, 4)
+        .background(.black.opacity(0.45), in: Capsule())
     }
 
     private func detComment(_ d: Double) -> String {
         if abs(d) < 0.02 { return "Space collapses, A is not invertible." }
-        if d < 0 { return "Volume ×\(fmt(abs(d), 2)) — orientation flipped." }
+        if d < 0 { return "Volume ×\(fmt(abs(d), 2)), orientation flipped." }
         return "Volume ×\(fmt(abs(d), 2))."
-    }
-
-    // MARK: - Control deck
-
-    private var controlDeck: some View {
-        HStack(alignment: .center, spacing: 12) {
-            VStack(alignment: .leading, spacing: 0) {
-                sectionLabel("Examples")
-                Picker("", selection: $presetIndex) {
-                    ForEach(Matrix3DView.presets.indices, id: \.self) { i in
-                        Text(Matrix3DView.presets[i].name)
-                            .font(.system(size: 13, weight: .medium))
-                            .tag(i)
-                    }
-                }
-                .pickerStyle(.wheel)
-                .frame(height: 80)
-                .clipped()
-                .onChange(of: presetIndex) { applyPreset() }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-
-            VStack(alignment: .leading, spacing: 6) {
-                sectionLabel("Deformation scale")
-                Slider(value: $morph, in: 0...1).tint(.cyan)
-                Text(morph < 0.999 ? "\(Int(morph * 100))% applied" : "fully applied")
-                    .font(.system(size: 9.5, design: .monospaced))
-                    .foregroundStyle(.secondary)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
-        .padding(10)
-        .background(RoundedRectangle(cornerRadius: 13).fill(Color(.secondarySystemGroupedBackground)))
     }
 
     private func sectionLabel(_ t: String) -> some View {
@@ -280,7 +232,7 @@ struct Matrix3DView: View {
     }
 
     private func applyPreset() {
-        guard let m = Matrix3DView.presets[presetIndex].matrix else { return }
+        guard let m = MatrixPreset.sharedPresets[presetIndex].matrix else { return }
         matrix = m
         morph = 1
     }
@@ -342,12 +294,12 @@ struct Matrix3DView: View {
         .background(RoundedRectangle(cornerRadius: 13).fill(Color(.secondarySystemGroupedBackground)))
     }
 
-    /// Av = x·Ai + y·Aj + z·Ak — the "by columns" reading of the product.
+    /// Av = x·Ae₁ + y·Ae₂ + z·Ae₃, the "by columns" reading of the product.
     private var combinationLine: some View {
         VStack(alignment: .leading, spacing: 3) {
             (Text("Av⃗ = ").foregroundStyle(Matrix3DView.avUIColor)
              + Text(fmt(vector.x, 2)).foregroundStyle(Color.primary)
-             + Text(" e⃗₁").foregroundStyle(Color.red)
+             + Text("· e⃗₁").foregroundStyle(Color.red)
              + Text("  +  ").foregroundStyle(Color.secondary)
              + Text(fmt(vector.y, 2)).foregroundStyle(Color.primary)
              + Text("· e⃗₂").foregroundStyle(Color.green)
@@ -410,30 +362,6 @@ struct Matrix3DView: View {
     private func comp(_ key: WritableKeyPath<V3, Double>) -> Binding<Double> {
         Binding(get: { vector[keyPath: key] }, set: { vector[keyPath: key] = $0 })
     }
-
-    // MARK: - Presets
-
-    static let presets: [MatrixPreset] = {
-        let a = Double.pi / 4
-        return [
-            MatrixPreset(name: "Custom", matrix: nil),
-            MatrixPreset(name: "Identity", matrix: .identity),
-            MatrixPreset(name: "Scaling ×1.5",
-                         matrix: M3(c1: V3(1.5, 0, 0), c2: V3(0, 1.5, 0), c3: V3(0, 0, 1.5))),
-            MatrixPreset(name: "Rotation about z",
-                         matrix: M3(c1: V3(cos(a), sin(a), 0), c2: V3(-sin(a), cos(a), 0), c3: V3(0, 0, 1))),
-            MatrixPreset(name: "Shear",
-                         matrix: M3(c1: V3(1, 0, 0), c2: V3(0.75, 1, 0), c3: V3(0.5, 0, 1))),
-            MatrixPreset(name: "Projection onto xy",
-                         matrix: M3(c1: V3(1, 0, 0), c2: V3(0, 1, 0), c3: V3(0, 0, 0))),
-            MatrixPreset(name: "Reflection",
-                         matrix: M3(c1: V3(1, 0, 0), c2: V3(0, 1, 0), c3: V3(0, 0, -1))),
-            MatrixPreset(name: "Dependent columns",
-                         matrix: M3(c1: V3(1, 0.5, 0), c2: V3(2, 1, 0), c3: V3(0, 0, 1))),
-            MatrixPreset(name: "Flattening twist",
-                         matrix: M3(c1: V3(0.6, 0.4, 0), c2: V3(-0.4, 0.6, 0), c3: V3(0.3, 0.3, 0.25)))
-        ]
-    }()
 
     // MARK: - 3D rendering
 

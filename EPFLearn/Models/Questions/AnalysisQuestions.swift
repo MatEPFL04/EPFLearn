@@ -601,13 +601,13 @@ extension Question {
     static let convergenceQuestions: [Question] = [
         Question(
             subject: .analysis,
-            text: "Select '1/n' and set ε = 0.100. Where does the vertical dashed line 'N' appear?",
-            hint: "Adjust the ε slider until it reads exactly 0.100, then look for the vertical dashed line labeled 'N' on the graph.",
+            text: "For the sequence uₙ = 1/n with limit L = 0 and tolerance ε = 0.100, what is the smallest N such that |uₙ − L| < ε for all n ≥ N?",
+            hint: "Select '1/n' and set ε = 0.100. Look for the vertical dashed line labeled 'N' on the graph.",
             options: [
-                "At n = 1",
-                "At n = 10 or n = 11",
-                "At n = 100",
-                "There is no N line visible"
+                "N = 1",
+                "N = 10 or N = 11",
+                "N = 100",
+                "No such N exists"
             ],
             correctIndex: 1,
             explanation: "For uₙ = 1/n to stay within ε = 0.1 of L = 0, we need 1/n < 0.1, so n > 10. The N line marks where all remaining terms stay inside the band.",
@@ -615,27 +615,13 @@ extension Question {
         ),
         Question(
             subject: .analysis,
-            text: "Select '(−1)ⁿ/n' and shrink ε from 1.000 down to 0.050. What happens to the N line?",
-            hint: "Start with a large ε, watch where the N line sits, then drag the slider left to make ε smaller. Observe the N line moving.",
+            text: "For the sequence uₙ = (−1)ⁿ with candidate limit L = 0, can you find an ε > 0 such that an N exists where all terms beyond N stay within ε of L?",
+            hint: "Select '(−1)ⁿ' and set ε = 0.500. Look at whether dots are green/purple (inside) or red/orange (outside the band) as n increases.",
             options: [
-                "N moves left (smaller n)",
-                "N moves right (larger n)",
-                "N stays fixed",
-                "N disappears"
-            ],
-            correctIndex: 1,
-            explanation: "Smaller ε means a tighter band, so you need more terms to get close enough to 0. The N line retreats to the right as the tolerance shrinks.",
-            visualization: .convergence
-        ),
-        Question(
-            subject: .analysis,
-            text: "Select '(−1)ⁿ' and set ε = 0.500. What color are the dots?",
-            hint: "Pick the last sequence in the list and adjust ε to 0.500. Look at whether dots are green/purple (inside) or red/orange (outside the band).",
-            options: [
-                "All green, the sequence converges",
-                "Mixed colors, some inside and some outside no matter how large n gets",
-                "All red for small n, then all green after some N",
-                "The sequence isn't shown"
+                "Yes, all terms eventually stay within ε of 0",
+                "No, terms keep jumping outside the band no matter how large n gets",
+                "Yes, but only for ε ≥ 2",
+                "The sequence converges to 1, not 0"
             ],
             correctIndex: 1,
             explanation: "(−1)ⁿ oscillates between +1 and −1 forever. No matter the ε, half the dots lie outside the band around L = 0. The verdict says 'no N exists'.",
@@ -643,13 +629,13 @@ extension Question {
         ),
         Question(
             subject: .analysis,
-            text: "Select 'sin(n)/n' and set ε ≈ 0.150. Click through several dots with your cursor. What do you observe?",
-            hint: "Adjust ε to around 0.150, then tap or hover over different dots to read their distance |uₙ − L|. Compare early dots (n < 10) with later ones (n > 25).",
+            text: "For the sequence uₙ = sin(n)/n with tolerance ε ≈ 0.150, how do the early terms (n < 10) compare to the later terms (n > 25) in terms of their distance from L = 0?",
+            hint: "Select 'sin(n)/n' and set ε ≈ 0.150, then tap or hover over different dots to read their distance |uₙ − L|. Compare early dots with later ones.",
             options: [
                 "All dots have the same distance from L",
                 "Early dots can be outside the band, later dots stay inside",
                 "The dots oscillate wildly with no pattern",
-                "sin(n)/n does not converge, so all dots are red"
+                "The sequence does not converge"
             ],
             correctIndex: 1,
             explanation: "sin(n) oscillates between ±1, but dividing by n forces the terms toward 0. Early terms can be large, but past N they all fit inside the ε band.",
@@ -662,10 +648,10 @@ extension Question {
     static let lhopitalQuestions: [Question] = [
         Question(
             subject: .analysis,
-            text: "Select 'sin(x)/x' and zoom in fully. What happens to the two curves near x = 0?",
-            hint: "Pick the first function pair and drag the zoom slider all the way to the right. Watch how the red and blue curves behave as you zoom in on the origin.",
+            text: "For lim[x→0] sin(x)/x, what happens to the ratio f(x)/g(x) as both curves approach their tangent lines at x = 0?",
+            hint: "Select 'sin(x)/x' and drag the zoom slider all the way to the right. Watch how the red and blue curves behave as you zoom in on the origin.",
             options: [
-                "They stay curved and separate",
+                "The curves stay curved and separate",
                 "They both flatten into straight lines with the same slope",
                 "Only sin(x) becomes a line",
                 "They spiral around each other"
@@ -676,13 +662,13 @@ extension Question {
         ),
         Question(
             subject: .analysis,
-            text: "Select 'sin(2x)/sin(3x)' and zoom in. Compare the slopes of the two tangent lines at x = 0.",
-            hint: "Choose the second function pair and zoom all the way in. Read the 'slope' values shown in the legend below the graph.",
+            text: "For lim[x→0] sin(2x)/sin(3x), what is the ratio f′(0)/g′(0)?",
+            hint: "Select 'sin(2x)/sin(3x)' and zoom all the way in. Read the 'slope' values shown in the legend below the graph.",
             options: [
-                "Both slopes are 1",
-                "f has slope 2, g has slope 3",
-                "f has slope 3, g has slope 2",
-                "The slopes oscillate and cannot be read"
+                "Both slopes are 1, so the ratio is 1",
+                "f′(0) = 2 and g′(0) = 3, so the ratio is 2/3",
+                "f′(0) = 3 and g′(0) = 2, so the ratio is 3/2",
+                "The derivatives don't exist"
             ],
             correctIndex: 1,
             explanation: "sin(2x) has derivative 2cos(2x) → 2 at 0. sin(3x) has derivative 3cos(3x) → 3 at 0. The limit is f′(0)/g′(0) = 2/3 ≈ 0.667.",
@@ -690,13 +676,13 @@ extension Question {
         ),
         Question(
             subject: .analysis,
-            text: "Select 'x²sin(1/x) / sin(x)'. What happens when you zoom in on the red curve?",
-            hint: "Pick the third function pair and zoom all the way in. Watch the red curve (f) closely as you increase the zoom — does it ever flatten into a line?",
+            text: "For lim[x→0] x²sin(1/x)/sin(x), does the numerator f(x) = x²sin(1/x) have a well-defined derivative at x = 0?",
+            hint: "Select 'x²sin(1/x) / sin(x)' and zoom all the way in. Watch the red curve (f) closely as you increase the zoom — does it ever flatten into a line?",
             options: [
-                "It flattens like the others",
-                "It keeps oscillating wildly no matter how much you zoom",
-                "It becomes a horizontal line",
-                "It disappears"
+                "Yes, it flattens like the others",
+                "No, it keeps oscillating wildly no matter how much you zoom",
+                "Yes, it becomes a horizontal line",
+                "It disappears at x = 0"
             ],
             correctIndex: 1,
             explanation: "x²sin(1/x) oscillates infinitely often near 0. No zoom reveals a tangent line because f′(0) doesn't exist. L'Hôpital cannot be applied — the legend says 'no slope'.",
@@ -704,8 +690,8 @@ extension Question {
         ),
         Question(
             subject: .analysis,
-            text: "For 'sin(2x)/sin(3x)', what does the green text below the graph tell you?",
-            hint: "Select the second function pair and read the colored text that appears below the zoom slider. This is the answer L'Hôpital gives.",
+            text: "For the indeterminate form lim[x→0] sin(2x)/sin(3x), what value does L'Hôpital's rule predict?",
+            hint: "Select 'sin(2x)/sin(3x)' and read the colored text that appears below the zoom slider. This is the answer L'Hôpital gives.",
             options: [
                 "The limit is 1",
                 "The limit is 2/3 ≈ 0.667",
@@ -723,8 +709,8 @@ extension Question {
     static let sandwichQuestions: [Question] = [
         Question(
             subject: .analysis,
-            text: "Select '(−1)ⁿ/n' and slide n from 1 to 40. What happens to the gap between the two bounds?",
-            hint: "Watch the yellow band (the 'jaw') closing as n increases. Compare the width at n = 4 versus n = 30.",
+            text: "For the sequence uₙ = (−1)ⁿ/n with bounds ±1/n, what happens to the gap between the two bounds as n → ∞?",
+            hint: "Select '(−1)ⁿ/n' and slide n from 1 to 40. Watch the yellow band (the 'jaw') closing as n increases. Compare the width at n = 4 versus n = 30.",
             options: [
                 "It stays constant at 2",
                 "It shrinks, approaching zero",
@@ -737,7 +723,7 @@ extension Question {
         ),
         Question(
             subject: .analysis,
-            text: "Compare 'sin(n²)/√n' and 'cos(n)/n²'. Which one gets squeezed to zero faster?",
+            text: "Which sequence gets squeezed to zero faster: uₙ = sin(n²)/√n (with bounds ±1/√n) or vₙ = cos(n)/n² (with bounds ±1/n²)?",
             hint: "Switch between the two presets and watch how quickly the yellow band collapses. Look at the width readout around n = 20.",
             options: [
                 "sin(n²)/√n, because the bound is ±1/√n",
@@ -751,27 +737,27 @@ extension Question {
         ),
         Question(
             subject: .analysis,
-            text: "On '(−1)ⁿ/n', does the middle sequence (blue dots) ever touch the upper or lower bound?",
-            hint: "Slide n through all values from 1 to 40 and watch closely. The bounds are ±1/n and the sequence is (−1)ⁿ/n.",
+            text: "For the sequence uₙ = (−1)ⁿ/n with bounds ±1/n, does the sequence ever touch the upper or lower bound?",
+            hint: "Select '(−1)ⁿ/n' and slide n through all values from 1 to 40. Watch closely whether the blue dots touch the yellow bound curves.",
             options: [
                 "Yes, at every n",
                 "Yes, but only at odd n",
                 "No, it stays strictly inside except at n = 1",
                 "Yes, it touches at n = 1 only"
             ],
-            correctIndex: 3,
-            explanation: "At n = 1, (−1)¹/1 = −1 exactly touches the lower bound. For all n > 1, the sequence equals one of the bounds exactly: it alternates between touching the upper and lower curves.",
+            correctIndex: 0,
+            explanation: "At every n, the sequence equals exactly one of the bounds: (−1)ⁿ/n alternates between −1/n (lower bound) and +1/n (upper bound). The middle sequence IS the boundary.",
             visualization: .sandwich
         ),
         Question(
             subject: .analysis,
-            text: "Select 'sin(n²)/√n'. Why can this sequence converge even though sin(n²) never settles?",
-            hint: "Watch the blue dots oscillate wildly inside the yellow band. Focus on the band's width, not the oscillation pattern.",
+            text: "Why can uₙ = sin(n²)/√n converge to zero even though sin(n²) never settles down?",
+            hint: "Select 'sin(n²)/√n' and watch the blue dots oscillate wildly inside the yellow band. Focus on the band's width, not the oscillation pattern.",
             options: [
                 "Because sin(n²) eventually becomes periodic",
                 "Because the bounds ±1/√n trap it and force it toward 0, regardless of the oscillation",
                 "Because sin(n²) approaches zero as n grows",
-                "It doesn't converge; the visualization is misleading"
+                "It doesn't converge; the oscillation prevents convergence"
             ],
             correctIndex: 1,
             explanation: "The squeeze theorem doesn't care about the chaos in the middle. As long as −1/√n ≤ sin(n²)/√n ≤ 1/√n and both bounds go to 0, the middle is forced to 0 too.",
@@ -784,48 +770,86 @@ extension Question {
     static let taylorQuestions: [Question] = [
         Question(
             subject: .analysis,
-            text: "For f(x) = sin(x), where does the error |f(x) − T₃(x)| first cross the threshold of 0.1?",
-            hint: "Select 'sin(x)' and set the order to 3. Look at the bottom graph (red error curve) and find where it crosses the dashed red line at height 0.1.",
-            options: ["Around ±π/4", "Around ±π/2", "Around ±π", "Around ±2"],
-            correctIndex: 1,
-            explanation: "The error passes 0.1 around ±π/2, where the missing x⁵ term starts to weigh. The bottom graph shows this visually.",
+            text: "For f(x) = sin(x) with Taylor polynomial T₃(x) centered at 0, what happens to the error |f(x) − T₃(x)| as you move away from the center?",
+            hint: "Select 'sin(x)' and set order to 3. Watch the orange shaded area (error ribbon) as you look further left or right from the center marker.",
+            options: [
+                "It shrinks to zero everywhere",
+                "It stays constant width",
+                "It widens rapidly as you move away from the center",
+                "It disappears entirely beyond x = ±1"
+            ],
+            correctIndex: 2,
+            explanation: "The error ribbon (shaded orange area) shows |f(x) − T₃(x)|. Near x = 0, the polynomial matches sin(x) closely, but as you move away, the missing higher-order terms cause the curves to diverge, widening the error ribbon.",
             visualization: .taylor
         ),
         Question(
             subject: .analysis,
-            text: "As you increase the order from 1 to 6, what happens to the contact between f and Tₙ near x = 0?",
-            hint: "Select any function and drag the order slider from 1 to 6. Watch the top graph where the orange curve (Taylor polynomial) meets the blue curve (f) at the center.",
+            text: "As the order n of a Taylor polynomial Tₙ increases from 1 to 6, what happens to the approximation quality at the center point?",
+            hint: "Select any function and tap the order buttons from 1 to 6. Watch how tightly the orange curve hugs the blue curve at the center marker.",
             options: [
-                "The curves separate more",
-                "The contact gets tighter and tighter at x = 0",
-                "The curves cross more times far from 0",
-                "Nothing changes if f is already linear"
+                "The curves separate more at the center",
+                "The contact gets tighter and tighter at the center point",
+                "The curves cross more times far from the center",
+                "Nothing changes at the center, only far away"
             ],
             correctIndex: 1,
-            explanation: "Higher order means matching more derivatives at 0. The orange curve hugs the blue one tighter near the center, though they may still separate far away.",
+            explanation: "Higher order means matching more derivatives at the center point. The orange Taylor polynomial hugs the blue function curve tighter near the orange center marker, though they may still separate far away.",
             visualization: .taylor
         ),
         Question(
             subject: .analysis,
-            text: "For f(x) = cos(x), which powers appear in the Taylor polynomial?",
-            hint: "Select 'cos(x)' and read the orange polynomial text below the top graph. Adjust the order from 1 to 6 and watch which powers appear.",
+            text: "For the even function f(x) = cos(x) centered at a = 0, which powers appear in its Taylor expansion?",
+            hint: "Select 'cos(x)' and tap through the order buttons from 1 to 6. Read the polynomial formula displayed below the graph and note which exponents appear.",
             options: [
                 "Even powers only (x⁰, x², x⁴, x⁶)",
                 "Odd powers only (x, x³, x⁵)",
-                "All powers alternating signs",
+                "All powers with alternating signs",
                 "Only constant and linear terms"
             ],
             correctIndex: 0,
-            explanation: "cos is even, so all odd derivatives vanish at 0. The polynomial shows only even powers: T₆(x) = 1 − x²/2 + x⁴/24 − x⁶/720.",
+            explanation: "cos(x) is an even function, so all odd derivatives vanish at x = 0. The polynomial shows only even powers: T₆(x) = 1 − x²/2 + x⁴/24 − x⁶/720.",
             visualization: .taylor
         ),
         Question(
             subject: .analysis,
-            text: "What is T₂(x) for f(x) = cos(x)?",
-            hint: "Select 'cos(x)' and set the order slider to 2. Read the orange polynomial displayed below the top graph.",
-            options: ["1 + x²/2", "1 − x²/2", "1 − x + x²/2", "x − x³/6"],
+            text: "When you shift the expansion center from a = 0 to a = 1 for f(x) = sin(x), how does the polynomial variable change?",
+            hint: "Select 'sin(x)', set order to 3, start at center 0 and note the polynomial. Then drag the center slider to 1.00 and watch the formula below.",
+            options: [
+                "The polynomial remains in terms of x",
+                "The polynomial changes to use u = x − 1 instead of x",
+                "The polynomial gains even powers",
+                "The polynomial becomes constant"
+            ],
             correctIndex: 1,
-            explanation: "cos(0) = 1, cos′(0) = 0, cos″(0) = −1, so T₂(x) = 1 − x²/2. The view shows this directly.",
+            explanation: "Moving the center from a = 0 to a = 1 shifts the expansion point. The polynomial is now written in terms of u = x − 1 (shown in the shift note below the formula), computing the Taylor series around the new center.",
+            visualization: .taylor
+        ),
+        Question(
+            subject: .analysis,
+            text: "For f(x) = eˣ at center a = 0, what pattern appears in the denominators 1/k! as you increase the order?",
+            hint: "Select 'eˣ' and tap through orders 1, 2, 3, 4. Look at the stacked fractions in the polynomial display and notice the pattern in the bottom numbers.",
+            options: [
+                "All denominators are 1 (no fractions)",
+                "Denominators are powers of 2: 2, 4, 8, 16...",
+                "Denominators are factorials: 1, 2, 6, 24...",
+                "Denominators alternate between 1 and 2"
+            ],
+            correctIndex: 2,
+            explanation: "For eˣ, all derivatives equal eˣ, so the k-th derivative at 0 is 1. The Taylor formula divides by k!, giving coefficients 1/0! = 1, 1/1! = 1, 1/2! = 1/2, 1/3! = 1/6, etc. The denominators are factorials: 1, 2, 6, 24, 120, 720.",
+            visualization: .taylor
+        ),
+        Question(
+            subject: .analysis,
+            text: "For f(x) = ln(1+x) with domain x > −1, what happens if you expand around a center point a < −1?",
+            hint: "Select 'ln(1+x)', set order to 4, then slowly drag the center slider left past x = −1. Watch what happens to both curves near the center marker.",
+            options: [
+                "Both curves continue smoothly",
+                "The function becomes undefined but the polynomial continues",
+                "Both curves become horizontal lines",
+                "The polynomial flips upside down"
+            ],
+            correctIndex: 1,
+            explanation: "ln(1+x) has domain x > −1. When the center crosses x = −1, the function becomes undefined (the blue curve breaks), but the Taylor polynomial (orange) is defined everywhere and continues as a regular polynomial, even though it no longer approximates anything meaningful.",
             visualization: .taylor
         ),
     ]

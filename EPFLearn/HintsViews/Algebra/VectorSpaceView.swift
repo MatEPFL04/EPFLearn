@@ -1,17 +1,13 @@
 //
 //  VectorSpaceView.swift
-//  EPFLearn
+//  LearnViz
 //
 //  Linear independence in R² / R³.
-//  Reuses V3 / M3 / Projector / ScrubCell / BracketShape from Matrix3DView.swift.
+//  Reuses V3 / M3 / Projector / ScrubCell / BracketShape from Matrix3DView.swift
+//  and the shared preset catalogue from SharedMatrixComponents.swift.
 //
 
 import SwiftUI
-
-struct VectorPreset {
-    let name: String
-    let vectors: (V3, V3, V3)?     // nil = "Custom"
-}
 
 struct VectorSpaceView: View {
 
@@ -19,22 +15,18 @@ struct VectorSpaceView: View {
     @State private var v2 = V3(1, 2, 0)
     @State private var v3 = V3(0.5, 0.5, 2)
 
-    /// Coefficients of the dependency equation λ₁v₁ + λ₂v₂ + λ₃v₃ = 0
-    @State private var lambda = V3(0, 0, 0)
-
     @State private var is3D: Bool
     @State private var presetIndex = 0
 
     // Camera (3D only)
     @State private var azimuth: Double = -0.9
     @State private var elevation: Double = 0.42
-    
-    /// Initialize with 2D or 3D mode
-    init(is3D: Bool = true) {
-        self._is3D = State(initialValue: is3D)
-    }
     @State private var distance: Double = 8.5
     @State private var orbitAnchor: (Double, Double)? = nil
+
+    init(is3D: Bool = true) {
+        _is3D = State(initialValue: is3D)
+    }
 
     static let warm = Color(red: 1.00, green: 0.80, blue: 0.26)
     static let warmUI = Color(red: 0.72, green: 0.50, blue: 0.00)
@@ -51,10 +43,11 @@ struct VectorSpaceView: View {
     }
     private var independent: Bool { abs(det) > 0.02 }
 
-    /// Σ λᵢvᵢ — the left-hand side of the equation, zero exactly when the chain closes.
-    private var residual: V3 { lambda.x * w1 + lambda.y * w2 + lambda.z * w3 }
-    private var lambdaIsTrivial: Bool { lambda.norm < 0.01 }
-    private var closed: Bool { residual.norm < 0.02 && !lambdaIsTrivial }
+    /// The planar views need their own catalogue: several 3D presets differ
+    /// only in their third column, which does not exist in ℝ².
+    private var presets: [MatrixPreset] {
+        is3D ? MatrixPreset.sharedPresets : MatrixPreset.planarPresets
+    }
 
     private var camAzimuth: Double { is3D ? azimuth : -.pi / 2 }
     private var camElevation: Double { is3D ? elevation : .pi / 2 - 0.0006 }
@@ -69,8 +62,16 @@ struct VectorSpaceView: View {
             .padding(14)
         }
         .background(Color(.systemGroupedBackground))
-        .onChange(of: det) { autoSolve() }
-        .onChange(of: is3D) { if !is3D { lambda.z = 0 }; autoSolve() }
+        .onChange(of: is3D) {
+            // The two catalogues are different lists, so an index carried over
+            // would point at an unrelated example.
+            presetIndex = 0
+            if !is3D {
+                v1.z = 0
+                v2.z = 0
+                v3.z = 0
+            }
+        }
     }
 
     // MARK: - Viewport
@@ -151,7 +152,7 @@ struct VectorSpaceView: View {
         HStack(alignment: .center, spacing: 12) {
             VStack(alignment: .leading, spacing: 6) {
                 sectionLabel("SPACE")
-                Picker("Espace", selection: $is3D) {
+                Picker("Space", selection: $is3D) {
                     Text("ℝ²").tag(false)
                     Text("ℝ³").tag(true)
                 }
@@ -165,19 +166,12 @@ struct VectorSpaceView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
 
             VStack(alignment: .leading, spacing: 0) {
-                sectionLabel("EXAMPLES")
-                Picker("Exemples", selection: $presetIndex) {
-                    ForEach(VectorSpaceView.presets.indices, id: \.self) { i in
-                        Text(VectorSpaceView.presets[i].name)
-                            .font(.system(size: 13, weight: .medium))
-                            .tag(i)
-                    }
-                }
-                .pickerStyle(.wheel)
-                .labelsHidden()
-                .frame(height: 76)
-                .clipped()
-                .onChange(of: presetIndex) { applyPreset() }
+                // A matrix is stored by columns, so its columns are the
+                // vectors: nothing to convert.
+                MatrixPresetPicker(presetIndex: $presetIndex,
+                                   presets: presets,
+                                   height: 76)
+                    .onChange(of: presetIndex) { applyPreset() }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -193,8 +187,17 @@ struct VectorSpaceView: View {
     }
 
     private func applyPreset() {
-        guard let vs = VectorSpaceView.presets[presetIndex].vectors else { return }
-        v1 = vs.0; v2 = vs.1; v3 = vs.2
+        guard presets.indices.contains(presetIndex),
+              let m = presets[presetIndex].matrix else { return }
+        if is3D {
+            v1 = m.c1
+            v2 = m.c2
+            v3 = m.c3
+        } else {
+            v1 = V3(m.c1.x, m.c1.y, 0)
+            v2 = V3(m.c2.x, m.c2.y, 0)
+            v3 = .zero
+        }
     }
 
     // MARK: - Analysis card
@@ -205,8 +208,6 @@ struct VectorSpaceView: View {
                 vectorEditor
                 verdictPanel
             }
-            Divider()
-            
         }
         .padding(10)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -288,36 +289,6 @@ struct VectorSpaceView: View {
             : "The span is only the highlighted line — the rest of the plane is out of reach."
     }
 
-    // MARK: The equation  λ₁v₁ + λ₂v₂ + λ₃v₃ = 0
-
-    private var equationRow: some View {
-        VStack(alignment: .leading, spacing: 5) {
-            HStack(spacing: 0) {
-                sectionLabel("DEPENDENCY EQUATION")
-                Spacer()
-            }
-            HStack(spacing: 3) {
-                ForEach(0..<columnCount, id: \.self) { c in
-                    if c > 0 {
-                        Text("+").font(.system(size: 13, weight: .light)).foregroundStyle(.secondary)
-                    }
-                    ScrubCell(value: lambdaBinding(c), tint: VectorSpaceView.tint(c))
-                    Text("·\(["v₁", "v₂", "v₃"][c])")
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundStyle(VectorSpaceView.tint(c))
-                }
-                Text("=").font(.system(size: 14, weight: .light)).foregroundStyle(.secondary)
-                    .padding(.leading, 2)
-                Text("0")
-                    .font(.system(size: 15, weight: .heavy, design: .monospaced))
-                    .foregroundStyle(closed ? Color.green : .secondary)
-            }
-            .lineLimit(1)
-            .minimumScaleFactor(0.65)
-        }
-    }
-
- 
     // MARK: Bindings
 
     static func tint(_ c: Int) -> Color { [.red, .green, .blue][c] }
@@ -337,63 +308,6 @@ struct VectorSpaceView: View {
         )
     }
 
-    private func lambdaBinding(_ c: Int) -> Binding<Double> {
-        Binding(
-            get: { c == 0 ? lambda.x : (c == 1 ? lambda.y : lambda.z) },
-            set: { nv in
-                if c == 0 { lambda.x = nv } else if c == 1 { lambda.y = nv } else { lambda.z = nv }
-            }
-        )
-    }
-
-    /// Fills λ with an actual non-trivial solution whenever one exists.
-    private func autoSolve() {
-        guard !independent else { return }
-        guard let l = nullVector() else { return }
-        lambda = l
-    }
-
-    /// Null vector of the matrix whose columns are the vectors: the rows must all be orthogonal to λ.
-    private func nullVector() -> V3? {
-        let rows: [V3] = is3D
-            ? [V3(w1.x, w2.x, w3.x), V3(w1.y, w2.y, w3.y), V3(w1.z, w2.z, w3.z)]
-            : [V3(w1.x, w2.x, 0), V3(w1.y, w2.y, 0)]
-
-        var best = V3.zero
-        if is3D {
-            for i in 0..<rows.count {
-                for j in (i + 1)..<rows.count {
-                    let c = rows[i].cross(rows[j])
-                    if c.norm > best.norm { best = c }
-                }
-            }
-        } else {
-            // In R²: λ orthogonal to the dominant row (a, b) is (-b, a).
-            let r = rows[0].norm >= rows[1].norm ? rows[0] : rows[1]
-            best = V3(-r.y, r.x, 0)
-        }
-        guard best.norm > 1e-6 else { return nil }
-
-        // Normalise so the largest coefficient is ±1, then snap to the 0.25 grid of the cells.
-        let m = max(abs(best.x), max(abs(best.y), abs(best.z)))
-        let s = 1.0 / m
-        let snap: (Double) -> Double = { min(max(($0 * s * 4).rounded() / 4, -3), 3) }
-        return V3(snap(best.x), snap(best.y), is3D ? snap(best.z) : 0)
-    }
-
-    // MARK: - Presets
-
-    static let presets: [VectorPreset] = [
-        VectorPreset(name: "Custom", vectors: nil),
-        VectorPreset(name: "Canonical basis", vectors: (V3(1, 0, 0), V3(0, 1, 0), V3(0, 0, 1))),
-        VectorPreset(name: "Independent", vectors: (V3(2, 1, 0), V3(1, 2, 0), V3(0.5, 0.5, 2))),
-        VectorPreset(name: "Collinear pair", vectors: (V3(1.5, 1, 0), V3(-3, -2, 0), V3(0, 0, 2))),
-        VectorPreset(name: "Coplanar trio", vectors: (V3(2, 0, 1), V3(0, 2, 1), V3(2, 2, 2))),
-        VectorPreset(name: "Almost dependent", vectors: (V3(2, 1, 0), V3(2, 1.25, 0), V3(0, 0, 2))),
-        VectorPreset(name: "Flat trio", vectors: (V3(2, 1, 0), V3(-1, 2, 0), V3(1, 3, 0))),
-        VectorPreset(name: "Skewed frame", vectors: (V3(2, 0.5, 0.5), V3(0.5, 2, 0.5), V3(0.5, 0.5, 2)))
-    ]
-
     // MARK: - Rendering
 
     private func render(_ ctx: GraphicsContext, size: CGSize) {
@@ -405,7 +319,6 @@ struct VectorSpaceView: View {
         if is3D { drawShadow(ctx, p) }
         drawSolid(ctx, p)
         drawVectors(ctx, p)
-        drawChain(ctx, p)
     }
 
     private func drawFloor(_ ctx: GraphicsContext, _ p: Projector) {
@@ -501,8 +414,12 @@ struct VectorSpaceView: View {
         ctx.fill(path, with: .color(.black.opacity(0.4)))
     }
 
-    /// Parallelogram in ℝ², parallelepiped in ℝ³ — same code, w3 is simply zero in 2D.
+    /// Parallelogram in ℝ², parallelepiped in ℝ³ — same code, w3 is simply zero
+    /// in 2D. Skipped when the family is dependent: the solid collapses and its
+    /// faces produce nothing but slivers, while drawSpan already shows the truth.
     private func drawSolid(_ ctx: GraphicsContext, _ p: Projector) {
+        guard independent else { return }
+
         let A = M3(c1: w1, c2: w2, c3: w3)
         let light = V3(0.45, -0.6, 0.85).unit
         var faces: [(depth: Double, path: Path, shade: Double)] = []
@@ -542,7 +459,11 @@ struct VectorSpaceView: View {
 
         for (v, color, label) in items {
             arrow(ctx, p, from: .zero, to: v, color: color, width: 5)
-            if is3D && abs(v.z) > 0.01 {
+
+            // Plumb line only where it means something: a genuinely 3D setup,
+            // with the vector clearly off the floor. In 2D the z components are
+            // always zero, so this never fires.
+            if is3D && independent && abs(v.z) > 0.1 && v.norm > 0.2 && abs(v.z) / v.norm > 0.15 {
                 let ground = V3(v.x, v.y, 0)
                 if let s = p.segment(v, ground) {
                     var path = Path()
@@ -555,43 +476,13 @@ struct VectorSpaceView: View {
                              with: .color(color.opacity(0.35)))
                 }
             }
+
             if let tip = p.project(v) {
                 ctx.draw(Text(label).font(.system(size: 14, weight: .heavy)).foregroundStyle(color),
                          at: CGPoint(x: tip.x + 16, y: tip.y - 12))
             }
         }
     }
-
-    private func drawChain(_ ctx: GraphicsContext, _ p: Projector) {
-            guard !lambdaIsTrivial else { return }
-
-            let steps: [(V3, Color)] = is3D
-                ? [(lambda.x * w1, .red), (lambda.y * w2, .green), (lambda.z * w3, .blue)]
-                : [(lambda.x * w1, .red), (lambda.y * w2, .green)]
-
-            var cursor = V3.zero
-            for (step, color) in steps {
-                let next = cursor + step
-                if step.norm > 1e-6, let s = p.segment(cursor, next) {
-                    var path = Path()
-                    path.move(to: s.0); path.addLine(to: s.1)
-                    ctx.stroke(path, with: .color(color.opacity(0.9)),
-                               style: StrokeStyle(lineWidth: 2.5, lineCap: .round, dash: [6, 4]))
-                }
-                cursor = next
-            }
-
-            if closed {
-                if let o = p.project(.zero) {
-                    ctx.stroke(Path(ellipseIn: CGRect(x: o.x - 9, y: o.y - 9, width: 18, height: 18)),
-                               with: .color(.green), lineWidth: 2.5)
-                    ctx.draw(Text("= 0").font(.system(size: 12, weight: .heavy)).foregroundStyle(.green),
-                             at: CGPoint(x: o.x + 26, y: o.y + 14))
-                }
-            } else {
-                // Flèche jaune et texte supprimés pour épurer le dessin.
-            }
-        }
 
     private func arrow(_ ctx: GraphicsContext, _ p: Projector,
                        from a: V3, to b: V3, color: Color, width: CGFloat) {
@@ -620,4 +511,5 @@ private func fmt(_ v: Double, _ digits: Int) -> String {
 
 #Preview {
     VectorSpaceView()
+        .preferredColorScheme(.dark)
 }

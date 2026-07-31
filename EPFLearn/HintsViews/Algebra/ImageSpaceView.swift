@@ -1,9 +1,10 @@
 //
 //  ImageSpaceView.swift
-//  EPFLearn
+//  LearnViz
 //
 //  The image of a linear map: an integer lattice, and where it travels.
-//  Reuses V3 / M3 / Projector / ScrubCell / BracketShape from Matrix3DView.swift.
+//  Reuses V3 / M3 / Projector / ScrubCell / BracketShape from Matrix3DView.swift
+//  and the shared chrome from SharedMatrixComponents.swift.
 //
 
 import SwiftUI
@@ -17,7 +18,6 @@ struct ImageSpaceView: View {
     @State private var azimuth: Double = -0.9
     @State private var elevation: Double = 0.42
     @State private var distance: Double = 11
-    @State private var orbitAnchor: (Double, Double)? = nil
 
     static let neonCore = Color(red: 1.00, green: 0.99, blue: 0.78)
     static let neonHalo = Color(red: 1.00, green: 0.84, blue: 0.02)
@@ -73,72 +73,48 @@ struct ImageSpaceView: View {
         }
     }
 
+    /// Same order as Matrix3DView: header, viewport, transformation slider,
+    /// matrix panel.
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 10) {
-                header
-                viewport
-                morphCard
-                controls
+                AlgebraHeader(
+                    title: "The Image of a Map",
+                    subtitle: "Drag the transformation slider and watch the grid leave its origin."
+                )
+
+                AlgebraViewport(
+                    azimuth: $azimuth,
+                    elevation: $elevation,
+                    distance: $distance,
+                    distanceRange: 6...24,
+                    home: (azimuth: -0.9, elevation: 0.42, distance: 11),
+                    accent: ImageSpaceView.neonHalo,
+                    render: { ctx, size in render(ctx, size: size) },
+                    hud: { hud },
+                    legend: { legend }
+                )
+
+                MorphCard(morph: $morph, accent: ImageSpaceView.neonUI)
+
+                MatrixControlPanel(
+                    matrix: $matrix,
+                    presetIndex: $presetIndex,
+                    onPresetChange: applyPreset,
+                    pickerHeight: 88
+                )
             }
             .padding(14)
         }
         .background(Color(.systemGroupedBackground))
     }
 
-    private var header: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text("The Image of a Map")
-                .font(.title3.bold())
-            Text("Drag the transform slider and watch the grid leave its origin.")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-        }
-    }
-
-    // MARK: - Viewport
-
-    private var viewport: some View {
-        ZStack(alignment: .topLeading) {
-            Canvas { ctx, size in render(ctx, size: size) }
-                .frame(height: 400)
-                .background(Color(red: 0.03, green: 0.03, blue: 0.05))
-                .clipShape(RoundedRectangle(cornerRadius: 16))
-                .contentShape(RoundedRectangle(cornerRadius: 16))
-                .highPriorityGesture(orbitGesture)
-                .onTapGesture(count: 2) {
-                    azimuth = -0.9; elevation = 0.42; distance = 11
-                }
-
-            hud.padding(10)
-        }
-        .overlay(alignment: .bottomLeading) { legend.padding(10) }
-        .overlay(alignment: .bottomTrailing) { zoomSlider.padding(9) }
-    }
-
-    private var orbitGesture: some Gesture {
-        DragGesture(minimumDistance: 2)
-            .onChanged { g in
-                if orbitAnchor == nil { orbitAnchor = (azimuth, elevation) }
-                guard let a = orbitAnchor else { return }
-                azimuth = a.0 - Double(g.translation.width) * 0.008
-                elevation = min(max(a.1 + Double(g.translation.height) * 0.006, -1.45), 1.45)
-            }
-            .onEnded { _ in orbitAnchor = nil }
-    }
+    // MARK: - Viewport overlays
 
     private var hud: some View {
-        VStack(alignment: .leading, spacing: 1) {
-            Text("dim im A = \(rank)")
-                .font(.system(size: 14, weight: .bold, design: .monospaced))
-                .foregroundStyle(ImageSpaceView.neonHalo)
-            Text(imageName)
-                .font(.system(size: 10))
-                .foregroundStyle(.white.opacity(0.55))
-        }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 5)
-        .background(.black.opacity(0.4), in: RoundedRectangle(cornerRadius: 8))
+        AlgebraHUD(headline: "dim im A = \(rank)",
+                   detail: imageName,
+                   color: ImageSpaceView.neonHalo)
     }
 
     private var legend: some View {
@@ -162,124 +138,11 @@ struct ImageSpaceView: View {
         .background(.black.opacity(0.45), in: Capsule())
     }
 
-    private var zoomSlider: some View {
-        HStack(spacing: 5) {
-            Image(systemName: "minus.magnifyingglass").font(.system(size: 9))
-            Slider(value: $distance, in: 6...24).frame(width: 88)
-            Image(systemName: "plus.magnifyingglass").font(.system(size: 9))
-        }
-        .foregroundStyle(.white.opacity(0.7))
-        .tint(ImageSpaceView.neonHalo)
-        .padding(.horizontal, 8)
-        .padding(.vertical, 2)
-        .background(.black.opacity(0.35), in: Capsule())
-    }
-
-    // MARK: - Morph
-
-    private var morphCard: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 0) {
-                Text("Transformation slider")
-                    .font(.system(size: 9, weight: .bold))
-                    .tracking(0.7)
-                    .foregroundStyle(.secondary)
-                Spacer()
-                Text(morphReadout)
-                    .font(.system(size: 10, weight: .heavy, design: .monospaced))
-                    .foregroundStyle(ImageSpaceView.neonUI)
-            }
-            Slider(value: $morph, in: 0...1).tint(ImageSpaceView.neonUI)
-        }
-        .padding(10)
-        .background(RoundedRectangle(cornerRadius: 13).fill(Color(.secondarySystemGroupedBackground)))
-    }
-
-    private var morphReadout: String {
-        if morph < 0.001 { return "identity" }
-        if morph > 0.999 { return "A applied" }
-        let pct: Int = Int(morph * 100)
-        return "\(pct)%"
-    }
-
-    // MARK: - Matrix + presets
-
-    private var controls: some View {
-        HStack(alignment: .top, spacing: 12) {
-            VStack(spacing: 2) {
-                HStack(spacing: 3) {
-                    ForEach(0..<3, id: \.self) { c in
-                        Text(["e⃗₁", "e⃗₂", "e⃗₃"][c])
-                            .font(.system(size: 9, weight: .bold))
-                            .foregroundStyle([Color.red, .green, .blue][c])
-                            .frame(width: Matrix3DView.cellW)
-                    }
-                }
-                HStack(spacing: 2) {
-                    BracketShape(leading: true)
-                        .stroke(Color.secondary.opacity(0.5), lineWidth: 1.2).frame(width: 5)
-                    VStack(spacing: 3) {
-                        ForEach(0..<3, id: \.self) { r in
-                            HStack(spacing: 3) {
-                                ForEach(0..<3, id: \.self) { c in
-                                    ScrubCell(value: cellBinding(r, c),
-                                              tint: [Color.red, .green, .blue][c])
-                                }
-                            }
-                        }
-                    }
-                    BracketShape(leading: false)
-                        .stroke(Color.secondary.opacity(0.5), lineWidth: 1.2).frame(width: 5)
-                }
-                Text("drag ↔ · double-tap to zero")
-                    .font(.system(size: 8.5))
-                    .foregroundStyle(.tertiary)
-                    .padding(.top, 2)
-            }
-
-            VStack(alignment: .leading, spacing: 0) {
-                Text("Examples")
-                    .font(.system(size: 9, weight: .bold))
-                    .tracking(0.7)
-                    .foregroundStyle(.secondary)
-                Picker("", selection: $presetIndex) {
-                    ForEach(ImageSpaceView.presets.indices, id: \.self) { i in
-                        Text(ImageSpaceView.presets[i].0)
-                            .font(.system(size: 13, weight: .medium))
-                            .tag(i)
-                    }
-                }
-                .pickerStyle(.wheel)
-                .frame(height: 88)
-                .clipped()
-                .onChange(of: presetIndex) { applyPreset() }
-            }
-            .frame(maxWidth: .infinity)
-        }
-        .padding(10)
-        .background(RoundedRectangle(cornerRadius: 13).fill(Color(.secondarySystemGroupedBackground)))
-    }
-
-    private func cellBinding(_ r: Int, _ c: Int) -> Binding<Double> {
-        Binding(get: { matrix[r, c] },
-                set: { matrix[r, c] = $0; presetIndex = 0 })
-    }
-
     private func applyPreset() {
-        guard let m = ImageSpaceView.presets[presetIndex].1 else { return }
+        guard let m = MatrixPreset.sharedPresets[presetIndex].matrix else { return }
         matrix = m
         morph = 1
     }
-
-    static let presets: [(String, M3?)] = [
-        ("Custom", nil),
-        ("Identity", M3(c1: V3(1, 0, 0), c2: V3(0, 1, 0), c3: V3(0, 0, 1))),
-        ("Plane · rank 2", M3(c1: V3(1, 0, 0), c2: V3(0, 1, 0), c3: V3(1, 1, 0))),
-        ("Tilted plane", M3(c1: V3(1, 0, 0.5), c2: V3(0, 1, 0.5), c3: V3(1, 1, 1))),
-        ("Projection on xy", M3(c1: V3(1, 0, 0), c2: V3(0, 1, 0), c3: V3(0, 0, 0))),
-        ("Line · rank 1", M3(c1: V3(1, 1, 0.5), c2: V3(2, 2, 1), c3: V3(-1, -1, -0.5))),
-        ("Zero map", M3(c1: .zero, c2: .zero, c3: .zero))
-    ]
 
     // MARK: - Rendering
 
@@ -477,7 +340,7 @@ struct ImageSpaceView: View {
 
     private func drawColumns(_ ctx: GraphicsContext, _ p: Projector, _ A: M3) {
         let cols: [(V3, Color, String)] = [
-            (A.c1, .red, "Ae⃗₁"), (A.c2, .green, "Ae⃗₂"), (A.c3, .blue, "Ae⃗₃")
+            (A.c1, .red, "e⃗₁"), (A.c2, .green, "e⃗₂"), (A.c3, .blue, "e⃗₃")
         ]
         for (v, color, label) in cols {
             guard v.norm > 0.02 else { continue }
