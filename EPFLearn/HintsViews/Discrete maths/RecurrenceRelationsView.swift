@@ -89,12 +89,6 @@ struct RecurrenceRelationsView: View {
                 DMSectionTitle(text: "Definition", symbol: "text.book.closed.fill", tint: tint)
                 DMFormula(text: model.recurrenceLine, tint: tint, emphasised: true)
                 DMFormula(text: model.baseLine, tint: tint)
-
-                HStack(spacing: 8) {
-                    Image(systemName: "arrow.right.circle.fill").foregroundStyle(DMTheme.mint)
-                    Text("Closed form").font(.caption.weight(.bold)).foregroundStyle(.secondary)
-                }
-                DMFormula(text: model.closedForm, tint: DMTheme.mint, emphasised: true)
             }
         }
     }
@@ -256,12 +250,6 @@ struct RecurrenceRelationsView: View {
                 .background(RoundedRectangle(cornerRadius: 14, style: .continuous)
                     .fill(DMTheme.amber.opacity(0.08)))
 
-                Text(kind == .fibonacci
-                     ? "Each term only needs the two before it, so working upwards computes Fₙ in n steps instead of exponentially many."
-                     : "Substituting the recurrence into itself makes the pattern visible — and the pattern is the closed form.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
             }
         }
     }

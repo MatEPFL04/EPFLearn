@@ -94,8 +94,11 @@ struct QuizView: View {
                 .font(.title)
                 .bold()
             
-            Button(action: { vm.restart() }) {
-                Text("Start again")
+            Button(action: { 
+                vm.restart()
+                quizHasStarted = false
+            }) {
+                Text("Back to the category menu")
                     .bold()
                     .frame(maxWidth: .infinity)
                     .padding()

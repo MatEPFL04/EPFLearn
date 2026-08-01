@@ -64,11 +64,18 @@ struct TAFView: View {
         }
         
         // Recherche par balayage pour les fonctions lisses (f2, f3, f4)
+        // IMPORTANT: chercher uniquement dans l'intervalle OUVERT ]a, b[
         var results: [Double] = []
         let step = (b - a) / 500.0
+        let epsilon = 0.05 // Distance minimale des bornes pour garantir que c ∈ ]a,b[
+        
         for i in 0...500 {
             let x = a + Double(i) * step
+            
+            // Exclure les points trop proches des bornes a et b
+            guard x > a + epsilon && x < b - epsilon else { continue }
             guard abs(derivative(f, at: x) - slope) < 0.04 else { continue }
+            
             if results.last.map({ abs($0 - x) > 0.1 }) ?? true {
                 results.append(x)
             }
@@ -87,9 +94,12 @@ struct TAFView: View {
 
         VStack(spacing: 14) {
 
-            Text("Mean Value Theorem")
-                .font(.headline)
-                .foregroundStyle(.primary)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Mean Value Theorem").font(.headline)
+                Text("f(x) = \(functionName(selectedFunction))")
+                    .font(.system(size: 12, design: .monospaced))
+                    .foregroundStyle(.secondary)
+            }
 
             ZStack {
                 GridDrawing(step: 10)
@@ -155,6 +165,7 @@ struct TAFView: View {
                 }
             }
             .pickerStyle(.menu)
+            .labelsHidden()
             .frame(width: graphSize)
 
             // Sliders ajustés

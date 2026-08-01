@@ -188,6 +188,8 @@ struct TFIView: View {
 
     var body: some View {
         VStack(spacing: 14) {
+            
+            Text("Fundamental Theorem of Calculus").font(.headline)
 
             VStack(alignment: .leading, spacing: 2) {
                 IntegralExpression(lhs: "F(x) =", lower: "0", upper: "x",
@@ -195,15 +197,6 @@ struct TFIView: View {
                 IntegralExpression(lhs: "G(x) =", lower: "0", upper: "x",
                                    integrand: "g(t) dt", color: .blue)
             }
-
-            Picker("Paire de fonctions", selection: $preset) {
-                ForEach(TFIPreset.allCases) { option in
-                    Text(option.displayName).tag(option)
-                }
-            }
-            .pickerStyle(.menu)
-            .labelsHidden()
-            .frame(width: graphSize)
 
             ZStack {
                 // Neutral grid: blue would collide with the colour of g.
@@ -238,6 +231,15 @@ struct TFIView: View {
             .background(Color(.systemBackground))
             .clipShape(RoundedRectangle(cornerRadius: 8))
             .overlay(alignment: .topLeading) { legend }
+
+            Picker("Function pair", selection: $preset) {
+                ForEach(TFIPreset.allCases) { option in
+                    Text(option.displayName).tag(option)
+                }
+            }
+            .pickerStyle(.menu)
+            .labelsHidden()
+            .frame(width: graphSize)
 
             VStack(alignment: .leading, spacing: 4) {
                 Text("x = \(target, specifier: "%.2f")")

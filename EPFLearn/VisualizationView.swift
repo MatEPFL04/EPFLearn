@@ -79,8 +79,8 @@ struct VisualizationView: View {
         case .functions: FunctionView()
             
              
-        case .sorting:
-            SortingView(algo: .merge, shape: .random)
+        case .sorting: 
+            SortingView(algo: .insertion, shape: .random)
         case .quickSort:
             QuickSortView()
         case .search:
@@ -128,5 +128,5 @@ struct VisualizationView: View {
 }
 
 #Preview {
-    VisualizationView(type: .variablesMemory, hint: "Observe la diff entre F et G")
+    VisualizationView(type: .variablesMemory, hint: "Observ the difference between F and G")
 }

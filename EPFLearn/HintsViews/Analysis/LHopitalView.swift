@@ -60,13 +60,12 @@ struct LHopitalView: View {
     var body: some View {
         VStack(spacing: 14) {
 
-            Picker("Function pair", selection: $selected) {
-                ForEach(lhopitalCases) { c in
-                    Text(c.chip).tag(c.id)
-                }
+            VStack(alignment: .leading, spacing: 2) {
+                Text("L'Hôpital's Rule").font(.headline)
+                Text("\(current.chip)")
+                    .font(.system(size: 12, design: .monospaced))
+                    .foregroundStyle(.secondary)
             }
-            .pickerStyle(.menu)
-            .frame(width: graphSize)
 
             ZStack {
                 GridDrawing(step: 10).stroke(Color.blue.opacity(0.2), lineWidth: 0.5)
@@ -82,6 +81,15 @@ struct LHopitalView: View {
             .padding(6)
             .background(Color(.systemBackground))
             .clipShape(RoundedRectangle(cornerRadius: 8))
+
+            Picker("Function pair", selection: $selected) {
+                ForEach(lhopitalCases) { c in
+                    Text(c.chip).tag(c.id)
+                }
+            }
+            .pickerStyle(.menu)
+            .labelsHidden()
+            .frame(width: graphSize)
 
             // Légende sous le graphe (plus de superposition avec les courbes),
             // avec le nom explicite de f et g plutôt que juste "slope X".

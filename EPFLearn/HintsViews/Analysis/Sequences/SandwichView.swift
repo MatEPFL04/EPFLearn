@@ -2,9 +2,9 @@
 //  SandwichView.swift
 //  EPFLearn
 //
-//  Théorème des gendarmes. Échelle fixe : on voit l'étau se refermer sur les
-//  premiers termes, là où le mouvement est lisible. Au-delà, c'est le curseur
-//  et la lecture chiffrée qui prennent le relais — pas un zoom.
+//  Squeeze (Sandwich) Theorem. Fixed scale: watch the vise close on the
+//  first terms where the movement is readable. Beyond that, the cursor
+//  and numerical readout take over.
 //
 
 import SwiftUI
@@ -14,28 +14,24 @@ private struct SqueezeCase: Identifiable {
     let name: String
     let boundLabel: String
     let middle: (Int) -> Double
-    let bound: (Int) -> Double          // enveloppe positive ; l'autre est son opposée
-    let note: String
+    let bound: (Int) -> Double          // positive envelope; negative is its opposite
 }
 
 private let squeezeCases: [SqueezeCase] = [
     SqueezeCase(
         id: 0, name: "sin(n²)/√n", boundLabel: "±1/√n",
         middle: { sin(Double($0 * $0)) / sqrt(Double($0)) },
-        bound:  { 1 / sqrt(Double($0)) },
-        note: "sin(n²) oscille sans aucun motif — mais reste pris entre ±1/√n, qui tendent vers 0. L'oscillation devient sans importance."
+        bound:  { 1 / sqrt(Double($0)) }
     ),
     SqueezeCase(
         id: 1, name: "(−1)ⁿ/n", boundLabel: "±1/n",
         middle: { ($0 % 2 == 0 ? 1.0 : -1.0) / Double($0) },
-        bound:  { 1 / Double($0) },
-        note: "Le signe alterne à chaque pas, mais l'enveloppe ±1/n se referme quel que soit ce signe."
+        bound:  { 1 / Double($0) }
     ),
     SqueezeCase(
         id: 2, name: "cos(n)/n²", boundLabel: "±1/n²",
         middle: { cos(Double($0)) / pow(Double($0), 2) },
-        bound:  { 1 / pow(Double($0), 2) },
-        note: "Même principe, étau bien plus serré : ±1/n² se referme beaucoup plus vite que ±1/n."
+        bound:  { 1 / pow(Double($0), 2) }
     ),
 ]
 
@@ -52,18 +48,11 @@ struct SandwichView: View {
         VStack(alignment: .leading, spacing: 12) {
 
             VStack(alignment: .leading, spacing: 2) {
-                Text("Théorème des gendarmes").font(.headline)
-                Text("−\(c.boundLabel.dropFirst()) ≤ uₙ ≤ \(c.boundLabel.dropFirst())  avec  uₙ = \(c.name)")
+                Text("Squeeze Theorem").font(.headline)
+                Text("−\(c.boundLabel.dropFirst()) ≤ uₙ ≤ \(c.boundLabel.dropFirst())  with  uₙ = \(c.name)")
                     .font(.system(size: 12, design: .monospaced))
                     .foregroundStyle(.secondary)
             }
-
-            Picker("Suite", selection: $caseIndex) {
-                ForEach(squeezeCases) { Text($0.name).tag($0.id) }
-            }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-            .onChange(of: caseIndex) { cursor = 4 }
 
             SeqPlotCanvas(
                 nRange: 1...maxN,
@@ -72,6 +61,13 @@ struct SandwichView: View {
                 onScrub: { cursor = $0 },
                 content: { ctx, s in draw(&ctx, s) }
             )
+
+            Picker("Sequence", selection: $caseIndex) {
+                ForEach(squeezeCases) { Text($0.name).tag($0.id) }
+            }
+            .pickerStyle(.menu)
+            .labelsHidden()
+            .onChange(of: caseIndex) { cursor = 4 }
 
             legend
 
@@ -89,14 +85,6 @@ struct SandwichView: View {
 
             SeqReadout(badge: "n = \(cursor)", badgeColor: SeqPalette.cursor,
                        detail: "\(f(-c.bound(cursor)))  ≤  \(f(c.middle(cursor)))  ≤  \(f(c.bound(cursor)))")
-
-            SeqReadout(badge: "étau", badgeColor: SeqPalette.bound,
-                       detail: "largeur = \(f(2 * c.bound(cursor)))  ·  la suite n'a plus la place de s'éloigner de 0")
-
-            Text(c.note)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
@@ -119,12 +107,12 @@ struct SandwichView: View {
         }
     }
 
-    // MARK: Tracé
+    // MARK: Drawing
 
     private func draw(_ ctx: inout GraphicsContext, _ s: SeqSpace) {
         let ns = Array(1...maxN)
 
-        // Zone d'étau.
+        // Squeeze zone.
         var band = Path()
         band.move(to: CGPoint(x: s.x(1), y: s.y(c.bound(1))))
         for n in ns { band.addLine(to: CGPoint(x: s.x(n), y: s.y(c.bound(n)))) }
@@ -132,7 +120,7 @@ struct SandwichView: View {
         band.closeSubpath()
         ctx.fill(band, with: .color(SeqPalette.bound.opacity(0.13)))
 
-        // Les deux gendarmes.
+        // The two bounding sequences.
         for sign in [1.0, -1.0] {
             var env = Path()
             for (i, n) in ns.enumerated() {
@@ -142,11 +130,11 @@ struct SandwichView: View {
             ctx.stroke(env, with: .color(SeqPalette.bound), lineWidth: 1.6)
         }
 
-        // La limite.
+        // The limit.
         ctx.line(CGPoint(x: s.left, y: s.y(0)), CGPoint(x: s.right, y: s.y(0)),
                  SeqPalette.limit.opacity(0.8), width: 1, dash: [5, 3])
 
-        // La suite prise au milieu.
+        // The squeezed sequence in the middle.
         var poly = Path()
         for (i, n) in ns.enumerated() {
             let p = CGPoint(x: s.x(n), y: s.y(c.middle(n)))
@@ -163,7 +151,7 @@ struct SandwichView: View {
         drawBracket(&ctx, s)
     }
 
-    /// Étau matérialisé à l'indice pointé : deux mors et le terme coincé entre eux.
+    /// Vise materialized at the pointed index: two jaws and the term caught between them.
     private func drawBracket(_ ctx: inout GraphicsContext, _ s: SeqSpace) {
         let n = min(max(cursor, 1), maxN)
         let x = s.x(n)

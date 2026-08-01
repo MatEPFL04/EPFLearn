@@ -44,7 +44,6 @@ enum SequencePreset: String, CaseIterable, Identifiable {
     case inverseN
     case cosQuarterTurn
     case alternatingRatio
-    case sineOfN
     case alternatingGrowth
 
     var id: Self { self }
@@ -54,7 +53,6 @@ enum SequencePreset: String, CaseIterable, Identifiable {
         case .inverseN:          return "1/n"
         case .cosQuarterTurn:    return "cos(nπ/2)"
         case .alternatingRatio:  return "(−1)ⁿ · n/(n+1)"
-        case .sineOfN:           return "sin(n)"
         case .alternatingGrowth: return "(−1)ⁿ(n+1)"
         }
     }
@@ -109,19 +107,6 @@ enum SequencePreset: String, CaseIterable, Identifiable {
                 ]
             )
 
-        case .sineOfN:
-            // No periodicity: n radians never lands on the same spot twice, and
-            // the terms end up dense in [−1, 1]. Every point of that interval is
-            // the limit of some subsequence.
-            return SeqDef(
-                f: { sin(Double($0)) },
-                first: 1, count: 60, initialShown: 40,
-                yRange: -1.2...1.2,
-                limitBand: -1...1,
-                summary: "Bounded, so Bolzano-Weierstrass applies and convergent subsequences exist. But no pattern of indices singles one out: every point of [−1, 1] is the limit of some subsequence.",
-                subs: []
-            )
-
         case .alternatingGrowth:
             return SeqDef(
                 f: { ($0 % 2 == 0 ? 1.0 : -1.0) * Double($0 + 1) },
@@ -162,6 +147,14 @@ struct SequenceView: View {
                     .foregroundStyle(.secondary)
             }
 
+            SeqPlotCanvas(
+                nRange: seq.first...lastN,
+                yRange: seq.yRange,
+                height: 230,
+                onScrub: { shown = max(1, $0 - seq.first + 1) },
+                content: { ctx, s in draw(&ctx, s) }
+            )
+
             Picker("Sequence", selection: $preset) {
                 ForEach(SequencePreset.allCases) { option in
                     Text(option.displayName).tag(option)
@@ -172,14 +165,6 @@ struct SequenceView: View {
             .onChange(of: preset) { _, new in
                 shown = new.definition.initialShown
             }
-
-            SeqPlotCanvas(
-                nRange: seq.first...lastN,
-                yRange: seq.yRange,
-                height: 230,
-                onScrub: { shown = max(1, $0 - seq.first + 1) },
-                content: { ctx, s in draw(&ctx, s) }
-            )
 
             if !seq.subs.isEmpty {
                 HStack(spacing: 14) {

@@ -2,7 +2,7 @@
 //  ConvergenceView.swift
 //  EPFLearn
 //
-//  Définition ε–N. Resserre ε : la bande se pince, le rang N recule.
+//  ε–N definition of convergence. Tighten ε: the band shrinks, rank N moves forward.
 //
 
 import SwiftUI
@@ -28,15 +28,15 @@ struct ConvergenceView: View {
     private let epsMin = 0.01, epsMax = 1.2
 
     @State private var index = 0
-    /// Position linéaire ∈ [0,1], convertie en ε sur une échelle log : les
-    /// petits ε méritent plus de course que les grands.
+    /// Linear position ∈ [0,1], converted to ε on a log scale: small ε values
+    /// deserve more slider range than large ones.
     @State private var sliderPos: Double = 0.55
     @State private var cursor: Int? = nil
 
     private var c: ConvCase { convCases[index] }
     private var epsilon: Double { exp(log(epsMin) + sliderPos * (log(epsMax) - log(epsMin))) }
 
-    /// Premier rang à partir duquel tous les termes visibles restent dans la bande.
+    /// First rank from which all visible terms stay inside the band.
     private var critN: Int? {
         guard c.converges else { return nil }
         var n = totalN
@@ -55,21 +55,12 @@ struct ConvergenceView: View {
         VStack(alignment: .leading, spacing: 12) {
 
             VStack(alignment: .leading, spacing: 2) {
-                Text("Convergence : la définition ε–N").font(.headline)
+                Text("Convergence: the ε–N definition").font(.headline)
                 Text("uₙ = \(c.name)   ·   ∀ε > 0, ∃N, ∀n ≥ N : |uₙ − L| < ε")
                     .font(.system(size: 11, design: .monospaced))
                     .foregroundStyle(.secondary)
                     .lineLimit(1).minimumScaleFactor(0.7)
             }
-
-            Picker("Suite", selection: $index) {
-                ForEach(convCases) { suite in
-                    Text(suite.name).tag(suite.id)
-                }
-            }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-            .onChange(of: index) { cursor = nil }
 
             SeqPlotCanvas(
                 nRange: 1...totalN,
@@ -78,6 +69,15 @@ struct ConvergenceView: View {
                 onScrub: { cursor = $0 },
                 content: { ctx, s in draw(&ctx, s) }
             )
+
+            Picker("Sequence", selection: $index) {
+                ForEach(convCases) { seq in
+                    Text(seq.name).tag(seq.id)
+                }
+            }
+            .pickerStyle(.menu)
+            .labelsHidden()
+            .onChange(of: index) { cursor = nil }
 
             HStack(spacing: 8) {
                 Text("ε").font(.caption.bold()).foregroundStyle(SeqPalette.limit).frame(width: 16)
@@ -106,26 +106,26 @@ struct ConvergenceView: View {
         if !c.converges {
             if allInside {
                 SeqReadout(badge: "ε ≥ 1", badgeColor: SeqPalette.ghost,
-                           detail: "La bande avale tout — mais ça marcherait pour n'importe quelle « limite »")
+                           detail: "The band contains everything — but this would work for any 'limit'")
             } else {
-                SeqReadout(badge: "Aucun N", badgeColor: SeqPalette.outside,
-                           detail: "Des termes restent dehors quel que soit le rang choisi")
+                SeqReadout(badge: "No N", badgeColor: SeqPalette.outside,
+                           detail: "Terms remain outside no matter which rank is chosen")
             }
         } else if let n = critN {
             SeqReadout(badge: "N = \(n)", badgeColor: SeqPalette.limit,
                        detail: "∀n ≥ \(n),  |uₙ − L| < ε")
         } else {
             SeqReadout(badge: "N > \(totalN)", badgeColor: SeqPalette.bound,
-                       detail: "Le rang existe, mais au-delà des \(totalN) termes tracés — augmente ε")
+                       detail: "The rank exists, but beyond the \(totalN) plotted terms — increase ε")
         }
     }
 
-    // MARK: Tracé
+    // MARK: Drawing
 
     private func draw(_ ctx: inout GraphicsContext, _ s: SeqSpace) {
         let color = c.converges ? SeqPalette.limit : SeqPalette.outside
 
-        // Bande ε.
+        // ε band.
         let top = s.y(c.limit + epsilon), bot = s.y(c.limit - epsilon)
         ctx.fill(Path(CGRect(x: s.left, y: top, width: s.right - s.left, height: bot - top)),
                  with: .color(color.opacity(0.10)))
@@ -136,7 +136,7 @@ struct ConvergenceView: View {
         ctx.label("L+ε", at: CGPoint(x: s.left + 16, y: top - 8), size: 9, color)
         ctx.label("L−ε", at: CGPoint(x: s.left + 16, y: bot + 8), size: 9, color)
 
-        // Rang critique.
+        // Critical rank.
         if let n = critN {
             let x = s.x(n)
             ctx.line(CGPoint(x: x, y: 6), CGPoint(x: x, y: s.size.height - 6),

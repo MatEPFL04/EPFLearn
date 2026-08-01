@@ -207,11 +207,11 @@ let recurrenceQuestions = [
     ),
     Question(
         subject: .discreteMaths,
-        text: "Tower of Hanoi: T(n) = 2T(n−1) + 1 with T(1) = 1. What is T(4)?",
-        hint: "Each extra disk doubles the previous work and adds one move.",
-        options: ["7", "11", "15", "31"],
+        text: "A sequence satisfies aₙ = 3aₙ₋₁ − 2 with a₀ = 2. What is a₃?",
+        hint: "Unfold one step at a time: a₁, then a₂, then a₃.",
+        options: ["10", "16", "28", "34"],
         correctIndex: 2,
-        explanation: "T(2) = 3, T(3) = 7, T(4) = 2·7 + 1 = 15 — which is 2⁴ − 1.",
+        explanation: "a₁ = 3·2 − 2 = 4, a₂ = 3·4 − 2 = 10, a₃ = 3·10 − 2 = 28.",
         visualization: .recurrenceRelations
     ),
     Question(
@@ -275,7 +275,7 @@ let closedFormQuestions = [
     Question(
         subject: .discreteMaths,
         text: "A sequence satisfies aₙ = 3aₙ₋₁ with a₀ = 2. What is a₄?",
-        hint: "Closed form first, then substitute.",
+        hint: "Try looking at the substitute section.",
         options: ["54", "162", "243", "486"],
         correctIndex: 1,
         explanation: "aₙ = 2 · 3ⁿ, so a₄ = 2 · 81 = 162.",
@@ -297,37 +297,37 @@ let probabilityQuestions = [
     Question(
         subject: .discreteMaths,
         text: "What is the probability of rolling a sum of 7 with two fair dice?",
-        hint: "List the favourable pairs: (1,6), (2,5), (3,4), (4,3), (5,2), (6,1).",
+        hint: "Use the two dice view to count how many ways you can get 7.",
         options: ["1/6", "1/9", "5/36", "1/12"],
         correctIndex: 0,
-        explanation: "6 favourable outcomes out of 36 equally likely pairs: 6/36 = 1/6.",
+        explanation: "6 favourable outcomes out of 36 equally likely pairs: 6/36 = 1/6. Check the bar for sum = 7 in the view.",
         visualization: .probability
     ),
     Question(
         subject: .discreteMaths,
-        text: "If P(A) = 0.4, P(B) = 0.5 and A and B are independent, what is P(A ∩ B)?",
-        hint: "Independence turns 'and' into a product of probabilities.",
-        options: ["0.1", "0.2", "0.3", "0.9"],
+        text: "With two fair dice, which sum is the most likely?",
+        hint: "Look at the probability distribution in the two dice view, which bar is tallest?",
+        options: ["6", "7", "8", "All sums are equally likely"],
         correctIndex: 1,
-        explanation: "P(A ∩ B) = P(A) · P(B) = 0.4 × 0.5 = 0.2.",
+        explanation: "Sum = 7 has 6/36 probability, the highest. It can be formed in 6 ways: (1,6), (2,5), (3,4), (4,3), (5,2), (6,1).",
         visualization: .probability
     ),
     Question(
         subject: .discreteMaths,
-        text: "What is the probability of getting at least one head in 3 coin flips?",
-        hint: "The opposite event is much easier to count.",
-        options: ["3/4", "7/8", "1/2", "5/8"],
-        correctIndex: 1,
-        explanation: "P(all tails) = (1/2)³ = 1/8, so P(at least one head) = 1 − 1/8 = 7/8.",
+        text: "What is the probability of rolling a 4 on a single fair die?",
+        hint: "Use the die view — each face has equal probability.",
+        options: ["1/4", "1/5", "1/6", "1/12"],
+        correctIndex: 2,
+        explanation: "A die has 6 faces, each equally likely: P(X = 4) = 1/6 ≈ 16.7%.",
         visualization: .probability
     ),
     Question(
         subject: .discreteMaths,
-        text: "What is the probability of drawing a heart from a standard 52-card deck?",
-        hint: "Each of the four suits is equally represented.",
-        options: ["1/13", "1/4", "1/2", "4/13"],
-        correctIndex: 1,
-        explanation: "13 hearts out of 52 cards: 13/52 = 1/4.",
+        text: "When rolling two dice, what is P(sum = 2)?",
+        hint: "Only one way to get 2: both dice show 1.",
+        options: ["1/36", "1/18", "1/12", "1/6"],
+        correctIndex: 0,
+        explanation: "Only (1,1) gives sum = 2, so P(S = 2) = 1/36 ≈ 2.8%. Check the leftmost bar in the two dice view.",
         visualization: .probability
     ),
 ]

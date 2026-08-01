@@ -110,9 +110,12 @@ struct FixedPointView: View {
         
         VStack(spacing: 14) {
             
-            Text("Fixed Point Theorem & Intersections")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Fixed Point Theorem").font(.headline)
+                Text("f(x) = \(FixedPointView.functionName(selectedFunction))")
+                    .font(.system(size: 12, design: .monospaced))
+                    .foregroundStyle(.secondary)
+            }
             
             ZStack {
                 GridDrawing(step: 10)
@@ -205,13 +208,14 @@ struct FixedPointView: View {
             .padding(.horizontal, 10)
             .frame(height: 30)
             
-            Picker("Function: ", selection: $selectedFunction) {
+            Picker("Function", selection: $selectedFunction) {
                 ForEach(Functions.allCases, id: \.self) { type in
                     let i = type.rawValue
                     Text("\(FixedPointView.functionName(i))").tag(i)
                 }
             }
             .pickerStyle(.menu)
+            .labelsHidden()
             .frame(width: graphSize)
         }
         .padding()

@@ -134,22 +134,12 @@ struct InjectionSurjectionView: View {
     var body: some View {
         VStack(spacing: 14) {
 
-            Text("Horizontal line test: how many times does it cut the graph?")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .frame(width: graphSize)
-
-            Picker("Function", selection: $selectedCase) {
-                ForEach(mapCases) { c in
-                    Text(c.chip)
-                        .font(.system(size: 20, weight: .medium, design: .rounded))
-                        .tag(c.id)
-                }
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Injectivity & Surjectivity").font(.headline)
+                Text("Horizontal line test")
+                    .font(.system(size: 12, design: .monospaced))
+                    .foregroundStyle(.secondary)
             }
-            .pickerStyle(.wheel)
-            .frame(width: graphSize, height: 110)
-            .clipped()
 
             Text("\(current.formula),   \(current.domainLabel) → \(current.codomainLabel)")
                 .font(.system(size: 14, weight: .medium, design: .monospaced))
@@ -212,6 +202,15 @@ struct InjectionSurjectionView: View {
             .frame(width: graphSize, height: graphSize)
             .background(Color(.systemBackground))
             .clipShape(RoundedRectangle(cornerRadius: 8))
+
+            Picker("Function", selection: $selectedCase) {
+                ForEach(mapCases) { c in
+                    Text(c.chip).tag(c.id)
+                }
+            }
+            .pickerStyle(.menu)
+            .labelsHidden()
+            .frame(width: graphSize)
 
             VStack(alignment: .leading, spacing: 4) {
                 Text("y = \(level, specifier: "%.2f")")

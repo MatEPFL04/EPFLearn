@@ -10,16 +10,16 @@ extension Question {
     static let complexPlaneQuestions: [Question] = [
         Question(
             subject: .analysis,
-            text: "In × mode, what single geometric operation takes z₁ to z₁ × z₂?",
-            hint: "Flip between + and × with the same z₂ and compare how the result moves: one slides, the other turns and stretches.",
+            text: "In • mode, what single geometric operation takes z₁ to z₁ • z₂, when z₂ is unitary?",
+            hint: "Flip between '+' and '•' with the same z₂ and compare how the result moves: one slides, the other turns",
             options: [
                 "A translation by z₂",
-                "A rotation by θ₂ followed by a scaling by r₂",
+                "A rotation by θ₂",
                 "A reflection across the direction of z₂",
                 "A projection onto z₂"
             ],
             correctIndex: 1,
-            explanation: "Moduli multiply and arguments add: |z₁z₂| = r₁r₂ and arg = θ₁ + θ₂. Addition is the parallelogram, multiplication is rotate then stretch.",
+            explanation: "Moduli multiply and arguments add: |z₁z₂| = r₁ • 1 = r₁ (same moduli)  and arg(z₁ • z₂) = θ₁ + θ₂. Addition is the parallelogram, multiplication is rotate then stretch.",
             visualization: .complexNumbers
         ),
         Question(
@@ -38,8 +38,8 @@ extension Question {
         ),
         Question(
             subject: .analysis,
-            text: "In × mode you replace θ₂ by θ₂ + π and leave r₂ alone. What happens to z₁ × z₂?",
-            hint: "Push θ₂ half a turn and watch whether the product changes length or only direction.",
+            text: "In × mode you replace θ₂ by θ₂ + π and leave r₂ alone. What happens to z₁ • z₂?",
+            hint: "In '•' mode, push θ₂ half a turn and watch whether the product changes length or only direction.",
             options: [
                 "Its modulus doubles",
                 "It flips to the opposite direction, same modulus",
@@ -47,13 +47,13 @@ extension Question {
                 "Nothing changes, since the modulus only depends on r₁ and r₂"
             ],
             correctIndex: 1,
-            explanation: "Adding π multiplies z₂ by e^(iπ) = −1. The argument shifts by π while |z₁ × z₂| = r₁r₂ stays put.",
+            explanation: "Adding π multiplies z₂ by eⁱᶿ = −1. The argument shifts by π while |z₁ • z₂| = r₁r₂ stays put.",
             visualization: .complexNumbers
         ),
         Question(
             subject: .analysis,
-            text: "θ₁ = 3π/4, θ₂ = 3π/2 in × mode. The app normalizes angles to [0, 2π). What argument does it display?",
-            hint: "Set both angles, read the value the app prints, then work out what it did to the raw sum.",
+            text: "Let θ₁ = 3π/4, θ₂ = 3π/2 angles for the two numbers z₁, z₂ (both are unitary). What is arg(z₁ • z₂) ?",
+            hint: "In '•' mode, set both angles to the values stated in the question, read the value the app prints, then work out what it did to the raw sum.",
             options: ["9π/4", "π/4", "5π/4", "−3π/4"],
             correctIndex: 1,
             explanation: "3π/4 + 3π/2 = 9π/4, which sits past 2π. Subtracting 2π brings it back to π/4.",
@@ -144,7 +144,7 @@ extension Question {
         ),
         Question(
             subject: .analysis,
-            text: "You refine a subdivision P into P′ by adding one point. What happens to the sums?",
+            text: "You refine a subdivision P into P′ by splitting each rectangle in two. What happens to the sums?",
             hint: "Select 'f(x) = sin(x)', then add a single point with the slider and compare each staircase before and after.",
             options: [
                 "S⁻(P′) ≤ S⁻(P) and S⁺(P′) ≥ S⁺(P)",
@@ -605,7 +605,7 @@ extension Question {
             hint: "Select '1/n' and set ε = 0.100. Look for the vertical dashed line labeled 'N' on the graph.",
             options: [
                 "N = 1",
-                "N = 10 or N = 11",
+                "N = 11",
                 "N = 100",
                 "No such N exists"
             ],
@@ -613,6 +613,20 @@ extension Question {
             explanation: "For uₙ = 1/n to stay within ε = 0.1 of L = 0, we need 1/n < 0.1, so n > 10. The N line marks where all remaining terms stay inside the band.",
             visualization: .convergence
         ),
+        Question(
+                    subject: .analysis,
+                    text: "For the sequence uₙ = 1/n with limit L = 0, how does the critical rank N behave when the tolerance ε is made smaller?",
+                    hint: "Select '1/n' and drag the ε slider from right to left, shrinking the band. Watch the vertical orange dashed line labelled 'N=…'.",
+                    options: [
+                        "N gets smaller: a tighter band is satisfied sooner",
+                        "N is unchanged, since it depends only on the sequence",
+                        "N no longer exists once ε drops below 1",
+                        "N gets larger: a tighter band takes more terms to satisfy"
+                    ],
+                    correctIndex: 3,
+                    explanation: "N is not a property of the sequence alone; it answers a demand made by ε. Tighten the band and the early terms no longer fit, so the rank from which everything stays inside is pushed further out. Convergence means that however small ε gets, such an N still exists.",
+                    visualization: .convergence
+                ),
         Question(
             subject: .analysis,
             text: "For the sequence uₙ = (−1)ⁿ with candidate limit L = 0, can you find an ε > 0 such that an N exists where all terms beyond N stay within ε of L?",
@@ -663,7 +677,7 @@ extension Question {
         Question(
             subject: .analysis,
             text: "For lim[x→0] sin(2x)/sin(3x), what is the ratio f′(0)/g′(0)?",
-            hint: "Select 'sin(2x)/sin(3x)' and zoom all the way in. Read the 'slope' values shown in the legend below the graph.",
+            hint: "Select 'sin(2x)/sin(3x)' and zoom all the way in. Do you see the ratio ?",
             options: [
                 "Both slopes are 1, so the ratio is 1",
                 "f′(0) = 2 and g′(0) = 3, so the ratio is 2/3",
@@ -765,92 +779,62 @@ extension Question {
         ),
     ]
 
-    // MARK: - Taylor
-
     static let taylorQuestions: [Question] = [
-        Question(
-            subject: .analysis,
-            text: "For f(x) = sin(x) with Taylor polynomial T₃(x) centered at 0, what happens to the error |f(x) − T₃(x)| as you move away from the center?",
-            hint: "Select 'sin(x)' and set order to 3. Watch the orange shaded area (error ribbon) as you look further left or right from the center marker.",
-            options: [
-                "It shrinks to zero everywhere",
-                "It stays constant width",
-                "It widens rapidly as you move away from the center",
-                "It disappears entirely beyond x = ±1"
-            ],
-            correctIndex: 2,
-            explanation: "The error ribbon (shaded orange area) shows |f(x) − T₃(x)|. Near x = 0, the polynomial matches sin(x) closely, but as you move away, the missing higher-order terms cause the curves to diverge, widening the error ribbon.",
-            visualization: .taylor
-        ),
-        Question(
-            subject: .analysis,
-            text: "As the order n of a Taylor polynomial Tₙ increases from 1 to 6, what happens to the approximation quality at the center point?",
-            hint: "Select any function and tap the order buttons from 1 to 6. Watch how tightly the orange curve hugs the blue curve at the center marker.",
-            options: [
-                "The curves separate more at the center",
-                "The contact gets tighter and tighter at the center point",
-                "The curves cross more times far from the center",
-                "Nothing changes at the center, only far away"
-            ],
-            correctIndex: 1,
-            explanation: "Higher order means matching more derivatives at the center point. The orange Taylor polynomial hugs the blue function curve tighter near the orange center marker, though they may still separate far away.",
-            visualization: .taylor
-        ),
-        Question(
-            subject: .analysis,
-            text: "For the even function f(x) = cos(x) centered at a = 0, which powers appear in its Taylor expansion?",
-            hint: "Select 'cos(x)' and tap through the order buttons from 1 to 6. Read the polynomial formula displayed below the graph and note which exponents appear.",
-            options: [
-                "Even powers only (x⁰, x², x⁴, x⁶)",
-                "Odd powers only (x, x³, x⁵)",
-                "All powers with alternating signs",
-                "Only constant and linear terms"
-            ],
-            correctIndex: 0,
-            explanation: "cos(x) is an even function, so all odd derivatives vanish at x = 0. The polynomial shows only even powers: T₆(x) = 1 − x²/2 + x⁴/24 − x⁶/720.",
-            visualization: .taylor
-        ),
-        Question(
-            subject: .analysis,
-            text: "When you shift the expansion center from a = 0 to a = 1 for f(x) = sin(x), how does the polynomial variable change?",
-            hint: "Select 'sin(x)', set order to 3, start at center 0 and note the polynomial. Then drag the center slider to 1.00 and watch the formula below.",
-            options: [
-                "The polynomial remains in terms of x",
-                "The polynomial changes to use u = x − 1 instead of x",
-                "The polynomial gains even powers",
-                "The polynomial becomes constant"
-            ],
-            correctIndex: 1,
-            explanation: "Moving the center from a = 0 to a = 1 shifts the expansion point. The polynomial is now written in terms of u = x − 1 (shown in the shift note below the formula), computing the Taylor series around the new center.",
-            visualization: .taylor
-        ),
-        Question(
-            subject: .analysis,
-            text: "For f(x) = eˣ at center a = 0, what pattern appears in the denominators 1/k! as you increase the order?",
-            hint: "Select 'eˣ' and tap through orders 1, 2, 3, 4. Look at the stacked fractions in the polynomial display and notice the pattern in the bottom numbers.",
-            options: [
-                "All denominators are 1 (no fractions)",
-                "Denominators are powers of 2: 2, 4, 8, 16...",
-                "Denominators are factorials: 1, 2, 6, 24...",
-                "Denominators alternate between 1 and 2"
-            ],
-            correctIndex: 2,
-            explanation: "For eˣ, all derivatives equal eˣ, so the k-th derivative at 0 is 1. The Taylor formula divides by k!, giving coefficients 1/0! = 1, 1/1! = 1, 1/2! = 1/2, 1/3! = 1/6, etc. The denominators are factorials: 1, 2, 6, 24, 120, 720.",
-            visualization: .taylor
-        ),
-        Question(
-            subject: .analysis,
-            text: "For f(x) = ln(1+x) with domain x > −1, what happens if you expand around a center point a < −1?",
-            hint: "Select 'ln(1+x)', set order to 4, then slowly drag the center slider left past x = −1. Watch what happens to both curves near the center marker.",
-            options: [
-                "Both curves continue smoothly",
-                "The function becomes undefined but the polynomial continues",
-                "Both curves become horizontal lines",
-                "The polynomial flips upside down"
-            ],
-            correctIndex: 1,
-            explanation: "ln(1+x) has domain x > −1. When the center crosses x = −1, the function becomes undefined (the blue curve breaks), but the Taylor polynomial (orange) is defined everywhere and continues as a regular polynomial, even though it no longer approximates anything meaningful.",
-            visualization: .taylor
-        ),
+            Question(
+                subject: .analysis,
+                text: "For f(x) = sin(x) with Taylor polynomial T₃(x) centered at 0, what happens to the error |f(x) − T₃(x)| as you move away from the center?",
+                hint: "Select 'sin(x)' and set order to 3. Watch the orange shaded area (error) as you look further left or right from the center marker.",
+                options: [
+                    "It shrinks to zero everywhere",
+                    "It stays constant width",
+                    "It grows rapidly as you move away from the center",
+                    "It disappears entirely beyond x = ±1"
+                ],
+                correctIndex: 2,
+                explanation: "The error (shaded orange area) shows |f(x) − T₃(x)|. Near x = 0, the polynomial matches sin(x) closely, but as you move away, the missing higher-order terms cause the curves to diverge, widening the error ribbon.",
+                visualization: .taylor
+            ),
+            Question(
+                subject: .analysis,
+                text: "As the order n of a Taylor polynomial Tₙ increases from 1 to 6, what happens to the approximation quality at the center point?",
+                hint: "Select any function and tap the order buttons from 1 to 6. Watch how tightly the orange curve hugs the blue curve at the center marker.",
+                options: [
+                    "The curves separate more at the center",
+                    "The contact gets tighter and tighter at the center point",
+                    "The curves cross more times far from the center",
+                    "Nothing changes at the center, only far away"
+                ],
+                correctIndex: 1,
+                explanation: "Higher order means matching more derivatives at the center point. The orange Taylor polynomial hugs the blue function curve tighter near the orange center marker, though they may still separate far away.",
+                visualization: .taylor
+            ),
+            Question(
+                subject: .analysis,
+                text: "For the even function f(x) = cos(x) centered at a = 0, which powers appear in its Taylor expansion?",
+                hint: "Select 'cos(x)' and tap through the order buttons from 1 to 6. Read the polynomial displayed below the graph and note which exponents appear.",
+                options: [
+                    "Even powers only (x⁰, x², x⁴, x⁶)",
+                    "Odd powers only (x, x³, x⁵)",
+                    "All powers with alternating signs",
+                    "Only constant and linear terms"
+                ],
+                correctIndex: 0,
+                explanation: "cos(x) is an even function, so all odd derivatives vanish at x = 0. Those terms have coefficient 0 and are dropped from the display, leaving only even powers: T₆(x) = 1.00 − 0.500x² + 0.042x⁴ − 0.0014x⁶. The exponents jump 0, 2, 4, 6 with no odd power in between.",
+                visualization: .taylor
+            ),
+            Question(
+                subject: .analysis,
+                text: "For f(x) = eˣ at center a = 0, how do the coefficients behave as the order increases?",
+                hint: "Select 'eˣ' and tap through orders 1, 2, 3, 4. Compare the decimal number in front of each power.",
+                options: [
+                    "Every coefficient stays equal to 1",
+                    "They double at each step: 1, 2, 4, 8...",
+                    "They shrink quickly: 1, 1, 0.500, 0.167, 0.042...",
+                    "They alternate between positive and negative"
+                ],
+                correctIndex: 2,
+                explanation: "Every derivative of eˣ is again eˣ, so each derivative at 0 equals 1 and the coefficient of xᵏ is exactly 1/k!. The decimals shown are those reciprocal factorials: 1/2 = 0.500, 1/6 = 0.167, 1/24 = 0.042. They shrink fast because k! grows fast, which is why the series converges for every x.",
+                visualization: .taylor
+            ),
     ]
 }

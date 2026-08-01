@@ -111,7 +111,7 @@ extension Question {
     
     static func sampleQuestionsLinearAlgebra() -> [Question] {
         let banks = [
-            matrixOperationsQuestions,determinantQuestions,vectorSpaceQuestions,linearTransformQuestions,imagesQuestions,matrix3DQuestions
+            determinantQuestions,vectorSpaceQuestions,gaussQuestions,imagesQuestions,matrix3DQuestions, matrixShapeQuestions
         ]
         return banks.map { $0.shuffled().first! }.shuffled()
         

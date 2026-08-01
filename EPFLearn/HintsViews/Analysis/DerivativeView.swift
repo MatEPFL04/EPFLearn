@@ -179,10 +179,9 @@ struct DerivateView: View {
             : (fn.f(xMathEnd) - fn.f(xMathStart)) / h
 
         VStack(spacing: 14) {
+            
+            Text("Derivative").font(.headline)
 
-            Text("Secant slope against the derivative")
-                .font(.caption)
-                .foregroundStyle(.secondary)
 
             ZStack {
                 // One grid square is one unit of x, whatever the plot size.
@@ -229,13 +228,12 @@ struct DerivateView: View {
                 }
             }
             .pickerStyle(.menu)
+            .labelsHidden()
             .frame(width: graphSize)
 
-            readout(
+            compactReadout(
                 x0: xMathStart,
-                x1: xMathEnd,
                 h: h,
-                f: fn.f,
                 secant: secantSlope,
                 tangent: tangentSlope
             )
@@ -278,61 +276,32 @@ struct DerivateView: View {
         }
     }
 
-    /// Writes the quotient in the form that matches the side the secant point
-    /// sits on: forward difference to the right, backward difference to the
-    /// left. h is displayed as a positive step in both cases.
-    ///
-    /// The five lines are always rendered, including when h reaches 0. A
-    /// branch that drops lines would change the panel height and make
-    /// everything below it jump while the slider moves.
-    private func readout(
+    /// Compact readout showing just the essential slopes
+    private func compactReadout(
         x0: Double,
-        x1: Double,
         h: Double,
-        f: (Double) -> Double,
         secant: Double?,
         tangent: Double
     ) -> some View {
-        let step = abs(h)
-        let fromRight = h >= 0
-        let fx0 = f(x0)
-        let fx1 = f(x1)
-        let lead = fromRight ? fx1 : fx0
-        let sub  = fromRight ? fx0 : fx1
-
-        return VStack(alignment: .leading, spacing: 6) {
-            Text(fromRight
-                 ? "From the right, h = \(formatted(step))"
-                 : "From the left,  h = \(formatted(step))")
-                .foregroundStyle(.secondary)
-
-            Text(fromRight
-                 ? "(f(x+h) − f(x)) / h"
-                 : "(f(x) − f(x−h)) / h")
-
-            Text("= (\(difference(lead, sub))) / \(formatted(step))")
-
-            Text("= \(secant.map(formatted) ?? "undefined (0 / 0)")")
-                .foregroundStyle(.orange)
-
+        HStack(spacing: 20) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("h = \(formatted(abs(h)))")
+                    .foregroundStyle(.secondary)
+                Text("Secant: \(secant.map(formatted) ?? "—")")
+                    .foregroundStyle(.orange)
+            }
+            
+            Spacer()
+            
             Text("f'(x) = \(formatted(tangent))")
                 .foregroundStyle(.red)
         }
-        .lineLimit(1)
-        .minimumScaleFactor(0.75)
         .font(.system(.footnote, design: .monospaced))
-        .padding()
-        .frame(width: graphSize, alignment: .leading)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .frame(width: graphSize)
         .background(.regularMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 10))
-    }
-
-    /// "5.12 − 3.50", or "5.12 + 3.50" when the subtracted value is negative,
-    /// to avoid printing a double minus.
-    private func difference(_ lead: Double, _ sub: Double) -> String {
-        sub < 0
-            ? "\(formatted(lead)) + \(formatted(-sub))"
-            : "\(formatted(lead)) − \(formatted(sub))"
+        .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
     private func slider(title: String, value: Binding<Double>) -> some View {

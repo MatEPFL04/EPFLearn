@@ -88,5 +88,7 @@ class QuizViewModel {
         score = 0
         selectedAnswer = nil
         isFinished = false
+        
+        
     }
 }

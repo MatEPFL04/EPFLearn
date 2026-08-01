@@ -199,10 +199,9 @@ struct MeanThmView: View {
         let dotRadius: CGFloat = sectionCount <= 12 ? 5 : 3
 
         VStack(spacing: 14) {
+            
+            Text("Mean Value Theorem (Integrals)").font(.headline)
 
-            Text("Mean value theorem (integral form)")
-                .font(.caption)
-                .foregroundStyle(.secondary)
 
             ZStack {
                 GridDrawing(step: scale)
@@ -246,6 +245,7 @@ struct MeanThmView: View {
                 }
             }
             .pickerStyle(.menu)
+            .labelsHidden()
             .frame(width: graphSize)
 
             VStack(alignment: .leading, spacing: 4) {

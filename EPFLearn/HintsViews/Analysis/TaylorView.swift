@@ -26,8 +26,10 @@ struct PolyTerm: Identifiable {
     let exponent: Int?          // nil for exponent 1
 }
 
-/// Renders  T₃(x) = x − x³/6  with real stacked fractions and raised
-/// exponents, wrapping to a second line when the polynomial gets long.
+/// Renders  T₃(x) = x − 0.167x³  with raised exponents, wrapping to a second
+/// line when the polynomial gets long. The stacked-fraction path is kept for
+/// the case where a term does carry a denominator, but the view no longer
+/// switches typography depending on the centre.
 struct PolynomialDisplay: View {
     let order: Int
     let terms: [PolyTerm]
@@ -66,37 +68,55 @@ struct PolynomialDisplay: View {
 
     @ViewBuilder
     private func termView(_ term: PolyTerm) -> some View {
-        HStack(spacing: 4) {
+        HStack(alignment: .firstTextBaseline, spacing: 4) {
             if !term.sign.isEmpty {
                 Text(term.sign).font(body1)
             }
             if let denominator = term.denominator {
+                // Fraction: align the middle of the fraction bar with the baseline
                 VStack(spacing: 1) {
-                    numerator(term)
+                    numeratorView(term)
                     Rectangle()
                         .frame(height: 0.9)
                         .frame(minWidth: size * 0.6)
                     Text(denominator).font(small)
                 }
+                .alignmentGuide(.firstTextBaseline) { d in
+                    // Position so the fraction bar sits on the baseline
+                    d[VerticalAlignment.center]
+                }
                 .fixedSize()
             } else {
-                numerator(term)
+                // Non-fraction: just the numerator view with natural baseline
+                numeratorView(term)
             }
         }
     }
 
-    private func numerator(_ term: PolyTerm) -> some View {
-        var text = Text("")
+    @ViewBuilder
+    private func numeratorView(_ term: PolyTerm) -> some View {
+        buildTermText(term)
+    }
+
+    private func buildTermText(_ term: PolyTerm) -> Text {
+        var result = Text("")
+
         if let coefficient = term.coefficient {
-            text = text + Text(coefficient).font(body1)
+            result = result + Text(coefficient).font(body1)
         }
+
         if let variable = term.variable {
-            text = text + Text(variable).font(body1).italic()
+            result = result + Text(variable).font(body1).italic()
+
             if let exponent = term.exponent {
-                text = text + Text("\(exponent)").font(small).baselineOffset(size * 0.42)
+                result = result + Text("\(exponent)")
+                    .font(small)
+                    .fontWeight(.regular)
+                    .baselineOffset(size * 0.35)
             }
         }
-        return text.fixedSize()
+
+        return result
     }
 }
 
@@ -354,10 +374,17 @@ struct TaylorView: View {
         return String(format: "%.2f", a)
     }
 
+    private var isCentred: Bool { abs(center) < 0.005 }
+
     // MARK: Body
 
     var body: some View {
         VStack(spacing: 14) {
+            
+            Text("Taylor Polynomials").font(.headline)
+
+
+            plot
 
             Picker("Function", selection: $preset) {
                 ForEach(TaylorPreset.allCases) { option in
@@ -365,17 +392,19 @@ struct TaylorView: View {
                 }
             }
             .pickerStyle(.menu)
+            .labelsHidden()
             .frame(width: graphSize)
             .onChange(of: preset) { _, _ in
                 center = min(max(center, centerRange.lowerBound), centerRange.upperBound)
             }
 
-            plot
-
             PolynomialDisplay(
                 order: order,
                 terms: polynomialTerms,
-                shiftNote: abs(center) < 0.005 ? nil : "u = x − \(centreLabel(center))"
+                // A blank line rather than nil: the block keeps the same height
+                // whether or not the substitution note is needed, so the layout
+                // does not jump as the centre leaves 0.
+                shiftNote: isCentred ? " " : "u = x − \(centreLabel(center))"
             )
             .frame(width: graphSize)
 
@@ -388,7 +417,7 @@ struct TaylorView: View {
                     Spacer()
                     Button("reset to 0") { center = 0 }
                         .font(.caption2)
-                        .disabled(abs(center) < 0.005)
+                        .disabled(isCentred)
                 }
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -447,12 +476,21 @@ struct TaylorView: View {
 
     // MARK: Polynomial terms
 
-    private func gcd(_ a: Int, _ b: Int) -> Int { b == 0 ? a : gcd(b, a % b) }
+    /// One coefficient style whatever the centre. The number of decimals
+    /// follows the order of magnitude, otherwise 1/120 prints as "0.01" and
+    /// 1/720 as "0.00".
+    private func decimalString(_ value: Double) -> String {
+        let v = abs(value)
+        switch v {
+        case 100...:   return String(format: "%.1f", v)
+        case 1..<100:  return String(format: "%.2f", v)
+        case 0.01..<1: return String(format: "%.3f", v)
+        default:       return String(format: "%.4f", v)
+        }
+    }
 
-    /// Exact fractions whenever the derivative lands on a whole number, which
-    /// covers every landmark centre, and plain decimals otherwise.
     private var polynomialTerms: [PolyTerm] {
-        let variable = abs(center) < 0.005 ? "x" : "u"
+        let variable = isCentred ? "x" : "u"
         var result: [PolyTerm] = []
 
         for k in 0...order {
@@ -465,26 +503,16 @@ struct TaylorView: View {
             let variablePart: String? = k == 0 ? nil : variable
             let exponent: Int? = k <= 1 ? nil : k
 
-            var magnitude: String?
-            var denominator: String?
-
-            if abs(d.rounded() - d) < 1e-9 {
-                let numRaw = Int(d.rounded())
-                let denRaw = Int(factorial(k))
-                let g = gcd(abs(numRaw), denRaw)
-                let num = abs(numRaw / g), den = denRaw / g
-                magnitude = (num == 1 && k != 0) ? nil : "\(num)"
-                denominator = den == 1 ? nil : "\(den)"
-            } else {
-                magnitude = String(format: "%.2f", abs(coefficient))
-            }
-            if magnitude == nil && variablePart == nil { magnitude = "1" }
+            // The only exception kept: a 1 in front of a power stays implicit,
+            // so the display never reads "1.00x".
+            var magnitude: String? = decimalString(coefficient)
+            if k > 0, abs(abs(coefficient) - 1) < 1e-9 { magnitude = nil }
 
             result.append(PolyTerm(
                 id: k,
                 sign: sign,
                 coefficient: magnitude,
-                denominator: denominator,
+                denominator: nil,   // never a stacked fraction any more
                 variable: variablePart,
                 exponent: exponent
             ))
