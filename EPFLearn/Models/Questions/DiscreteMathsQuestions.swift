@@ -39,7 +39,7 @@ let permutationsQuestions = [
     
     Question(
         subject: .discreteMaths,
-        text: "From 5 runners, how many different gold–silver podiums are possible?",
+        text: "From 5 runners, how many different gold-silver podiums are possible?",
         hint: "Two slots, and swapping the two medals gives a different podium. Use the view and choose the right type",
         options: ["10", "20", "25", "120"],
         correctIndex: 1,
@@ -135,7 +135,7 @@ let pigeonholeQuestions = [
         hint: "365 possible days.",
         options: ["1", "2", "3", "367"],
         correctIndex: 1,
-        explanation: "⌈367/365⌉ = 2. Note this is a guarantee, not a probability — no 'birthday paradox' needed.",
+        explanation: "⌈367/365⌉ = 2. Note this is a guarantee, not a probability; no 'birthday paradox' needed.",
         visualization: .pigeonholePrinciple
     ),
     Question(
@@ -169,7 +169,7 @@ let setOperationsQuestions = [
         hint: "Removing B is the same as intersecting with everything outside B.",
         options: ["A ∩ Bᶜ", "Aᶜ ∩ B", "A ∪ Bᶜ", "(A ∩ B)ᶜ"],
         correctIndex: 0,
-        explanation: "A \\ B = A ∩ Bᶜ — keep what is in A while staying outside B.",
+        explanation: "A \\ B = A ∩ Bᶜ: keep what is in A while staying outside B.",
         visualization: .setOperations
     ),
     Question(
@@ -226,10 +226,10 @@ let recurrenceQuestions = [
     Question(
         subject: .discreteMaths,
         text: "With F₀ = 0 and F₁ = 1, what is F₇?",
-        hint: "Build upwards — each term is the sum of the two before it.",
+        hint: "Build upwards: each term is the sum of the two before it.",
         options: ["8", "13", "21", "34"],
         correctIndex: 1,
-        explanation: "0, 1, 1, 2, 3, 5, 8, 13 — so F₇ = 13.",
+        explanation: "0, 1, 1, 2, 3, 5, 8, 13, so F₇ = 13.",
         visualization: .recurrenceRelations
     ),
     Question(
@@ -315,7 +315,7 @@ let probabilityQuestions = [
     Question(
         subject: .discreteMaths,
         text: "What is the probability of rolling a 4 on a single fair die?",
-        hint: "Use the die view — each face has equal probability.",
+        hint: "Use the die view: each face has equal probability.",
         options: ["1/4", "1/5", "1/6", "1/12"],
         correctIndex: 2,
         explanation: "A die has 6 faces, each equally likely: P(X = 4) = 1/6 ≈ 16.7%.",

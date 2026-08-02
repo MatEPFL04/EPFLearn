@@ -191,7 +191,7 @@ struct FibTreeView: View {
             Canvas { ctx, size in draw(ctx, size: size) }
                 .frame(maxWidth: .infinity)
                 .frame(height: 240)
-                .background(RoundedRectangle(cornerRadius: 12).fill(Color.black))
+                .background(RoundedRectangle(cornerRadius: 12).fill(Color(.secondarySystemBackground)))
                 .clipShape(RoundedRectangle(cornerRadius: 12))
 
             legend
@@ -200,7 +200,7 @@ struct FibTreeView: View {
         .background(RoundedRectangle(cornerRadius: 16).fill(Color(.secondarySystemGroupedBackground)))
     }
 
-    /// Légende : au plus 9 pastilles (n ≤ 8), donc un simple HStack suffit — pas de ScrollView imbriquée.
+    /// Légende : au plus 9 pastilles (n ≤ 8), donc un simple HStack suffit - pas de ScrollView imbriquée.
     private var legend: some View {
         HStack(spacing: 8) {
             ForEach(0...Int(n), id: \.self) { v in
@@ -240,8 +240,8 @@ struct FibTreeView: View {
                 else { solid.move(to: from); solid.addLine(to: to) }
             }
         }
-        ctx.stroke(solid, with: .color(.white.opacity(0.28)), lineWidth: 1)
-        ctx.stroke(faded, with: .color(.white.opacity(0.12)), lineWidth: 1)
+        ctx.stroke(solid, with: .color(.primary.opacity(0.28)), lineWidth: 1)
+        ctx.stroke(faded, with: .color(.primary.opacity(0.12)), lineWidth: 1)
 
         // Nœuds
         for node in tree.nodes {
@@ -251,9 +251,9 @@ struct FibTreeView: View {
             let box = CGRect(x: p.x - dia / 2, y: p.y - dia / 2, width: dia, height: dia)
             let circle = Path(ellipseIn: box)
 
-            ctx.fill(circle, with: .color(v.faded ? .white.opacity(0.18)
+            ctx.fill(circle, with: .color(v.faded ? .primary.opacity(0.18)
                                                  : colorFor(node.value, max: Int(n))))
-            ctx.stroke(circle, with: .color(.white.opacity(v.faded ? 0.12 : 0.25)), lineWidth: 0.5)
+            ctx.stroke(circle, with: .color(.primary.opacity(v.faded ? 0.12 : 0.25)), lineWidth: 0.5)
 
             if dia >= 12 && !v.faded {
                 var label = ctx.resolve(Text("\(node.value)")
@@ -334,11 +334,11 @@ struct FibTreeView: View {
 
     private var explanationSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(memoized ? "Avec mémoïsation" : "Sans mémoïsation")
+            Text(memoized ? "With memoization" : "Without memoization")
                 .font(.headline)
             Text(memoized
-                 ? "Chaque valeur n'est calculée qu'une seule fois : les branches grisées sont des cache hits, l'arbre se réduit à n+1 appels → O(n)."
-                 : "Les mêmes sous-problèmes sont recalculés encore et encore : le nombre d'appels explose de façon exponentielle → O(φⁿ).")
+                 ? "Each value is computed only once: the grayed-out branches are cache hits, and the tree collapses to n+1 calls → O(n)."
+                 : "The same subproblems are recomputed again and again: the number of calls explodes exponentially → O(φⁿ).")
                 .font(.callout)
                 .foregroundStyle(.secondary)
         }

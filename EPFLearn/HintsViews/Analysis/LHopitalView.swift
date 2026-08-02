@@ -32,7 +32,7 @@ private let lhopitalCases: [LHopitalCase] = [
         fLabel: "f(x) = x²sin(1/x)", gLabel: "g(x) = sin x",
         f: { x in x == 0 ? 0 : pow(x, 2) * sin(1 / x) }, g: { sin($0) },
         fSlope: nil, gSlope: 1,
-        note: "g flattens onto its tangent (slope 1) — but f keeps oscillating no matter the zoom, no slope to read. L'Hôpital gives no answer."
+        note: "g flattens onto its tangent (slope 1), but f keeps oscillating no matter the zoom, no slope to read. L'Hôpital gives no answer."
     ),
 ]
 
@@ -137,7 +137,7 @@ struct LHopitalView: View {
                     .font(.system(size: 14, weight: .semibold, design: .monospaced))
                     .foregroundStyle(.green)
             } else {
-                Text("f′(0) doesn't exist — L'Hôpital gives no answer here")
+                Text("f′(0) doesn't exist, so L'Hôpital gives no answer here")
                     .font(.system(size: 14, weight: .semibold, design: .monospaced))
                     .foregroundStyle(.red)
             }
@@ -154,5 +154,4 @@ struct LHopitalView: View {
 
 #Preview {
     LHopitalView()
-        .preferredColorScheme(.dark)
 }

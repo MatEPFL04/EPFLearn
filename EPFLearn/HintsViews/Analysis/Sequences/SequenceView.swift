@@ -253,7 +253,7 @@ struct SequenceView: View {
         for n in visible {
             let v = seq.f(n)
             let (y, off) = s.yClamped(v)
-            let color = sub(for: n)?.color ?? Color(white: 0.6)
+            let color = sub(for: n)?.color ?? SeqPalette.ghost
 
             if off {
                 // A term outside the frame: an arrow reads better than a dot
@@ -275,5 +275,4 @@ struct SequenceView: View {
 
 #Preview {
     ScrollView { SequenceView() }
-        .preferredColorScheme(.dark)
 }

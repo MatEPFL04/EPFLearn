@@ -177,15 +177,15 @@ struct QuickSortView: View {
             if maxStep > 0 {
                 VStack(spacing: 4) {
                     Slider(value: $step, in: 0...Double(maxStep), step: 1)
-                    Text("Étape \(Int(step)) / \(maxStep)")
+                    Text("Step \(Int(step)) / \(maxStep)")
                         .font(.system(.caption2, design: .monospaced))
                         .foregroundStyle(.secondary)
                 }
             }
 
             HStack(spacing: 12) {
-                Button("Mélanger") { reset() }.buttonStyle(.bordered)
-                Button("Comparer") { run() }.buttonStyle(.borderedProminent)
+                Button("Shuffle") { reset() }.buttonStyle(.bordered)
+                Button("Run") { run() }.buttonStyle(.borderedProminent)
             }
 
             Picker("Input", selection: $input) {
@@ -220,7 +220,7 @@ struct QuickSortView: View {
             QSBars(frame: frame)
                 .frame(height: 150)
                 .padding(.vertical, 6)
-                .background(Color.black)
+                .background(Color(.secondarySystemBackground))
                 .clipShape(RoundedRectangle(cornerRadius: 10))
                 .overlay(RoundedRectangle(cornerRadius: 10).stroke(.gray.opacity(0.2)))
         }

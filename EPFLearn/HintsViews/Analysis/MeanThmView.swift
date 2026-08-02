@@ -223,7 +223,7 @@ struct MeanThmView: View {
                 ForEach(pieces) { piece in
                     ForEach(Array(piece.roots.enumerated()), id: \.offset) { _, c in
                         Circle()
-                            .fill(Color.white)
+                            .fill(Color.orange)
                             .frame(width: dotRadius * 2, height: dotRadius * 2)
                             .position(cs.toScreen(x: c, y: piece.height))
                     }
@@ -233,7 +233,7 @@ struct MeanThmView: View {
             .clipped()
 
             HStack(spacing: 5) {
-                Circle().fill(Color.white).frame(width: 6, height: 6)
+                Circle().fill(Color.orange).frame(width: 6, height: 6)
                 Text("each c where the top edge meets the curve")
             }
             .font(.caption2)
@@ -263,5 +263,4 @@ struct MeanThmView: View {
 
 #Preview {
     ScrollView { MeanThmView() }
-        .preferredColorScheme(.dark)
 }

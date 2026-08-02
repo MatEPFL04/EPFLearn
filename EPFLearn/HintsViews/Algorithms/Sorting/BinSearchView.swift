@@ -65,27 +65,27 @@ struct BinarySearchView: View {
             panel(title: "Binary search", frames: framesBin, step: stepBin)
             if framesBin.count > 1 {
                 Slider(value: $stepBin, in: 0...Double(framesBin.count - 1), step: 1)
-                Text("Binary : \(Int(stepBin)) / \(framesBin.count - 1)")
+                Text("Binary: \(Int(stepBin)) / \(framesBin.count - 1)")
                     .font(.system(.caption2, design: .monospaced)).foregroundStyle(.secondary)
             }
 
             panel(title: "Linear search", frames: framesLin, step: stepLin)
             if framesLin.count > 1 {
                 Slider(value: $stepLin, in: 0...Double(framesLin.count - 1), step: 1)
-                Text("Linear : \(Int(stepLin)) / \(framesLin.count - 1)")
+                Text("Linear: \(Int(stepLin)) / \(framesLin.count - 1)")
                     .font(.system(.caption2, design: .monospaced)).foregroundStyle(.secondary)
             }
 
-            Text("Cible : \(target)")
+            Text("Target: \(target)")
                 .font(.system(.caption, design: .monospaced))
                 .foregroundStyle(.secondary)
 
             HStack(spacing: 12) {
-                Button("Nouveau") { reset() }.buttonStyle(.bordered)
-                Button("Chercher") { run() }.buttonStyle(.borderedProminent)
+                Button("New") { reset() }.buttonStyle(.bordered)
+                Button("Search") { run() }.buttonStyle(.borderedProminent)
             }
 
-            Text("Number of elements in the array : \(Int(n))")
+            Text("Number of elements in the array: \(Int(n))")
                 .font(.system(.caption, design: .monospaced))
                 .foregroundStyle(.secondary)
             Slider(value: $n, in: 1...100, step: 1)
@@ -106,7 +106,7 @@ struct BinarySearchView: View {
             HStack {
                 Text(title).font(.caption).bold()
                 Spacer()
-                Text("\(frame.comparisons) comparaisons")
+                Text("\(frame.comparisons) comparisons")
                     .font(.system(.caption2, design: .monospaced))
                     .foregroundStyle(.secondary)
                     .contentTransition(.numericText())
@@ -114,7 +114,7 @@ struct BinarySearchView: View {
             QSBars(frame: frame, targetIndex: targetIndex)
                 .frame(height: 120)
                 .padding(.vertical, 6)
-                .background(Color.black)
+                .background(Color(.secondarySystemBackground))
                 .clipShape(RoundedRectangle(cornerRadius: 10))
                 .overlay(RoundedRectangle(cornerRadius: 10).stroke(.gray.opacity(0.2)))
         }

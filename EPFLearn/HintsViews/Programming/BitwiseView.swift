@@ -54,26 +54,36 @@ struct BitwiseView: View {
 
     private var result: Int { op.compute(a, b) }
 
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 10) {
-                PBHeader("Bitwise")
-
-                Picker("", selection: $op) {
-                    ForEach(Op.allCases, id: \.self) { Text($0.rawValue).tag($0) }
-                }
-                .pickerStyle(.segmented)
-
-                PBAdaptive {
-                    stage
-                } code: {
-                    PBCodePane(lines: op.java(a, b, result).map { PBCodePane.Line(code: $0) },
-                               current: 0, accent: op.color)
-                        .pbViewport()
-                }
-            }
-            .padding(14)
+    private var opNote: String {
+        switch op {
+        case .and: return "and: a result bit is 1 only where both a and b have a 1"
+        case .or:  return "or: a result bit is 1 where either a or b (or both) has a 1"
+        case .xor: return "xor: a result bit is 1 where a and b differ"
+        case .not: return "not: every bit of a is flipped, 0 becomes 1 and 1 becomes 0"
+        case .shl: return "shift left: every bit moves one place left and a 0 fills in on the right, doubling the value"
+        case .shr: return "shift right: every bit moves one place right and a 0 fills in on the left, halving the value"
         }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            PBHeader("Bitwise")
+
+            Picker("", selection: $op) {
+                ForEach(Op.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+            }
+            .pickerStyle(.segmented)
+
+            PBAdaptive {
+                stage
+            } code: {
+                PBCodePane(lines: op.java(a, b, result).map { PBCodePane.Line(code: $0) },
+                           current: 0, accent: op.color)
+                    .pbViewport()
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .top)
         .background(Color(.systemGroupedBackground))
     }
 
@@ -90,8 +100,10 @@ struct BitwiseView: View {
             if op.needsB {
                 bitRow(value: b, color: .green, label: "b", editable: true) { b ^= (1 << $0) }
             }
-            Rectangle().fill(.white.opacity(0.12)).frame(height: 1).padding(.vertical, 2)
+            Rectangle().fill(.primary.opacity(0.12)).frame(height: 1).padding(.vertical, 2)
             bitRow(value: result, color: op.color, label: "r")
+            PBNote(text: opNote)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(14)
         .pbViewport()
@@ -106,7 +118,7 @@ struct BitwiseView: View {
             ForEach(Array((0..<8).reversed()), id: \.self) { k in
                 Text("\(k)")
                     .font(.system(size: 9, design: .monospaced))
-                    .foregroundColor(.white.opacity(0.3))
+                    .foregroundColor(.primary.opacity(0.3))
                     .frame(maxWidth: .infinity)
             }
         }
@@ -122,10 +134,10 @@ struct BitwiseView: View {
                 let bit = (value >> k) & 1
                 Text("\(bit)")
                     .font(.system(size: 15, weight: .bold, design: .monospaced))
-                    .foregroundColor(bit == 1 ? .black : .white.opacity(0.35))
+                    .foregroundColor(bit == 1 ? .black : .primary.opacity(0.35))
                     .frame(maxWidth: .infinity).frame(height: 40)
                     .background(RoundedRectangle(cornerRadius: 8)
-                        .fill(bit == 1 ? color : Color.white.opacity(0.07)))
+                        .fill(bit == 1 ? color : Color.primary.opacity(0.07)))
                     .overlay(RoundedRectangle(cornerRadius: 8)
                         .strokeBorder(editable ? color.opacity(0.35) : .clear, lineWidth: 1))
                     .shadow(color: bit == 1 ? color.opacity(0.45) : .clear, radius: 5)

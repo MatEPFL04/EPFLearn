@@ -169,7 +169,7 @@ enum Sym {
 }
 
 enum PropLogic {
-    /// Toutes les affectations pour n variables — vrai d'abord (V,V ; V,F ; F,V ; F,F).
+    /// Toutes les affectations pour n variables - vrai d'abord (V,V ; V,F ; F,V ; F,F).
     static func rows(_ n: Int) -> [[Bool]] {
         let total = 1 << n
         return (0..<total).reversed().map { mask in
@@ -226,10 +226,10 @@ struct FormulaKeypad: View {
                 Button {
                     if !text.isEmpty { text.removeLast() }
                 } label: {
-                    Label("Effacer", systemImage: "delete.left")
+                    Label("Delete", systemImage: "delete.left")
                 }
                 Spacer()
-                Button("Tout effacer") { text = "" }
+                Button("Clear all") { text = "" }
                     .foregroundStyle(.red)
             }
             .font(.footnote)

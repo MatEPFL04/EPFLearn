@@ -105,6 +105,20 @@ struct Projector {
 
     func depth(_ p: V3) -> Double { view(p).z }
 
+    /// Casts a ray through a screen point and intersects it with the world
+    /// z = 0 plane - lets a 2D (planar) view turn a drag location straight
+    /// back into math coordinates.
+    func unprojectToZPlane(_ screen: CGPoint) -> V3? {
+        let u = Double(screen.x - center.x) / focal
+        let v = -Double(screen.y - center.y) / focal
+        let dir = u * right + v * up + fwd
+        guard abs(dir.z) > 1e-9 else { return nil }
+        let t = -eye.z / dir.z
+        guard t > 0 else { return nil }
+        let p = eye + t * dir
+        return V3(p.x, p.y, 0)
+    }
+
     /// Segment clipped against the near plane, so nothing behind the camera is ever drawn.
     func segment(_ a: V3, _ b: V3) -> (CGPoint, CGPoint)? {
         let near = 0.1
@@ -140,7 +154,7 @@ struct Matrix3DView: View {
     private var image: V3 { matrix.apply(vector) }
 
     // Palette
-    static let vSceneColor = Color(white: 0.92)
+    static let vSceneColor = Color.primary
     static let avSceneColor = Color(red: 1.00, green: 0.80, blue: 0.26)
     static let avUIColor = Color(red: 0.72, green: 0.50, blue: 0.00)
 
@@ -215,7 +229,7 @@ struct Matrix3DView: View {
         }
         .padding(.horizontal, 9)
         .padding(.vertical, 4)
-        .background(.black.opacity(0.45), in: Capsule())
+        .background(.thinMaterial, in: Capsule())
     }
 
     private func detComment(_ d: Double) -> String {
@@ -392,7 +406,7 @@ struct Matrix3DView: View {
             path.move(to: pts[0])
             for q in pts.dropFirst() { path.addLine(to: q) }
             path.closeSubpath()
-            ctx.fill(path, with: .color(.white.opacity(0.035)))
+            ctx.fill(path, with: .color(.primary.opacity(0.035)))
         }
 
         var grid = Path()
@@ -406,7 +420,7 @@ struct Matrix3DView: View {
             }
             i += 0.5
         }
-        ctx.stroke(grid, with: .color(.white.opacity(0.09)), lineWidth: 0.7)
+        ctx.stroke(grid, with: .color(.primary.opacity(0.09)), lineWidth: 0.7)
     }
 
     // World axes + canonical basis (dashed)
@@ -452,7 +466,11 @@ struct Matrix3DView: View {
         path.move(to: hull[0])
         for q in hull.dropFirst() { path.addLine(to: q) }
         path.closeSubpath()
-        ctx.fill(path, with: .color(.black.opacity(0.4)))
+
+        ctx.drawLayer { layer in
+            layer.addFilter(.blur(radius: 6))
+            layer.fill(path, with: .color(.black.opacity(0.26)))
+        }
     }
 
     // Original unit cube, discreet wireframe
@@ -461,7 +479,7 @@ struct Matrix3DView: View {
         for (a, b) in Matrix3DView.cubeEdges {
             if let s = p.segment(a, b) { path.move(to: s.0); path.addLine(to: s.1) }
         }
-        ctx.stroke(path, with: .color(.white.opacity(0.22)),
+        ctx.stroke(path, with: .color(.primary.opacity(0.22)),
                    style: StrokeStyle(lineWidth: 1, dash: [3, 4]))
     }
 
@@ -680,5 +698,4 @@ private func fmt(_ v: Double, _ digits: Int) -> String {
 
 #Preview {
     Matrix3DView()
-        .preferredColorScheme(.dark)
 }

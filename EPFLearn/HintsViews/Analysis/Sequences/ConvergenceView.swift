@@ -2,7 +2,7 @@
 //  ConvergenceView.swift
 //  EPFLearn
 //
-//  ε–N definition of convergence. Tighten ε: the band shrinks, rank N moves forward.
+//  ε-N definition of convergence. Tighten ε: the band shrinks, rank N moves forward.
 //
 
 import SwiftUI
@@ -55,7 +55,7 @@ struct ConvergenceView: View {
         VStack(alignment: .leading, spacing: 12) {
 
             VStack(alignment: .leading, spacing: 2) {
-                Text("Convergence: the ε–N definition").font(.headline)
+                Text("Convergence: the ε-N definition").font(.headline)
                 Text("uₙ = \(c.name)   ·   ∀ε > 0, ∃N, ∀n ≥ N : |uₙ − L| < ε")
                     .font(.system(size: 11, design: .monospaced))
                     .foregroundStyle(.secondary)
@@ -106,7 +106,7 @@ struct ConvergenceView: View {
         if !c.converges {
             if allInside {
                 SeqReadout(badge: "ε ≥ 1", badgeColor: SeqPalette.ghost,
-                           detail: "The band contains everything — but this would work for any 'limit'")
+                           detail: "The band contains everything, but this would work for any 'limit'")
             } else {
                 SeqReadout(badge: "No N", badgeColor: SeqPalette.outside,
                            detail: "Terms remain outside no matter which rank is chosen")
@@ -116,7 +116,7 @@ struct ConvergenceView: View {
                        detail: "∀n ≥ \(n),  |uₙ − L| < ε")
         } else {
             SeqReadout(badge: "N > \(totalN)", badgeColor: SeqPalette.bound,
-                       detail: "The rank exists, but beyond the \(totalN) plotted terms — increase ε")
+                       detail: "The rank exists, but beyond the \(totalN) plotted terms: increase ε")
         }
     }
 

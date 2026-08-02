@@ -19,10 +19,28 @@ struct ImageSpaceView: View {
     @State private var elevation: Double = 0.42
     @State private var distance: Double = 11
 
-    static let neonCore = Color(red: 1.00, green: 0.99, blue: 0.78)
-    static let neonHalo = Color(red: 1.00, green: 0.84, blue: 0.02)
-    static let neonUI   = Color(red: 0.62, green: 0.48, blue: 0.00)
+    /// Yellow glows nicely against the dark canvas, but reads poorly on a
+    /// white light-mode background - swap to a vivid blue there instead.
+    static let neonHalo = Color(UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor(red: 1.00, green: 0.84, blue: 0.02, alpha: 1)
+            : UIColor(red: 0.05, green: 0.50, blue: 1.00, alpha: 1)
+    })
+    static let neonUI = Color(UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor(red: 0.62, green: 0.48, blue: 0.00, alpha: 1)
+            : UIColor(red: 0.02, green: 0.32, blue: 0.68, alpha: 1)
+    })
     static let sourceCol = Color(red: 0.55, green: 0.60, blue: 0.72)
+
+    /// Thin rim around each core dot. Always a light tint, never `.primary` -
+    /// where hundreds of points collapse onto one spot (rank < 3), this rim
+    /// gets painted over itself many times; a light rim brightens into a
+    /// glow there, while a dark one (as `.primary` would be in light mode)
+    /// stacks into an ugly black smudge.
+    static let coreRim = Color(UIColor { traits in
+        UIColor.white.withAlphaComponent(traits.userInterfaceStyle == .dark ? 0.18 : 0.4)
+    })
 
     /// Integer combinations of e₁, e₂, e₃.
     static let lattice: [V3] = {
@@ -127,7 +145,7 @@ struct ImageSpaceView: View {
                     .foregroundStyle(ImageSpaceView.sourceCol)
             }
             HStack(spacing: 5) {
-                Circle().fill(ImageSpaceView.neonCore)
+                Circle().fill(ImageSpaceView.neonHalo)
                     .frame(width: 6, height: 6)
                 Text("Ax").font(.system(size: 10, weight: .bold, design: .monospaced))
                     .foregroundStyle(ImageSpaceView.neonHalo)
@@ -135,7 +153,7 @@ struct ImageSpaceView: View {
         }
         .padding(.horizontal, 9)
         .padding(.vertical, 4)
-        .background(.black.opacity(0.45), in: Capsule())
+        .background(.thinMaterial, in: Capsule())
     }
 
     private func applyPreset() {
@@ -168,7 +186,7 @@ struct ImageSpaceView: View {
             if let s = p.segment(V3(-4, i, 0), V3(4, i, 0)) { grid.move(to: s.0); grid.addLine(to: s.1) }
             i += 1
         }
-        ctx.stroke(grid, with: .color(.white.opacity(0.05)), lineWidth: 0.6)
+        ctx.stroke(grid, with: .color(.primary.opacity(0.05)), lineWidth: 0.6)
     }
 
     private func drawAxes(_ ctx: GraphicsContext, _ p: Projector) {
@@ -255,7 +273,7 @@ struct ImageSpaceView: View {
         }
     }
 
-    /// Image points: filled cores plus additive halo, so collisions burn brighter.
+    /// Image points: a soft halo plus a solid core, denser clusters reading darker/richer.
     private func drawImageLattice(_ ctx: GraphicsContext, _ p: Projector, _ A: M3) {
         var pts: [(CGPoint, Double)] = []
         pts.reserveCapacity(ImageSpaceView.lattice.count)
@@ -267,9 +285,6 @@ struct ImageSpaceView: View {
         guard !pts.isEmpty else { return }
 
         pts.sort { $0.1 > $1.1 }
-
-        var g = ctx
-        g.blendMode = .plusLighter
 
         let bands: Int = 5
         let per: Int = max(1, pts.count / bands)
@@ -290,8 +305,9 @@ struct ImageSpaceView: View {
                 core.addEllipse(in: CGRect(x: q.x - rCore, y: q.y - rCore,
                                            width: rCore * 2, height: rCore * 2))
             }
-            g.fill(halo, with: .color(ImageSpaceView.neonHalo.opacity(0.05 + 0.09 * t)))
-            g.fill(core, with: .color(ImageSpaceView.neonCore.opacity(0.40 + 0.45 * t)))
+            ctx.fill(halo, with: .color(ImageSpaceView.neonHalo.opacity(0.14 + 0.16 * t)))
+            ctx.fill(core, with: .color(ImageSpaceView.neonHalo.opacity(0.75 + 0.25 * t)))
+            ctx.stroke(core, with: .color(ImageSpaceView.coreRim), lineWidth: 0.4)
         }
     }
 
@@ -344,7 +360,6 @@ struct ImageSpaceView: View {
         ]
         for (v, color, label) in cols {
             guard v.norm > 0.02 else { continue }
-            arrow(ctx, p, to: v, color: .black.opacity(0.6), width: 6.5)
             arrow(ctx, p, to: v, color: color, width: 3)
             if let tip = p.project(v) {
                 ctx.draw(Text(label).font(.system(size: 12, weight: .bold)).foregroundStyle(color),

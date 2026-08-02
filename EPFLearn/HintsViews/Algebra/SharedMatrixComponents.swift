@@ -280,8 +280,8 @@ struct AlgebraViewport<HUD: View, Legend: View>: View {
             Canvas { ctx, size in render(ctx, size) }
                 .frame(height: height)
                 .background(
-                    LinearGradient(colors: [Color(red: 0.10, green: 0.11, blue: 0.16),
-                                            Color(red: 0.04, green: 0.05, blue: 0.08)],
+                    LinearGradient(colors: [Color(.secondarySystemBackground),
+                                            Color(.tertiarySystemBackground)],
                                    startPoint: .top, endPoint: .bottom)
                 )
                 .clipShape(RoundedRectangle(cornerRadius: 16))
@@ -320,11 +320,11 @@ struct AlgebraViewport<HUD: View, Legend: View>: View {
             Slider(value: $distance, in: distanceRange).frame(width: 88)
             Image(systemName: "minus.magnifyingglass").font(.system(size: 9))
         }
-        .foregroundStyle(.white.opacity(0.7))
+        .foregroundStyle(.secondary)
         .tint(accent)
         .padding(.horizontal, 8)
         .padding(.vertical, 2)
-        .background(.black.opacity(0.3), in: Capsule())
+        .background(.thinMaterial, in: Capsule())
     }
 }
 
@@ -341,11 +341,11 @@ struct AlgebraHUD: View {
                 .foregroundStyle(color)
             Text(detail)
                 .font(.system(size: 9.5))
-                .foregroundStyle(.white.opacity(0.55))
+                .foregroundStyle(.secondary)
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 5)
-        .background(.black.opacity(0.35), in: RoundedRectangle(cornerRadius: 8))
+        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 8))
     }
 }
 

@@ -3,7 +3,7 @@
 //  EPFLearn
 //
 //  Shared design language for the Discrete Maths visualisations.
-//  Import once — every discrete-maths view is built on these primitives.
+//  Import once - every discrete-maths view is built on these primitives.
 //
 
 import SwiftUI
@@ -392,7 +392,7 @@ struct DMPolyline: Shape {
     }
 }
 
-/// Same polyline, closed down to the baseline — used for the gradient area fill.
+/// Same polyline, closed down to the baseline - used for the gradient area fill.
 struct DMAreaShape: Shape {
     var points: [CGPoint]
 

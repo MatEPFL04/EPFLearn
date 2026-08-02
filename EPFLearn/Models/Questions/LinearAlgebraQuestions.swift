@@ -320,7 +320,7 @@ let imagesQuestions = [
             "Because I is the only matrix with entries in {0, 1}"
         ],
         correctIndex: 0,
-        explanation: "Writing v⃗ = v₁·e⃗₁ + v₂·e⃗₂ + v₃·e⃗₃ and applying linearity: A·v⃗ = v₁·(A·e⃗₁) + v₂·(A·e⃗₂) + v₃·(A·e⃗₃). A matrix is entirely determined by where it sends the basis vectors (its columns). Asking A·v⃗ = v⃗ for all v⃗ forces A·e⃗ᵢ = e⃗ᵢ, i.e., A = I. The identity is not 'neutral by convention'—it's the unique map whose columns are the basis you're using. (det = 1 is weaker: rotations also have det = 1.)",
+        explanation: "Writing v⃗ = v₁·e⃗₁ + v₂·e⃗₂ + v₃·e⃗₃ and applying linearity: A·v⃗ = v₁·(A·e⃗₁) + v₂·(A·e⃗₂) + v₃·(A·e⃗₃). A matrix is entirely determined by where it sends the basis vectors (its columns). Asking A·v⃗ = v⃗ for all v⃗ forces A·e⃗ᵢ = e⃗ᵢ, i.e., A = I. The identity is not 'neutral by convention'; it's the unique map whose columns are the basis you're using. (det = 1 is weaker: rotations also have det = 1.)",
         visualization: .image
     ),
 

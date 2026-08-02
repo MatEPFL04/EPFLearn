@@ -171,7 +171,7 @@ private struct StaircaseOutline: Shape {
 ///
 /// Every boundary is drawn the same way. Highlighting only the cuts added by
 /// the last refinement made the nesting explicit but striped the plot, one
-/// bright rule every other slice — glaring wherever the bars run deep, as they
+/// bright rule every other slice - glaring wherever the bars run deep, as they
 /// do over the half of a sine that sits below the axis.
 private struct StaircaseSeparators: Shape {
     let slices: [Slice]
@@ -314,7 +314,7 @@ struct DarbouxView: View {
                 .stroke(Color.primary.opacity(0.7), lineWidth: 1)
 
             // Combined mode: each sum keeps its own colour. Filling the band
-            // between the staircases instead would merge them into one block —
+            // between the staircases instead would merge them into one block -
             // over a slice where the infimum is negative and the supremum
             // positive, the two bars are disjoint, one under the axis and one
             // above it, and a single fill across the whole band erases that.
@@ -339,7 +339,7 @@ struct DarbouxView: View {
                               negativePart: false)
                     .fill(DarbouxView.lowerColor.opacity(0.34))
                 // Below the axis, paler: the bar still reads as a contribution
-                // that subtracts. Never outlined — StaircaseFill emits one
+                // that subtracts. Never outlined - StaircaseFill emits one
                 // rectangle per slice, so stroking it draws both vertical
                 // sides of every bar, and at sixty-odd sections that is a wall
                 // of hatching on whichever half of the curve dips negative.
@@ -414,8 +414,8 @@ struct DarbouxView: View {
 // MARK: - Refinement control
 
 /// Halving rather than a free section count. A slider from 2 to 80 walks
-/// through partitions that are not nested — going from 2 slices to 3 discards
-/// the midpoint — and then S⁺ is under no obligation to decrease. Refining is
+/// through partitions that are not nested - going from 2 slices to 3 discards
+/// the midpoint - and then S⁺ is under no obligation to decrease. Refining is
 /// the operation the theorem is about, so it is the operation the control
 /// offers.
 private struct RefinementControl: View {
@@ -518,5 +518,4 @@ private struct ModeSelector: View {
 
 #Preview {
     ScrollView { DarbouxView() }
-        .preferredColorScheme(.dark)
 }

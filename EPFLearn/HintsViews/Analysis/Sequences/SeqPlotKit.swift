@@ -45,7 +45,7 @@ struct SeqSpace {
         (y(v), v < yRange.lowerBound || v > yRange.upperBound)
     }
 
-    /// Indice le plus proche d'une abscisse écran — pour le scrub.
+    /// Indice le plus proche d'une abscisse écran - pour le scrub.
     func n(at px: CGFloat) -> Int {
         let span = max(nRange.upperBound - nRange.lowerBound, 1)
         let t = (px - padL) / max(size.width - padL - padR, 1)

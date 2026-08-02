@@ -161,7 +161,7 @@ struct SortingView: View {
             QSBars(frame: current, targetIndex: nil)
                 .frame(height: 180)
                 .padding(.vertical, 6)
-                .background(Color.black)
+                .background(Color(.secondarySystemBackground))
                 .clipShape(RoundedRectangle(cornerRadius: 10))
                 .overlay(RoundedRectangle(cornerRadius: 10).stroke(.gray.opacity(0.2)))
         }

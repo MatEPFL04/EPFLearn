@@ -74,9 +74,10 @@ struct VisualizationView: View {
         case .forLoop: ForLoopView()
         case .ifStatement: IfElseView()
         case .bitwiseOperations: BitwiseView()
-        case .recursion: RecurrenceRelationsView()
         case .variablesMemory: VariablesView()
         case .functions: FunctionView()
+        case .classes: ClassView()
+        case .abstraction: AbstractionView()
             
              
         case .sorting: 

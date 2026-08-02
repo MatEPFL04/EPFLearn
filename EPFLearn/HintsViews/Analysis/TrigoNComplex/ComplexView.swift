@@ -2,7 +2,7 @@
 //  ComplexPlaneView.swift
 //  EPFLearn
 //
-//  Plan complexe — z₁, z₂ et leur somme ou produit. Vue autonome.
+//  Plan complexe - z₁, z₂ et leur somme ou produit. Vue autonome.
 //
 
 import SwiftUI

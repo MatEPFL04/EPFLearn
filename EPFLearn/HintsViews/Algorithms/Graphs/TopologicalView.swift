@@ -182,10 +182,10 @@ struct TopoOrderStrip: View {
     let n: Int
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("Order").font(.caption2).foregroundColor(.white.opacity(0.6))
+            Text("Order").font(.caption2).foregroundColor(.primary.opacity(0.6))
             HStack(spacing: 4) {
                 if order.isEmpty {
-                    Text("—").font(.caption).foregroundColor(.white.opacity(0.4))
+                    Text("—").font(.caption).foregroundColor(.primary.opacity(0.4))
                 } else {
                     ForEach(Array(order.enumerated()), id: \.offset) { i, node in
                         Text("\(node)")
@@ -195,7 +195,7 @@ struct TopoOrderStrip: View {
                             .background(Color.green).clipShape(RoundedRectangle(cornerRadius: 5))
                         if i < order.count - 1 {
                             Image(systemName: "arrow.right").font(.system(size: 9))
-                                .foregroundColor(.white.opacity(0.5))
+                                .foregroundColor(.primary.opacity(0.5))
                         }
                     }
                 }
@@ -222,7 +222,7 @@ struct TopoGraphView: View {
     }
     private func color(_ s: TEdgeState) -> Color {
         switch s {
-        case .idle:   return .white.opacity(0.22)
+        case .idle:   return .primary.opacity(0.22)
         case .active: return .cyan
         case .done:   return .green.opacity(0.5)
         }
@@ -256,13 +256,13 @@ struct TopoGraphView: View {
                     if let c = frame.current, edges[c].from == i || edges[c].to == i {
                         Circle().stroke(Color.cyan, lineWidth: 3).frame(width: 34, height: 34)
                     }
-                    Text("\(i)").font(.system(size: 11, weight: .bold)).foregroundColor(.white)
+                    Text("\(i)").font(.system(size: 11, weight: .bold)).foregroundColor(.primary)
                     if !frame.nodeLabel[i].isEmpty {
                         Text(frame.nodeLabel[i])   // in-degree (Kahn)
                             .font(.system(size: 9, weight: .bold, design: .monospaced))
-                            .foregroundColor(.white)
+                            .foregroundColor(.primary)
                             .padding(.horizontal, 4).padding(.vertical, 1)
-                            .background(Capsule().fill(.black.opacity(0.8)))
+                            .background(.thinMaterial, in: Capsule())
                             .offset(y: -21)
                     }
                 }
@@ -301,12 +301,12 @@ struct TopoSortLab: View {
 
     var body: some View {
         VStack(spacing: 14) {
-            Text("Topological sort — \(effectiveAlgo.rawValue)")
-                .font(.headline).foregroundColor(.white)
+            Text("Topological sort: \(effectiveAlgo.rawValue)")
+                .font(.headline).foregroundColor(.primary)
 
             GeometryReader { proxy in
                 ZStack {
-                    Color.black
+                    Color(.secondarySystemBackground)
                     if let f = current {
                         TopoGraphView(n: n, positions: positions, edges: edges,
                                       frame: f, canvasSize: proxy.size)
@@ -318,7 +318,7 @@ struct TopoSortLab: View {
                 }
             }
             .clipShape(RoundedRectangle(cornerRadius: 16))
-            .overlay(RoundedRectangle(cornerRadius: 16).stroke(.white.opacity(0.1)))
+            .overlay(RoundedRectangle(cornerRadius: 16).stroke(.primary.opacity(0.1)))
 
             sliderRow(title: "Vertices", value: "\(n)") {
                 Slider(value: Binding(
@@ -342,13 +342,13 @@ struct TopoSortLab: View {
                     Text(f.info).font(.caption.monospaced()).foregroundColor(.cyan)
                     Spacer()
                     Text("Step \(idx + 1)/\(frames.count)")
-                        .font(.caption2).foregroundColor(.white.opacity(0.6))
+                        .font(.caption2).foregroundColor(.primary.opacity(0.6))
                 }
                 Text(f.message)
-                    .font(.callout).foregroundColor(.white)
+                    .font(.callout).foregroundColor(.primary)
                     .frame(maxWidth: .infinity, minHeight: 40, alignment: .leading)
                     .padding(8)
-                    .background(.white.opacity(0.06))
+                    .background(.primary.opacity(0.06))
                     .clipShape(RoundedRectangle(cornerRadius: 8))
             }
 
@@ -367,8 +367,7 @@ struct TopoSortLab: View {
             .tint(.cyan)
         }
         .padding()
-        .background(Color.black.ignoresSafeArea())
-        .preferredColorScheme(.dark)
+        .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .onReceive(timer) { _ in
             guard playing, !frames.isEmpty else { return }
             if idx < frames.count - 1 { idx += 1 } else { playing = false }
@@ -378,7 +377,7 @@ struct TopoSortLab: View {
     @ViewBuilder
     private func sliderRow<S: View>(title: String, value: String, @ViewBuilder slider: () -> S) -> some View {
         HStack(spacing: 10) {
-            Text(title).font(.caption).foregroundColor(.white).frame(width: 64, alignment: .leading)
+            Text(title).font(.caption).foregroundColor(.primary).frame(width: 64, alignment: .leading)
             slider()
             Text(value).font(.caption.monospaced()).foregroundColor(.cyan).frame(width: 26, alignment: .trailing)
         }

@@ -54,24 +54,40 @@ struct WhileLoopView: View {
     private var checks: Int { frames.prefix(step + 1).filter { $0.check != nil }.count }
     private var done: Bool { step == total }
 
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 10) {
-                PBHeader("While Loop")
-
-                PBScrub(label: "n", value: $startN, range: 1...64, accent: .cyan) { step = 0 }
-
-                PBAdaptive {
-                    stage
-                } code: {
-                    PBCodePane(lines: paneLines, current: fr.line, accent: .cyan)
-                        .pbViewport()
-                }
-
-                PBStepper(step: $step, total: total, accent: .cyan)
-            }
-            .padding(14)
+    private var note: String {
+        switch fr.line {
+        case 0: return "n starts at \(startN)"
+        case 1: return "steps starts at 0"
+        case 2:
+            guard let c = fr.check else { return "checking n > 1" }
+            return c ? "n = \(fr.n) > 1 -> true, run the body" : "n = \(fr.n) > 1 -> false, exit the loop"
+        case 3: return "n = n / 2 -> \(fr.n)"
+        case 4: return "steps++ -> \(fr.steps)"
+        default:
+            if step == 0 { return "n starts at \(startN), press ▸ to start" }
+            return fr.steps == 0
+                ? "the check failed on the very first try, so the body never ran"
+                : "\(fr.steps) passes, but \(fr.steps + 1) checks: one more check than passes, since while checks before every pass"
         }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            PBHeader("While Loop")
+
+            PBScrub(label: "n", value: $startN, range: 1...64, accent: .cyan) { step = 0 }
+
+            PBAdaptive {
+                stage
+            } code: {
+                PBCodePane(lines: paneLines, current: fr.line, accent: .cyan)
+                    .pbViewport()
+            }
+
+            PBStepper(step: $step, total: total, accent: .cyan)
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .top)
         .background(Color(.systemGroupedBackground))
     }
 
@@ -102,15 +118,15 @@ struct WhileLoopView: View {
                             .frame(width: max(10, (geo.size.width - 44) * CGFloat(v) / maxN))
                             .shadow(color: isCurrent ? .cyan.opacity(0.5) : .clear, radius: 6)
                         Text("\(v)").font(.system(size: 11, weight: .bold, design: .monospaced))
-                            .foregroundColor(isCurrent ? .white : .white.opacity(0.4))
+                            .foregroundColor(isCurrent ? .primary : .primary.opacity(0.4))
                             .contentTransition(.numericText())
                     }
                 }
                 .frame(height: 16)
             }
         }
-        .padding(.horizontal, 14).padding(.top, 40).padding(.bottom, 14)
-        .frame(minHeight: 170, alignment: .topLeading)
+        .padding(.horizontal, 14).padding(.top, 42).padding(.bottom, 12)
+        .frame(minHeight: 155, alignment: .topLeading)
         .pbViewport()
         .overlay(alignment: .topTrailing) {
             HStack(spacing: 5) {
@@ -121,12 +137,7 @@ struct WhileLoopView: View {
             .padding(9)
         }
         .overlay(alignment: .bottomLeading) {
-            if done {
-                PBNote(text: fr.steps == 0
-                       ? "check failed first - body never ran"
-                       : "\(fr.steps) passes, \(fr.steps + 1) checks")
-                    .padding(9)
-            }
+            PBNote(text: note).padding(9)
         }
         .animation(.spring(duration: 0.3), value: step)
     }

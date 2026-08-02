@@ -567,5 +567,4 @@ private struct OrderSelector: View {
 
 #Preview {
     ScrollView { TaylorView() }
-        .preferredColorScheme(.dark)
 }

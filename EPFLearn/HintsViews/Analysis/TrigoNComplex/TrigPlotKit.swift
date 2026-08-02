@@ -80,7 +80,7 @@ struct TrigSpace {
 // MARK: - Conteneur
 
 /// Carré auto-dimensionné. Le Canvas reçoit sa taille dans sa closure : aucune
-/// constante de layout, aucun GeometryReader racine — donc sûr à l'intérieur du
+/// constante de layout, aucun GeometryReader racine - donc sûr à l'intérieur du
 /// ScrollView de VisualizationView, où un GeometryReader reçoit une hauteur nulle.
 struct TrigPlotCanvas: View {
 

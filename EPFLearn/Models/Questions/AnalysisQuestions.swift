@@ -352,67 +352,69 @@ extension Question {
         ),
     ]
     
-
     static let meanTheoremQuestions: [Question] = [
+        
         Question(
             subject: .analysis,
-            text: "The rectangles look badly matched to f. What is their total area?",
-            hint: "Select 'x² / 4' and look inside one rectangle: compare the sliver sticking out above the curve with the gap left below it.",
+            text: "Each slice carries a rectangle of height f(c) given by the mean value theorem, and the whole curve is shifted up by 2. What happens to the total area?",
+            hint: "Select 'cos(3x)' with 6 sections and imagine the axis dropped two units: every rectangle keeps its width but gains the same strip of height.",
             options: [
-                "An approximation of ∫f",
-                "Exactly ∫f, for any subdivision",
-                "Exact only if the rectangles touch the curve",
-                "Exact only as δ → 0"
+                "It grows by 2 times the length of the interval",
+                "It grows by 2",
+                "It doubles",
+                "It is unchanged, since the shift cancels out"
             ],
-            correctIndex: 1,
-            explanation: "The theorem picks cₖ so that f(cₖ)δ equals the integral on that piece exactly. Overshoot and undershoot cancel out.",
+            correctIndex: 0,
+            explanation: "Every height rises by 2, so each rectangle gains 2 times its width, and the widths add up to the length of the interval. This is just ∫(f + 2) = ∫f + 2(b − a).",
             visualization: .meanTheorem
         ),
+        
+        Question(
+            subject: .analysis,
+            text: "On each slice, the mean value theorem gives a point c such that the rectangle of height f(c) has exactly the area under f there. A point x₀ is fixed and the slices are made thinner and thinner. What does the height of the rectangle covering x₀ approach?",
+            hint: "Select 'cos(3x)', pick any point x₀ on the curve, and push the sections slider toward 40: watch the top of the rectangle sitting above x₀ settle onto the curve.",
+            options: [
+                "Zero, since the slice shrinks",
+                "f(x₀)",
+                "The average of f over the whole interval",
+                "The slope of f at x₀"
+            ],
+            correctIndex: 1,
+            explanation: "c is trapped inside a slice collapsing onto x₀, so continuity drags f(c) to f(x₀). This is the step that turns the theorem into the fundamental theorem of calculus.",
+            visualization: .meanTheorem
+        ),
+        
         Question(
                 subject: .analysis,
-                text: "You double the number of sections. What happens to the total area of the rectangles?",
-                hint: "Select 'sin(x)', then drag the sections slider from 2 to 60 and watch the blue total, not its outline.",
+                text: "An interval is cut into equal slices. On each one, the mean value theorem gives a point c, and a rectangle of height f(c) is raised. What do these rectangles add up to?",
+                hint: "Select 'x² / 4' and look inside one rectangle: the sliver sticking out above the curve matches the gap left below it.",
                 options: [
-                    "It grows toward the area under the curve",
-                    "It stays exactly the same",
-                    "It shrinks toward the area under the curve",
-                    "It oscillates as sections are added"
+                    "An approximation of ∫f",
+                    "Exactly ∫f, however the interval is cut",
+                    "Exactly ∫f only if the rectangles touch the curve",
+                    "Exactly ∫f only when the slices get very thin"
                 ],
                 correctIndex: 1,
-                explanation: "Each rectangle already matches its own piece exactly, so cutting a piece in two just splits an exact area into two exact areas. There is nothing to converge to.",
+                explanation: "The point c is chosen so that the rectangle's area equals the integral on its slice exactly. Overshoot and undershoot cancel out.",
                 visualization: .meanTheorem
             ),
         Question(
-                subject: .analysis,
-                text: "f is odd and the interval is symmetric around 0. What is the total area of the rectangles?",
-                hint: "Select 'sin(x)' (an odd function), set sections to 2: one rectangle hangs below the axis, the other rises above it.",
-                options: [
-                    "Twice the area of the right one",
-                    "Zero",
-                    "The area of the right one only",
-                    "Undefined, since one rectangle is below the axis"
-                ],
-                correctIndex: 1,
-                explanation: "Oddness makes the left rectangle drop below the axis by exactly what the right one rises above it. The areas carry a sign and cancel, matching an integral of 0.",
-                visualization: .meanTheorem
-            ),
-        Question(
-                subject: .analysis,
-                text: "For which kind of f is c unique in every piece, whatever the subdivision?",
-                hint: "Try 'x³/8 + x/2' (strictly increasing) at 20 sections and look for the curve that never comes back to a height it already left. Compare with the other functions.",
-                options: [
-                    "Any continuous f",
-                    "Any strictly monotone f",
-                    "Any positive f",
-                    "Any differentiable f"
-                ],
-                correctIndex: 1,
-                explanation: "The theorem alone only gives existence. Strict monotonicity makes f injective, so it reaches its average height exactly once per piece. A curve that turns back on itself can hit that height several times.",
-                visualization: .meanTheorem
-            ),
+            subject: .analysis,
+            text: "On each slice, the mean value theorem gives at least one point c where f reaches the average height of that slice. For which f is there exactly one, however the interval is cut?",
+            hint: "Select '0.5x + sin(2x)' with 2 sections and look for a height the curve reaches more than once inside the same slice.",
+            options: [
+                "Any continuous f",
+                "Any strictly monotone f",
+                "Any positive f",
+                "Any differentiable f"
+            ],
+            correctIndex: 1,
+            explanation: "The theorem alone only gives existence. Strict monotonicity makes f injective, so it reaches its average height exactly once per slice. A curve that turns back on itself can hit that height several times.",
+            visualization: .meanTheorem
+        ),
     ]
     
-    
+
     static let TFIQuestions: [Question] = [
         Question(
             subject: .analysis,
@@ -472,10 +474,8 @@ extension Question {
         )
 
     ]
-    
-    
-    // MARK: - Mean value theorem for derivatives
 
+    
     static let TAFQuestions: [Question] = [
         Question(
             subject: .analysis,
@@ -493,7 +493,7 @@ extension Question {
                 hint: "Select '0.5x + 0.2 (Affine)': what does it mean for the slope of the tangent if the derivative never changes?",
                 options: [
                     "Only the midpoint c = (a+b)/2 satisfies the Mean Value Theorem.",
-                    "Every single point c in ]a, b[ satisfies the MVT equation.",
+                    "Every single point c in ]a, b[ satisfies the Mean Value Theorem equation.",
                     "No point c satisfies the theorem because the function has no curvature.",
                     "The Mean Value Theorem fails because the chord and the tangent are merged."
                 ],
@@ -532,8 +532,6 @@ extension Question {
         ),
     ]
 
-    
-    // MARK: - Fixed points
 
     static let fixedPointQuestions: [Question] = [
         Question(
@@ -691,7 +689,7 @@ extension Question {
         Question(
             subject: .analysis,
             text: "For lim[x→0] x²sin(1/x)/sin(x), does the numerator f(x) = x²sin(1/x) have a well-defined derivative at x = 0?",
-            hint: "Select 'x²sin(1/x) / sin(x)' and zoom all the way in. Watch the red curve (f) closely as you increase the zoom — does it ever flatten into a line?",
+            hint: "Select 'x²sin(1/x) / sin(x)' and zoom all the way in. Watch the red curve (f) closely as you increase the zoom: does it ever flatten into a line?",
             options: [
                 "Yes, it flattens like the others",
                 "No, it keeps oscillating wildly no matter how much you zoom",
@@ -699,7 +697,7 @@ extension Question {
                 "It disappears at x = 0"
             ],
             correctIndex: 1,
-            explanation: "x²sin(1/x) oscillates infinitely often near 0. No zoom reveals a tangent line because f′(0) doesn't exist. L'Hôpital cannot be applied — the legend says 'no slope'.",
+            explanation: "x²sin(1/x) oscillates infinitely often near 0. No zoom reveals a tangent line because f′(0) doesn't exist. L'Hôpital cannot be applied; the legend says 'no slope'.",
             visualization: .lhopital
         ),
         Question(

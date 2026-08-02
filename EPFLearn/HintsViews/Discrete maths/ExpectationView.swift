@@ -69,7 +69,7 @@ struct TheoreticalPMFChart: View {
                         .contentShape(Rectangle())
                         // minimumDistance 0 fires on touch-down, before any
                         // movement, which is what lets the parent freeze the
-                        // ScrollView in time. Bars are dragged vertically —
+                        // ScrollView in time. Bars are dragged vertically -
                         // the exact direction the scroll would otherwise claim.
                         .highPriorityGesture(
                             DragGesture(minimumDistance: 0)

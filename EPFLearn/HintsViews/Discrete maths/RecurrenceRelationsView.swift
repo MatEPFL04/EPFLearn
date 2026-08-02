@@ -229,7 +229,7 @@ struct RecurrenceRelationsView: View {
         }
     }
 
-    // MARK: Unfolding — the pedagogical core
+    // MARK: Unfolding - the pedagogical core
 
     private var unfoldingCard: some View {
         DMCard(tint: DMTheme.amber) {
@@ -304,7 +304,7 @@ struct RecurrenceRelationsView: View {
                 recurrenceLine: "aₙ = aₙ₋₁ + 3",
                 baseLine: "a₀ = 1",
                 closedForm: "aₙ = 1 + 3n",
-                blurb: "Each term adds a fixed step to the previous one — growth is a straight line.",
+                blurb: "Each term adds a fixed step to the previous one, so growth is a straight line.",
                 value: { 1 + 3 * $0 }
             )
 
@@ -315,7 +315,7 @@ struct RecurrenceRelationsView: View {
                 recurrenceLine: "aₙ = 2·aₙ₋₁",
                 baseLine: "a₀ = 1",
                 closedForm: "aₙ = 2ⁿ",
-                blurb: "Each term multiplies the previous one — growth explodes exponentially.",
+                blurb: "Each term multiplies the previous one, so growth explodes exponentially.",
                 value: { Int(pow(2.0, Double($0))) }
             )
 
@@ -326,7 +326,7 @@ struct RecurrenceRelationsView: View {
                 recurrenceLine: "Fₙ = Fₙ₋₁ + Fₙ₋₂",
                 baseLine: "F₀ = 0,  F₁ = 1",
                 closedForm: "Fₙ = (φⁿ − ψⁿ)/√5,  φ = (1+√5)/2",
-                blurb: "Each term needs the two before it — a second-order recurrence with a golden-ratio closed form.",
+                blurb: "Each term needs the two before it: a second-order recurrence with a golden-ratio closed form.",
                 value: { n in
                     var a = 0, b = 1
                     if n == 0 { return 0 }

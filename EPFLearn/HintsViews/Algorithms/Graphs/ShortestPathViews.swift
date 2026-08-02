@@ -93,7 +93,7 @@ enum SP {
             guard let node = u else { break }
             settled[node] = true; done += 1
             if let te = treeEdge[node] { states[te] = .tree }
-            snap(treeEdge[node], "Settle \(node) (distance \(best)) — its distance is now final.", done)
+            snap(treeEdge[node], "Settle \(node) (distance \(best)): its distance is now final.", done)
 
             for ei in out[node] {
                 let e = edges[ei]
@@ -221,7 +221,7 @@ struct SPGraphView: View {
 
     private func color(_ s: SPEdgeState) -> Color {
         switch s {
-        case .idle:      return .white.opacity(0.22)
+        case .idle:      return .primary.opacity(0.22)
         case .relaxing:  return .cyan
         case .candidate: return .green.opacity(0.55)
         case .tree:      return .green
@@ -259,9 +259,9 @@ struct SPGraphView: View {
                 arrow(a, b).stroke(color(st), lineWidth: width(st))
                 Text("\(edges[i].w)")
                     .font(.system(size: 10, weight: .bold, design: .monospaced))
-                    .foregroundColor(edges[i].w < 0 ? .orange : (st == .tree ? .green : .white))
+                    .foregroundColor(edges[i].w < 0 ? .orange : (st == .tree ? .green : .primary))
                     .padding(.horizontal, 4).padding(.vertical, 1)
-                    .background(Capsule().fill(.black.opacity(0.78)))
+                    .background(.thinMaterial, in: Capsule())
                     .position(x: (a.x + b.x) / 2, y: (a.y + b.y) / 2)
             }
             ForEach(0..<n, id: \.self) { i in
@@ -270,12 +270,12 @@ struct SPGraphView: View {
                     if let c = frame.current, edges[c].from == i || edges[c].to == i {
                         Circle().stroke(Color.cyan, lineWidth: 3).frame(width: 32, height: 32)
                     }
-                    Text("\(i)").font(.system(size: 11, weight: .bold)).foregroundColor(.white)
+                    Text("\(i)").font(.system(size: 11, weight: .bold)).foregroundColor(.primary)
                     Text(label(frame.dist[i]))
                         .font(.system(size: 9, weight: .bold, design: .monospaced))
-                        .foregroundColor(.white)
+                        .foregroundColor(.primary)
                         .padding(.horizontal, 4).padding(.vertical, 1)
-                        .background(Capsule().fill(.black.opacity(0.8)))
+                        .background(.thinMaterial, in: Capsule())
                         .offset(y: -20)
                 }
                 .position(p[i])
@@ -320,11 +320,11 @@ struct ShortestPathLab: View {
 
     var body: some View {
         VStack(spacing: 14) {
-            Text(effectiveAlgo.rawValue).font(.headline).foregroundColor(.white)
+            Text(effectiveAlgo.rawValue).font(.headline).foregroundColor(.primary)
 
             GeometryReader { proxy in
                 ZStack {
-                    Color.black
+                    Color(.secondarySystemBackground)
                     if let f = current {
                         SPGraphView(n: n, positions: positions, edges: edges,
                                     frame: f, canvasSize: proxy.size)
@@ -347,7 +347,7 @@ struct ShortestPathLab: View {
             }
             .frame(height: 300)  // ← HAUTEUR FIXE
             .clipShape(RoundedRectangle(cornerRadius: 16))
-            .overlay(RoundedRectangle(cornerRadius: 16).stroke(.white.opacity(0.1)))
+            .overlay(RoundedRectangle(cornerRadius: 16).stroke(.primary.opacity(0.1)))
 
             VStack(spacing: 10) {
                 sliderRow(title: "Vertices", value: "\(n)") {
@@ -363,11 +363,11 @@ struct ShortestPathLab: View {
                     ), in: 0...Double(max(n - 1, 0)), step: 1)
                 }
                 Toggle("Connected graph", isOn: $connected)
-                    .tint(.cyan).foregroundColor(.white)
+                    .tint(.cyan).foregroundColor(.primary)
                     .onChange(of: connected) { _ in generate() }
                 if effectiveAlgo == .bellman {
                     Toggle("Allow negative weights", isOn: $allowNegative)
-                        .tint(.orange).foregroundColor(.white)
+                        .tint(.orange).foregroundColor(.primary)
                         .onChange(of: allowNegative) { _ in reweight() }
                 }
             }
@@ -385,13 +385,13 @@ struct ShortestPathLab: View {
                     Text(f.info).font(.caption.monospaced()).foregroundColor(.cyan)
                     Spacer()
                     Text("Step \(idx + 1)/\(frames.count)")
-                        .font(.caption2).foregroundColor(.white.opacity(0.6))
+                        .font(.caption2).foregroundColor(.primary.opacity(0.6))
                 }
                 Text(f.message)
-                    .font(.callout).foregroundColor(.white)
+                    .font(.callout).foregroundColor(.primary)
                     .frame(maxWidth: .infinity, minHeight: 40, alignment: .leading)
                     .padding(8)
-                    .background(.white.opacity(0.06))
+                    .background(.primary.opacity(0.06))
                     .clipShape(RoundedRectangle(cornerRadius: 8))
             }
 
@@ -410,8 +410,7 @@ struct ShortestPathLab: View {
             .tint(.cyan)
         }
         .padding()
-        .background(Color.black.ignoresSafeArea())
-        .preferredColorScheme(.dark)
+        .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .onReceive(timer) { _ in
             guard playing, !frames.isEmpty else { return }
             if idx < frames.count - 1 { idx += 1 } else { playing = false }
@@ -421,7 +420,7 @@ struct ShortestPathLab: View {
     @ViewBuilder
     private func sliderRow<S: View>(title: String, value: String, @ViewBuilder slider: () -> S) -> some View {
         HStack(spacing: 10) {
-            Text(title).font(.caption).foregroundColor(.white).frame(width: 64, alignment: .leading)
+            Text(title).font(.caption).foregroundColor(.primary).frame(width: 64, alignment: .leading)
             slider()
             Text(value).font(.caption.monospaced()).foregroundColor(.cyan).frame(width: 26, alignment: .trailing)
         }

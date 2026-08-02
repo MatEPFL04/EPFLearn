@@ -12,21 +12,23 @@ import SwiftUI
 // MARK: - Palette
 
 enum PB {
-    static let panelTop = Color(red: 0.10, green: 0.11, blue: 0.16)
-    static let panelBottom = Color(red: 0.04, green: 0.05, blue: 0.08)
+    static let panelTop = Color(.secondarySystemBackground)
+    static let panelBottom = Color(.tertiarySystemBackground)
 
     static let kw = Color(red: 1.00, green: 0.44, blue: 0.62)      // keywords
     static let ty = Color(red: 0.40, green: 0.82, blue: 1.00)      // types
     static let num = Color(red: 1.00, green: 0.64, blue: 0.28)     // numbers
     static let str = Color(red: 0.48, green: 0.90, blue: 0.58)     // strings
-    static let com = Color.white.opacity(0.32)                     // comments
-    static let plain = Color.white.opacity(0.88)
+    static let com = Color.secondary                               // comments
+    static let plain = Color.primary.opacity(0.88)
 
     static let keywords: Set<String> = [
         "int", "static", "void", "return", "while", "for", "if", "else",
-        "boolean", "double", "new", "true", "false", "null"
+        "boolean", "double", "new", "true", "false", "null",
+        "private", "public", "class", "interface", "abstract",
+        "extends", "implements", "this"
     ]
-    static let types: Set<String> = ["String", "System"]
+    static let types: Set<String> = ["String", "System", "Scanner"]
 
     /// Minimal Java syntax highlighter → concatenated Text.
     static func java(_ line: String) -> Text {
@@ -138,6 +140,11 @@ struct PBBadge: Equatable {
     let color: Color
 }
 
+/// A fixed-height window onto the code, not the full snippet at full height.
+/// Longer snippets (8-16 lines) used to push the stage + code + stepper
+/// past one screen; now the pane caps at `maxVisibleLines` and auto-scrolls
+/// to keep the current line centered as the step changes, so the canvas,
+/// the code, and the stepper stay on screen together while scrubbing.
 struct PBCodePane: View {
     struct Line {
         let code: String
@@ -148,47 +155,78 @@ struct PBCodePane: View {
     let lines: [Line]
     let current: Int
     var accent: Color = .cyan
+    var maxVisibleLines: Int = 11
+
+    private let rowHeight: CGFloat = 27
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            ForEach(lines.indices, id: \.self) { i in
-                HStack(spacing: 10) {
-                    Text("\(i + 1)")
-                        .font(.system(size: 11, design: .monospaced))
-                        .foregroundColor(.white.opacity(0.25))
-                        .frame(width: 16, alignment: .trailing)
-
-                    PB.java(lines[i].code)
-                        .font(.system(size: 13.5, weight: .medium, design: .monospaced))
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.7)
-
-                    Spacer(minLength: 4)
-
-                    if let b = lines[i].badge {
-                        Text(b.text)
-                            .font(.system(size: 10, weight: .bold, design: .monospaced))
-                            .padding(.horizontal, 7).padding(.vertical, 2)
-                            .background(Capsule().fill(b.color.opacity(0.22)))
-                            .foregroundColor(b.color)
-                            .transition(.scale.combined(with: .opacity))
+        ScrollViewReader { proxy in
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(alignment: .leading, spacing: 2) {
+                    ForEach(lines.indices, id: \.self) { i in
+                        row(i).id(i)
                     }
                 }
-                .padding(.horizontal, 10)
-                .padding(.vertical, 4.5)
-                .background(
-                    RoundedRectangle(cornerRadius: 7)
-                        .fill(i == current ? accent.opacity(0.16) : .clear)
-                )
-                .overlay(alignment: .leading) {
-                    if i == current {
-                        Capsule().fill(accent).frame(width: 3)
-                    }
-                }
-                .opacity(lines[i].dimmed ? 0.28 : 1)
+                .padding(10)
+            }
+            .frame(height: rowHeight * CGFloat(min(lines.count, maxVisibleLines)) + 20)
+            .onAppear { scrollToCurrent(proxy, animated: false) }
+            .onChange(of: current) { _ in scrollToCurrent(proxy, animated: true) }
+        }
+    }
+
+    private func scrollToCurrent(_ proxy: ScrollViewProxy, animated: Bool) {
+        guard !lines.isEmpty else { return }
+        let target = (current >= 0 && current < lines.count) ? current : 0
+        // Dispatched a tick late: calling scrollTo synchronously from
+        // onChange/onAppear can fire before the ScrollView has finished
+        // laying out its rows, so the very first scroll silently no-ops
+        // and the highlighted line is left off-window.
+        DispatchQueue.main.async {
+            if animated {
+                withAnimation(.easeInOut(duration: 0.25)) { proxy.scrollTo(target, anchor: .center) }
+            } else {
+                proxy.scrollTo(target, anchor: .center)
             }
         }
-        .padding(10)
+    }
+
+    @ViewBuilder
+    private func row(_ i: Int) -> some View {
+        HStack(spacing: 10) {
+            Text("\(i + 1)")
+                .font(.system(size: 11, design: .monospaced))
+                .foregroundColor(.primary.opacity(0.25))
+                .frame(width: 16, alignment: .trailing)
+
+            PB.java(lines[i].code)
+                .font(.system(size: 13.5, weight: .medium, design: .monospaced))
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+
+            Spacer(minLength: 4)
+
+            if let b = lines[i].badge {
+                Text(b.text)
+                    .font(.system(size: 10, weight: .bold, design: .monospaced))
+                    .padding(.horizontal, 7).padding(.vertical, 2)
+                    .background(Capsule().fill(b.color.opacity(0.22)))
+                    .foregroundColor(b.color)
+                    .transition(.scale.combined(with: .opacity))
+            }
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 4.5)
+        .background(
+            RoundedRectangle(cornerRadius: 7)
+                .fill(i == current ? accent.opacity(0.16) : .clear)
+        )
+        .overlay(alignment: .leading) {
+            if i == current {
+                Capsule().fill(accent).frame(width: 3)
+            }
+        }
+        .opacity(lines[i].dimmed ? 0.28 : 1)
     }
 }
 
@@ -264,7 +302,7 @@ struct PBChip: View {
         HStack(spacing: 5) {
             Text(label)
                 .font(.system(size: 9, weight: .semibold, design: .monospaced))
-                .foregroundColor(.white.opacity(0.45))
+                .foregroundColor(.secondary)
             Text(value)
                 .font(.system(size: 12, weight: .bold, design: .monospaced))
                 .foregroundColor(color)
@@ -272,7 +310,7 @@ struct PBChip: View {
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
-        .background(Capsule().fill(.white.opacity(hot ? 0.14 : 0.07)))
+        .background(.thinMaterial, in: Capsule())
         .overlay(Capsule().strokeBorder(color.opacity(hot ? 0.8 : 0), lineWidth: 1))
     }
 }
@@ -285,10 +323,10 @@ struct PBNote: View {
     var body: some View {
         Text(text)
             .font(.system(size: 10, design: .monospaced))
-            .foregroundColor(.white.opacity(0.60))
+            .foregroundColor(.secondary)
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
-            .background(RoundedRectangle(cornerRadius: 7).fill(.black.opacity(0.35)))
+            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 7))
     }
 }
 

@@ -35,7 +35,7 @@ struct Vertex: Identifiable, View {
                 Text(label)
                     .font(.system(size: 9, weight: .bold, design: .monospaced)).foregroundColor(.white)
                     .padding(.horizontal, 4).padding(.vertical, 1)
-                    .background(Capsule().fill(.black.opacity(0.75)))
+                    .background(.thinMaterial, in: Capsule())
                     .offset(y: -20)
             }
         }.position(pos)
@@ -151,7 +151,7 @@ enum Graph {
     static func generate(n: Int, extra: Int, connected: Bool = true,
                          in rect: CGRect) -> (vertices: [Vertex], edges: [Edge]) {
         let pad: CGFloat = 24
-        let yRange = (rect.minY + pad)...(rect.maxY + pad)
+        let yRange = (rect.minY + pad)...(rect.maxY - pad)
 
         var pts: [CGPoint]
         var edges: [Edge] = []

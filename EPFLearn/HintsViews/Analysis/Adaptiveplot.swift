@@ -14,7 +14,7 @@ private struct PlotWidthKey: EnvironmentKey {
 extension EnvironmentValues {
     /// Largeur du conteneur qui affiche la visualisation.
     /// Renseignée une seule fois, dans VisualizationView, à partir d'un GeometryReader
-    /// dont la taille ne dépend QUE de l'écran — jamais du contenu.
+    /// dont la taille ne dépend QUE de l'écran - jamais du contenu.
     var plotWidth: CGFloat {
         get { self[PlotWidthKey.self] }
         set { self[PlotWidthKey.self] = newValue }

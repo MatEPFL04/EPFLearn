@@ -24,6 +24,10 @@ struct VectorSpaceView: View {
     @State private var distance: Double = 8.5
     @State private var orbitAnchor: (Double, Double)? = nil
 
+    // Direct-drag editing (2D only): which vector's tip is currently grabbed.
+    @State private var draggingVector: Int? = nil
+    @State private var canvasSize: CGSize = CGSize(width: 300, height: 360)
+
     init(is3D: Bool = true) {
         _is3D = State(initialValue: is3D)
     }
@@ -56,6 +60,11 @@ struct VectorSpaceView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 10) {
                 viewport
+                if !is3D {
+                    Text("Drag either dot on the graph to rotate or rescale that vector.")
+                        .font(.system(size: 10.5))
+                        .foregroundStyle(.secondary)
+                }
                 controlDeck
                 analysisCard
             }
@@ -83,13 +92,15 @@ struct VectorSpaceView: View {
             }
             .frame(height: 360)
             .background(
-                LinearGradient(colors: [Color(red: 0.10, green: 0.11, blue: 0.16),
-                                        Color(red: 0.04, green: 0.05, blue: 0.08)],
+                LinearGradient(colors: [Color(.secondarySystemBackground),
+                                        Color(.tertiarySystemBackground)],
                                startPoint: .top, endPoint: .bottom)
             )
             .clipShape(RoundedRectangle(cornerRadius: 16))
             .contentShape(RoundedRectangle(cornerRadius: 16))
+            .onGeometryChange(for: CGSize.self) { $0.size } action: { canvasSize = $0 }
             .highPriorityGesture(orbitGesture, isEnabled: is3D)
+            .highPriorityGesture(vectorDragGesture, isEnabled: !is3D)
             .onTapGesture(count: 2) {
                 azimuth = -0.9; elevation = 0.42; distance = 8.5
             }
@@ -110,6 +121,37 @@ struct VectorSpaceView: View {
             .onEnded { _ in orbitAnchor = nil }
     }
 
+    /// Lets you grab v1 or v2 by its tip and drag it straight on the graph,
+    /// so rotating/rescaling a vector and watching the span react is a
+    /// direct manipulation instead of a numeric edit.
+    private var vectorDragGesture: some Gesture {
+        DragGesture(minimumDistance: 2)
+            .onChanged { g in
+                let p = Projector(azimuth: camAzimuth, elevation: camElevation,
+                                   distance: distance, size: canvasSize)
+
+                if draggingVector == nil {
+                    let candidates = [(0, w1), (1, w2)]
+                    let hit = candidates
+                        .compactMap { idx, v -> (Int, CGFloat)? in
+                            guard let tip = p.project(v) else { return nil }
+                            let d = hypot(tip.x - g.startLocation.x, tip.y - g.startLocation.y)
+                            return (idx, d)
+                        }
+                        .filter { $0.1 < 34 }
+                        .min { $0.1 < $1.1 }
+                    draggingVector = hit?.0
+                }
+                guard let idx = draggingVector,
+                      let math = p.unprojectToZPlane(g.location) else { return }
+
+                let clamped = V3(min(max(math.x, -4), 4), min(max(math.y, -4), 4), 0)
+                if idx == 0 { v1 = clamped } else { v2 = clamped }
+                presetIndex = 0
+            }
+            .onEnded { _ in draggingVector = nil }
+    }
+
     private var hud: some View {
         VStack(alignment: .leading, spacing: 1) {
             Text("det = \(fmt(det, 3))")
@@ -117,20 +159,20 @@ struct VectorSpaceView: View {
                 .foregroundStyle(independent ? .cyan : VectorSpaceView.warm)
             Text(verdictShort)
                 .font(.system(size: 9.5))
-                .foregroundStyle(.white.opacity(0.55))
+                .foregroundStyle(.secondary)
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 5)
-        .background(.black.opacity(0.35), in: RoundedRectangle(cornerRadius: 8))
+        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 8))
     }
 
     private var verdictShort: String {
         if independent {
-            return is3D ? "Independent — volume \(fmt(abs(det), 2))"
-                        : "Independent — area \(fmt(abs(det), 2))"
+            return is3D ? "Independent: volume \(fmt(abs(det), 2))"
+                        : "Independent: area \(fmt(abs(det), 2))"
         }
-        return is3D ? "Dependent — the trio is coplanar"
-                    : "Dependent — the pair is collinear"
+        return is3D ? "Dependent: the trio is coplanar"
+                    : "Dependent: the pair is collinear"
     }
 
     private var zoomSlider: some View {
@@ -139,11 +181,11 @@ struct VectorSpaceView: View {
             Slider(value: $distance, in: 4.5...16).frame(width: 88)
             Image(systemName: "plus.magnifyingglass").font(.system(size: 9))
         }
-        .foregroundStyle(.white.opacity(0.7))
+        .foregroundStyle(.secondary)
         .tint(.cyan)
         .padding(.horizontal, 8)
         .padding(.vertical, 2)
-        .background(.black.opacity(0.3), in: Capsule())
+        .background(.thinMaterial, in: Capsule())
     }
 
     // MARK: - Control deck
@@ -285,8 +327,8 @@ struct VectorSpaceView: View {
                 : "The pair is a basis of ℝ²: the parallelogram has non-zero area."
         }
         return is3D
-            ? "The span is only the highlighted plane — one direction of ℝ³ is out of reach."
-            : "The span is only the highlighted line — the rest of the plane is out of reach."
+            ? "The span is only the highlighted plane: one direction of ℝ³ is out of reach."
+            : "The span is only the highlighted line: the rest of the plane is out of reach."
     }
 
     // MARK: Bindings
@@ -333,7 +375,7 @@ struct VectorSpaceView: View {
             path.move(to: pts[0])
             for q in pts.dropFirst() { path.addLine(to: q) }
             path.closeSubpath()
-            ctx.fill(path, with: .color(.white.opacity(0.035)))
+            ctx.fill(path, with: .color(.primary.opacity(0.035)))
         }
 
         var grid = Path()
@@ -343,7 +385,7 @@ struct VectorSpaceView: View {
             if let s = p.segment(V3(-r, i, 0), V3(r, i, 0)) { grid.move(to: s.0); grid.addLine(to: s.1) }
             i += 0.5
         }
-        ctx.stroke(grid, with: .color(.white.opacity(0.09)), lineWidth: 0.7)
+        ctx.stroke(grid, with: .color(.primary.opacity(0.09)), lineWidth: 0.7)
     }
 
     private func drawAxes(_ ctx: GraphicsContext, _ p: Projector) {
@@ -411,10 +453,14 @@ struct VectorSpaceView: View {
         path.move(to: hull[0])
         for q in hull.dropFirst() { path.addLine(to: q) }
         path.closeSubpath()
-        ctx.fill(path, with: .color(.black.opacity(0.4)))
+
+        ctx.drawLayer { layer in
+            layer.addFilter(.blur(radius: 6))
+            layer.fill(path, with: .color(.black.opacity(0.26)))
+        }
     }
 
-    /// Parallelogram in ℝ², parallelepiped in ℝ³ — same code, w3 is simply zero
+    /// Parallelogram in ℝ², parallelepiped in ℝ³ - same code, w3 is simply zero
     /// in 2D. Skipped when the family is dependent: the solid collapses and its
     /// faces produce nothing but slivers, while drawSpan already shows the truth.
     private func drawSolid(_ ctx: GraphicsContext, _ p: Projector) {
@@ -471,15 +517,20 @@ struct VectorSpaceView: View {
                     ctx.stroke(path, with: .color(color.opacity(0.3)),
                                style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
                 }
-                if let g = p.project(ground) {
-                    ctx.fill(Path(ellipseIn: CGRect(x: g.x - 4, y: g.y - 2, width: 8, height: 4)),
-                             with: .color(color.opacity(0.35)))
-                }
             }
 
             if let tip = p.project(v) {
                 ctx.draw(Text(label).font(.system(size: 14, weight: .heavy)).foregroundStyle(color),
                          at: CGPoint(x: tip.x + 16, y: tip.y - 12))
+
+                // A visible, grabbable handle - only in 2D, where the tip can
+                // actually be dragged straight on the graph.
+                if !is3D {
+                    let r: CGFloat = 7
+                    let dot = Path(ellipseIn: CGRect(x: tip.x - r, y: tip.y - r, width: r * 2, height: r * 2))
+                    ctx.fill(dot, with: .color(color))
+                    ctx.stroke(dot, with: .color(.white.opacity(0.85)), lineWidth: 1.5)
+                }
             }
         }
     }

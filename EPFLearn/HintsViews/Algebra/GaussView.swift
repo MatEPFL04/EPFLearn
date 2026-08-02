@@ -426,12 +426,10 @@ struct GaussView: View {
 
         case .point(let q):
             guard let s = p.project(q) else { return }
-            var glow = ctx
-            glow.blendMode = .plusLighter
-            glow.fill(Path(ellipseIn: CGRect(x: s.x - 9, y: s.y - 9, width: 18, height: 18)),
+            ctx.fill(Path(ellipseIn: CGRect(x: s.x - 9, y: s.y - 9, width: 18, height: 18)),
                       with: .color(GaussView.warm.opacity(0.35)))
-            glow.fill(Path(ellipseIn: CGRect(x: s.x - 4, y: s.y - 4, width: 8, height: 8)),
-                      with: .color(.white))
+            ctx.fill(Path(ellipseIn: CGRect(x: s.x - 4, y: s.y - 4, width: 8, height: 8)),
+                      with: .color(GaussView.warm))
             ctx.draw(Text("solution").font(.system(size: 10, weight: .bold))
                                 .foregroundStyle(GaussView.warm),
                     at: CGPoint(x: s.x + 34, y: s.y - 12))
@@ -497,7 +495,7 @@ struct GaussView: View {
         }
         .padding(.horizontal, 9)
         .padding(.vertical, 4)
-        .background(.black.opacity(0.45), in: Capsule())
+        .background(.thinMaterial, in: Capsule())
     }
 
     // MARK: - Verdict, read off the current matrix
@@ -570,7 +568,7 @@ struct GaussView: View {
 
             Rectangle()
                 .frame(height: 0.5)
-                .foregroundStyle(.white.opacity(0.12))
+                .foregroundStyle(Color(.separator))
                 .padding(.vertical, 3)
 
             stageLabel("AUGMENTED MATRIX")
@@ -582,8 +580,8 @@ struct GaussView: View {
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
-            LinearGradient(colors: [Color(red: 0.10, green: 0.11, blue: 0.16),
-                                    Color(red: 0.04, green: 0.05, blue: 0.08)],
+            LinearGradient(colors: [Color(.secondarySystemBackground),
+                                    Color(.tertiarySystemBackground)],
                            startPoint: .top, endPoint: .bottom)
         )
         .clipShape(RoundedRectangle(cornerRadius: 16))
@@ -593,7 +591,7 @@ struct GaussView: View {
         Text(s)
             .font(.system(size: 9, weight: .bold))
             .tracking(0.8)
-            .foregroundStyle(.white.opacity(0.4))
+            .foregroundStyle(.secondary)
     }
 
     // MARK: Equation row
@@ -638,7 +636,7 @@ struct GaussView: View {
     private func equationText(_ r: Int) -> Text {
         let names: [String] = ["x", "y", "z"]
         let colors: [Color] = [.red, .green, .blue]
-        let dim: Color = Color.white.opacity(0.45)
+        let dim: Color = Color.primary.opacity(0.45)
         var out: Text = Text("")
         var started: Bool = false
 
@@ -650,12 +648,12 @@ struct GaussView: View {
             let coef: String = abs(a - 1) < 1e-9 ? "" : pretty(a)
 
             out = out + Text(lead).foregroundStyle(dim)
-            out = out + Text(coef).foregroundStyle(Color.white)
+            out = out + Text(coef).foregroundStyle(Color.primary)
             out = out + Text(names[c]).foregroundStyle(colors[c])
             started = true
         }
         if !started {
-            out = out + Text("0").foregroundStyle(Color.white.opacity(0.5))
+            out = out + Text("0").foregroundStyle(Color.primary.opacity(0.5))
         }
 
         out = out + Text("   =   ").foregroundStyle(dim)
@@ -673,20 +671,20 @@ struct GaussView: View {
                 .frame(width: 18)
 
             BracketShape(leading: true)
-                .stroke(Color.white.opacity(0.45), lineWidth: 1.2)
+                .stroke(Color.primary.opacity(0.45), lineWidth: 1.2)
                 .frame(width: 5, height: GaussView.rowH)
 
             ForEach(0..<3, id: \.self) { c in
                 Text(pretty(m[r][c]))
                     .font(.system(size: 12.5, weight: .semibold, design: .monospaced))
-                    .foregroundStyle(abs(m[r][c]) < 1e-9 ? Color.white.opacity(0.25) : Color.white)
+                    .foregroundStyle(abs(m[r][c]) < 1e-9 ? Color.primary.opacity(0.25) : Color.primary)
                     .frame(width: GaussView.cellW, height: GaussView.rowH)
                     .contentTransition(.numericText())
             }
 
             Rectangle()
                 .frame(width: 1, height: GaussView.rowH)
-                .foregroundStyle(.white.opacity(0.3))
+                .foregroundStyle(Color.primary.opacity(0.3))
 
             Text(pretty(m[r][3]))
                 .font(.system(size: 12.5, weight: .heavy, design: .monospaced))
@@ -695,7 +693,7 @@ struct GaussView: View {
                 .contentTransition(.numericText())
 
             BracketShape(leading: false)
-                .stroke(Color.white.opacity(0.45), lineWidth: 1.2)
+                .stroke(Color.primary.opacity(0.45), lineWidth: 1.2)
                 .frame(width: 5, height: GaussView.rowH)
 
             if let op = pending, r == op.target {

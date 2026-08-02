@@ -154,7 +154,7 @@ extension Question {
                 "The pivot ends up in the middle"
             ],
             correctIndex: 1,
-            explanation: "Because the pivot is the minimum, all n−1 other elements are greater and pile onto one side. The first partition is maximally unbalanced — the start of the Θ(n²) degeneration, even though the array looked 'almost sorted'.",
+            explanation: "Because the pivot is the minimum, all n−1 other elements are greater and pile onto one side. The first partition is maximally unbalanced, marking the start of the Θ(n²) degeneration, even though the array looked 'almost sorted'.",
             visualization: .quickSort
         ),
     ]
@@ -229,7 +229,7 @@ extension Question {
                 "It works but runs in Θ(n²)"
             ],
             correctIndex: 1,
-            explanation: "On [-2,3,-4] the best product is the whole array: (-2)·3·(-4)=24. A negative running product isn't worthless — a later negative can flip it to a large positive. So max-product needs to track the minimum product too, since min×negative can become the new max. Kadane's single-value reset doesn't carry over.",
+            explanation: "On [-2,3,-4] the best product is the whole array: (-2)·3·(-4)=24. A negative running product isn't worthless, since a later negative can flip it to a large positive. So max-product needs to track the minimum product too, since min×negative can become the new max. Kadane's single-value reset doesn't carry over.",
             visualization: .kadane
         ),
         Question(
@@ -257,13 +257,13 @@ extension Question {
                 "Only at index 0"
             ],
             correctIndex: 1,
-            explanation: "The max(a[j], …) is exactly the restart decision. Dropping it forces every element to inherit the previous (possibly very negative) sum, so the window never resets — it degenerates into a single running total, not Kadane.",
+            explanation: "The max(a[j], …) is exactly the restart decision. Dropping it forces every element to inherit the previous (possibly very negative) sum, so the window never resets: it degenerates into a single running total, not Kadane.",
             visualization: .kadane
         ),
         Question(
             subject: .arrays,
             text: "Kadane returns sum 6 on some array. You now multiply every element by -1. Is the new answer simply -6?",
-            hint: "Don't assume symmetry. The max subarray of the negated array is the MINIMUM subarray of the original — unrelated to its maximum.",
+            hint: "Don't assume symmetry. The max subarray of the negated array is the minimum subarray of the original, unrelated to its maximum.",
             options: [
                 "Yes, the answer becomes -6",
                 "No, it becomes the negation of the minimum-sum subarray of the original, generally not -6",
@@ -389,7 +389,7 @@ extension Question {
                 "n² swaps"
             ],
             correctIndex: 1,
-            explanation: "The first swap puts 1 in front but throws n into position 1. Each subsequent pass then has to move n further right one slot at a time, costing a swap nearly every pass — about n−1 total. A single misplaced large value is surprisingly expensive in swaps for selection sort.",
+            explanation: "The first swap puts 1 in front but throws n into position 1. Each subsequent pass then has to move n further right one slot at a time, costing a swap nearly every pass, about n−1 total. A single misplaced large value is surprisingly expensive in swaps for selection sort.",
             visualization: .sorting
         ),
     ]
@@ -401,7 +401,7 @@ extension Question {
             hint: "Count the nodes of the same color as fib(2) on the graph",
             options: ["3 times", "4 times", "5 times", "8 times"],
             correctIndex: 2,
-            explanation: "The number of occurrences of fib(k) in the call tree of fib(n) follows Fibonacci itself: fib(2) appears fib(6−2+1) = fib(5) = 5 times. On the graph, the five nodes of this color stand out, and each recomputes the exact same subtree. This redundancy — not the size of the numbers — is what makes the algorithm exponential. For comparison, fib(1) is recomputed fib(6) = 8 times.",
+            explanation: "The number of occurrences of fib(k) in the call tree of fib(n) follows Fibonacci itself: fib(2) appears fib(6−2+1) = fib(5) = 5 times. On the graph, the five nodes of this color stand out, and each recomputes the exact same subtree. This redundancy, not the size of the numbers, is what makes the algorithm exponential. For comparison, fib(1) is recomputed fib(6) = 8 times.",
             visualization: .dynamicProgramming
         ),
         Question(

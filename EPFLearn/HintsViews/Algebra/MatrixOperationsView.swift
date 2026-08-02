@@ -46,7 +46,7 @@ struct MatrixOperationsView: View {
     private var operationPickerSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Operation").font(.subheadline.weight(.medium))
-            Picker("Opération", selection: $operation) {
+            Picker("Operation", selection: $operation) {
                 ForEach(Operation.allCases) { op in
                     Text(op.rawValue).tag(op)
                 }

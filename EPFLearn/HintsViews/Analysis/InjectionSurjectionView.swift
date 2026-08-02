@@ -67,7 +67,7 @@ struct InjectionSurjectionView: View {
     private var current: MapCase { mapCases[selectedCase] }
     private var cs: MathCoordinateSpace { MathCoordinateSpace(size: graphSize, scale: scale) }
 
-    // MARK: Preimages of `level` — sweep + bisection on sign changes
+    // MARK: Preimages of `level` - sweep + bisection on sign changes
 
     private func preimages(of y: Double, in c: MapCase) -> [Double] {
         let lo = c.domain.lowerBound, hi = c.domain.upperBound
@@ -106,7 +106,7 @@ struct InjectionSurjectionView: View {
         }
     }
 
-    /// Sampled image of f — used to paint the codomain ruler.
+    /// Sampled image of f - used to paint the codomain ruler.
     private var imageSet: [(Double, Double)] {
         var ys: [Double] = []
         let lo = current.domain.lowerBound, hi = current.domain.upperBound
@@ -132,14 +132,9 @@ struct InjectionSurjectionView: View {
     // MARK: Body
 
     var body: some View {
-        VStack(spacing: 14) {
+        VStack(spacing: 10) {
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Injectivity & Surjectivity").font(.headline)
-                Text("Horizontal line test")
-                    .font(.system(size: 12, design: .monospaced))
-                    .foregroundStyle(.secondary)
-            }
+            Text("Injectivity & Surjectivity").font(.headline)
 
             Text("\(current.formula),   \(current.domainLabel) → \(current.codomainLabel)")
                 .font(.system(size: 14, weight: .medium, design: .monospaced))
@@ -220,10 +215,12 @@ struct InjectionSurjectionView: View {
             }
             .frame(width: graphSize - 40)
 
-            HStack(spacing: 6) {
-                Image(systemName: verdict.icon).foregroundStyle(verdict.color)
+            HStack(spacing: 5) {
+                Image(systemName: verdict.icon)
+                    .font(.system(size: 11))
+                    .foregroundStyle(verdict.color)
                 Text(verdict.text)
-                    .font(.system(size: 13, weight: .medium))
+                    .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(verdict.color)
             }
             .frame(width: graphSize)
@@ -265,13 +262,13 @@ struct InjectionSurjectionView: View {
     }
 
     private func badge(_ label: String, _ ok: Bool) -> some View {
-        HStack(spacing: 4) {
+        HStack(spacing: 3) {
             Image(systemName: ok ? "checkmark" : "xmark")
-                .font(.system(size: 10, weight: .bold))
-            Text(label).font(.system(size: 11, weight: .medium))
+                .font(.system(size: 9, weight: .bold))
+            Text(label).font(.system(size: 10, weight: .medium))
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 5)
+        .padding(.horizontal, 7)
+        .padding(.vertical, 3)
         .background((ok ? Color.green : Color.red).opacity(0.15))
         .foregroundStyle(ok ? Color.green : Color.red)
         .clipShape(Capsule())
@@ -280,5 +277,4 @@ struct InjectionSurjectionView: View {
 
 #Preview {
     ScrollView { InjectionSurjectionView() }
-        .preferredColorScheme(.dark)
 }

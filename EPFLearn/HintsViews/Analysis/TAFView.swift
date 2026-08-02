@@ -211,5 +211,4 @@ struct TAFView: View {
 
 #Preview {
     TAFView()
-        .preferredColorScheme(.dark)
 }

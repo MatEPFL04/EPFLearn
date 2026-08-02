@@ -3,7 +3,7 @@
 //  EPFLearn
 //
 //  One idea: copy semantics vs reference semantics.
-//  Primitives copy their value. Arrays copy the reference — two names,
+//  Primitives copy their value. Arrays copy the reference - two names,
 //  one object. The trace visits every executed line.
 //
 
@@ -41,32 +41,33 @@ struct VariablesView: View {
 
     private var note: String? {
         switch step {
+        case 0: return "nothing has run yet, press ▸ to start"
+        case 1: return "a = 5 -> a's box now holds 5"
         case 2: return "b gets a copy of the value"
-        case 3: return "b changed - a did not"
+        case 3: return "b changed, but a did not"
         case 4: return "u holds a reference to the array"
-        case 5: return "no new array - v points to the same one"
+        case 5: return "no new array here, v points to the same one"
         case 6: return "one write, visible through u and v"
         default: return nil
         }
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 10) {
-                PBHeader("Variables")
+        VStack(alignment: .leading, spacing: 10) {
+            PBHeader("Variables")
 
-                PBAdaptive {
-                    stage
-                } code: {
-                    PBCodePane(lines: code.map { PBCodePane.Line(code: $0) },
-                               current: step - 1, accent: .cyan)
-                        .pbViewport()
-                }
-
-                PBStepper(step: $step, total: total, accent: .cyan)
+            PBAdaptive {
+                stage
+            } code: {
+                PBCodePane(lines: code.map { PBCodePane.Line(code: $0) },
+                           current: step - 1, accent: .cyan)
+                    .pbViewport()
             }
-            .padding(14)
+
+            PBStepper(step: $step, total: total, accent: .cyan)
         }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .top)
         .background(Color(.systemGroupedBackground))
     }
 
@@ -74,9 +75,9 @@ struct VariablesView: View {
         GeometryReader { geo in
             let w = geo.size.width
             let ax: CGFloat = 74
-            let ay: CGFloat = 52, by: CGFloat = 52
+            let ay: CGFloat = 44, by: CGFloat = 44
             let bx: CGFloat = 178
-            let uy: CGFloat = 148, vy: CGFloat = 208
+            let uy: CGFloat = 118, vy: CGFloat = 168
             let box = CGPoint(x: w - 108, y: (uy + vy) / 2)
 
             ZStack {
@@ -111,7 +112,7 @@ struct VariablesView: View {
             }
             .animation(.spring(duration: 0.3), value: step)
         }
-        .frame(height: 258)
+        .frame(height: 210)
         .pbViewport()
         .overlay(alignment: .topTrailing) {
             HStack(spacing: 5) {
@@ -133,7 +134,7 @@ struct VariablesView: View {
                 .foregroundColor(color)
             Text(value.map(String.init) ?? "·")
                 .font(.system(size: 19, weight: .bold, design: .monospaced))
-                .foregroundColor(value == nil ? .white.opacity(0.2) : .white)
+                .foregroundColor(value == nil ? .primary.opacity(0.2) : .primary)
                 .contentTransition(.numericText())
                 .frame(width: 58, height: 38)
                 .background(RoundedRectangle(cornerRadius: 9)
@@ -151,7 +152,7 @@ struct VariablesView: View {
             Text(name).font(.system(size: 12, weight: .bold, design: .monospaced))
             Image(systemName: "arrow.right").font(.system(size: 9, weight: .bold))
         }
-        .foregroundColor(live ? color : .white.opacity(0.2))
+        .foregroundColor(live ? color : .primary.opacity(0.2))
         .frame(width: 58, height: 30)
         .background(RoundedRectangle(cornerRadius: 9).fill(color.opacity(live ? 0.16 : 0.05)))
         .overlay(RoundedRectangle(cornerRadius: 9)
@@ -163,18 +164,18 @@ struct VariablesView: View {
     private func arrayBox(_ values: [Int], hotCell: Int?) -> some View {
         VStack(spacing: 4) {
             Text("int[3]").font(.system(size: 9, weight: .semibold, design: .monospaced))
-                .foregroundColor(.white.opacity(0.4))
+                .foregroundColor(.primary.opacity(0.4))
             HStack(spacing: 3) {
                 ForEach(values.indices, id: \.self) { i in
                     Text("\(values[i])")
                         .font(.system(size: 15, weight: .bold, design: .monospaced))
-                        .foregroundColor(.white)
+                        .foregroundColor(.primary)
                         .contentTransition(.numericText())
                         .frame(width: 34, height: 34)
                         .background(RoundedRectangle(cornerRadius: 7)
-                            .fill(Color.white.opacity(hotCell == i ? 0.22 : 0.09)))
+                            .fill(Color.primary.opacity(hotCell == i ? 0.22 : 0.09)))
                         .overlay(RoundedRectangle(cornerRadius: 7)
-                            .strokeBorder(hotCell == i ? PB.num : .white.opacity(0.2),
+                            .strokeBorder(hotCell == i ? PB.num : .primary.opacity(0.2),
                                           lineWidth: hotCell == i ? 2 : 1))
                         .shadow(color: hotCell == i ? PB.num.opacity(0.7) : .clear, radius: 8)
                 }
@@ -182,7 +183,7 @@ struct VariablesView: View {
             HStack(spacing: 3) {
                 ForEach(0..<3, id: \.self) { i in
                     Text("[\(i)]").font(.system(size: 8, design: .monospaced))
-                        .foregroundColor(.white.opacity(0.3)).frame(width: 34)
+                        .foregroundColor(.primary.opacity(0.3)).frame(width: 34)
                 }
             }
         }

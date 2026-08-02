@@ -54,31 +54,48 @@ struct IfElseView: View {
     private var grade: String { ["A", "B", "C", "F"][winner] }
     private var gradeColor: Color { [Color.green, .cyan, PB.num, .pink][winner] }
 
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 10) {
-                PBHeader("If / Else")
-
-                PBScrub(label: "score", value: $score, range: 0...100, accent: .cyan) {
-                    step = 0
-                }
-
-                PBAdaptive {
-                    gradePanel
-                } code: {
-                    PBCodePane(lines: paneLines, current: currentLine, accent: .cyan)
-                        .pbViewport()
-                }
-
-                PBStepper(step: $step, total: total, accent: .cyan)
-            }
-            .padding(14)
+    private var note: String {
+        switch currentLine {
+        case 0: return "score = \(score)"
+        case 1: return "grade is declared, but not assigned yet"
+        case 2: return "checking score >= 90 -> \(score >= 90)"
+        case 3: return "true -> grade = \"A\". Java never even looks at the else-ifs below"
+        case 4: return "score >= 90 was false, so check the next one: score >= 75 -> \(score >= 75)"
+        case 5: return "true -> grade = \"B\". the remaining else-ifs are skipped"
+        case 6: return "score >= 75 was false too, so check: score >= 60 -> \(score >= 60)"
+        case 7: return "true -> grade = \"C\""
+        case 8: return "every condition above was false, so this falls into the final else"
+        case 9: return "grade = \"F\""
+        default:
+            if done { return "grade = \"\(grade)\": once a branch runs, the rest of the chain is skipped" }
+            return "nothing has run yet, press ▸ to start"
         }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            PBHeader("If / Else")
+
+            PBScrub(label: "score", value: $score, range: 0...100, accent: .cyan) {
+                step = 0
+            }
+
+            PBAdaptive {
+                gradePanel
+            } code: {
+                PBCodePane(lines: paneLines, current: currentLine, accent: .cyan)
+                    .pbViewport()
+            }
+
+            PBStepper(step: $step, total: total, accent: .cyan)
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .top)
         .background(Color(.systemGroupedBackground))
     }
 
     private var gradePanel: some View {
-        VStack(spacing: 14) {
+        VStack(spacing: 10) {
             HStack {
                 PBChip(label: "score", value: "\(score)")
                 Spacer()
@@ -86,25 +103,28 @@ struct IfElseView: View {
             }
             ZStack {
                 Circle()
-                    .fill(done ? gradeColor.opacity(0.15) : Color.white.opacity(0.05))
-                    .frame(width: 110, height: 110)
+                    .fill(done ? gradeColor.opacity(0.15) : Color.primary.opacity(0.05))
+                    .frame(width: 88, height: 88)
                 Text(done ? grade : "?")
-                    .font(.system(size: 54, weight: .black, design: .monospaced))
-                    .foregroundColor(done ? gradeColor : .white.opacity(0.25))
+                    .font(.system(size: 42, weight: .black, design: .monospaced))
+                    .foregroundColor(done ? gradeColor : .primary.opacity(0.25))
                     .shadow(color: done ? gradeColor.opacity(0.6) : .clear, radius: 12)
                     .contentTransition(.numericText())
             }
             // threshold ladder
-            VStack(spacing: 5) {
+            VStack(spacing: 4) {
                 ladderRow("A", ">= 90", 0)
                 ladderRow("B", ">= 75", 1)
                 ladderRow("C", ">= 60", 2)
                 ladderRow("F", "else", 3)
             }
         }
-        .padding(18)
+        .padding(.horizontal, 14).padding(.top, 14).padding(.bottom, 38)
         .frame(maxWidth: .infinity)
         .pbViewport()
+        .overlay(alignment: .bottomLeading) {
+            PBNote(text: note).padding(9)
+        }
         .animation(.spring(duration: 0.3), value: step)
     }
 
@@ -113,10 +133,10 @@ struct IfElseView: View {
         let color: Color = [Color.green, .cyan, PB.num, .pink][idx]
         return HStack {
             Text(g).font(.system(size: 12, weight: .bold, design: .monospaced))
-                .foregroundColor(isWinner ? color : .white.opacity(0.5))
+                .foregroundColor(isWinner ? color : .primary.opacity(0.5))
                 .frame(width: 18)
             Text(cond).font(.system(size: 11, design: .monospaced))
-                .foregroundColor(.white.opacity(0.45))
+                .foregroundColor(.primary.opacity(0.45))
             Spacer()
             if isWinner {
                 Image(systemName: "checkmark.circle.fill")

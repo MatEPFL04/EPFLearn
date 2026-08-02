@@ -30,7 +30,6 @@ struct ContentView: View {
                 .tabItem { Label("Settings", systemImage: "gearshape") }
         }
         .environment(profile)
-        .preferredColorScheme(.dark)
         .onAppear { installQuizCompletionHandler() }
     }
 

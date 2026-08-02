@@ -187,15 +187,15 @@ struct TFIView: View {
     }
 
     var body: some View {
-        VStack(spacing: 14) {
-            
+        VStack(spacing: 10) {
+
             Text("Fundamental Theorem of Calculus").font(.headline)
 
-            VStack(alignment: .leading, spacing: 2) {
+            HStack(spacing: 18) {
                 IntegralExpression(lhs: "F(x) =", lower: "0", upper: "x",
-                                   integrand: "f(t) dt", color: .red)
+                                   integrand: "f(t) dt", color: .red, scale: 0.72)
                 IntegralExpression(lhs: "G(x) =", lower: "0", upper: "x",
-                                   integrand: "g(t) dt", color: .blue)
+                                   integrand: "g(t) dt", color: .blue, scale: 0.72)
             }
 
             ZStack {
@@ -230,7 +230,8 @@ struct TFIView: View {
             .frame(width: graphSize, height: graphSize)
             .background(Color(.systemBackground))
             .clipShape(RoundedRectangle(cornerRadius: 8))
-            .overlay(alignment: .topLeading) { legend }
+            .overlay(alignment: .topLeading) { hud }
+            .overlay(alignment: .topTrailing) { legend }
 
             Picker("Function pair", selection: $preset) {
                 ForEach(TFIPreset.allCases) { option in
@@ -248,8 +249,6 @@ struct TFIView: View {
                 Slider(value: $target, in: -1.6...1.6)
             }
             .frame(width: graphSize - 40)
-
-            readout
 
             Text(target <= current.splitPoint
                  ? "f and g agree on all of [0, x], so the two shaded regions coincide and F(x) = G(x)."
@@ -275,7 +274,7 @@ struct TFIView: View {
     }
 
     private var legend: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .trailing, spacing: 4) {
             legendItem(.red, "f(x)")
             legendItem(.blue, "g(x)")
         }
@@ -284,36 +283,33 @@ struct TFIView: View {
 
     private func legendItem(_ color: Color, _ label: String) -> some View {
         HStack(spacing: 6) {
-            Rectangle().fill(color).frame(width: 16, height: 3)
             Text(label).font(.caption2).foregroundStyle(color)
+            Rectangle().fill(color).frame(width: 16, height: 3)
         }
     }
 
-    private var readout: some View {
-        HStack(spacing: 10) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("F(x) = \(F, specifier: "%.3f")")
-                    .foregroundStyle(.red)
-                Text("G(x) = \(G, specifier: "%.3f")")
-                    .foregroundStyle(.blue)
-            
-            }
-            .font(.system(size: 13, design: .monospaced))
-
-            Spacer()
-
+    /// Live readout, pinned to the graph itself (not the scroll flow below it)
+    /// so it never scrolls out of view while dragging x.
+    private var hud: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text("F(x) = \(F, specifier: "%.3f")")
+                .foregroundStyle(.red)
+            Text("G(x) = \(G, specifier: "%.3f")")
+                .foregroundStyle(.blue)
             HStack(spacing: 4) {
                 Image(systemName: areEqual ? "checkmark.circle.fill" : "xmark.circle.fill")
-                Text(areEqual ? "F(x) = G(x)" : "F(x) ≠ G(x)")
-                    .font(.system(size: 13, weight: .medium))
+                Text(areEqual ? "F = G" : "F ≠ G")
             }
+            .font(.system(size: 11, weight: .semibold))
             .foregroundStyle(areEqual ? .green : .orange)
         }
-        .frame(width: graphSize)
+        .font(.system(size: 13, weight: .semibold, design: .monospaced))
+        .padding(8)
+        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 8))
+        .padding(8)
     }
 }
 
 #Preview {
     ScrollView { TFIView() }
-        .preferredColorScheme(.dark)
 }

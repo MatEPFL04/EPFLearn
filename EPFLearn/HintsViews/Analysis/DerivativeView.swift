@@ -233,7 +233,6 @@ struct DerivateView: View {
 
             compactReadout(
                 x0: xMathStart,
-                h: h,
                 secant: secantSlope,
                 tangent: tangentSlope
             )
@@ -279,20 +278,15 @@ struct DerivateView: View {
     /// Compact readout showing just the essential slopes
     private func compactReadout(
         x0: Double,
-        h: Double,
         secant: Double?,
         tangent: Double
     ) -> some View {
         HStack(spacing: 20) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("h = \(formatted(abs(h)))")
-                    .foregroundStyle(.secondary)
-                Text("Secant: \(secant.map(formatted) ?? "—")")
-                    .foregroundStyle(.orange)
-            }
-            
+            Text("Secant: \(secant.map(formatted) ?? "—")")
+                .foregroundStyle(.orange)
+
             Spacer()
-            
+
             Text("f'(x) = \(formatted(tangent))")
                 .foregroundStyle(.red)
         }
@@ -321,5 +315,4 @@ struct DerivateView: View {
 
 #Preview {
     DerivateView()
-        .preferredColorScheme(.dark)
 }

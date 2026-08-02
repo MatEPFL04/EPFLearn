@@ -73,9 +73,10 @@ enum VisualizationType {
     case forLoop
     case ifStatement
     case bitwiseOperations
-    case recursion
     case variablesMemory
     case functions
+    case classes
+    case abstraction
     
     
     case DFS
@@ -156,9 +157,9 @@ extension Question {
     
     
     static func sampleQuestionsProgrammingBasics() -> [Question] {
-        
+
         let banks = [
-            variablesQuestions,ifElseQuestions,forLoopQuestions,whileLoopQuestions,functionQuestions,bitwiseQuestions
+            variablesQuestions,ifElseQuestions,forLoopQuestions,whileLoopQuestions,functionQuestions,bitwiseQuestions,classQuestions,abstractionQuestions
         ]
         return banks.map { $0.shuffled().first! }.shuffled()
     }

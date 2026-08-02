@@ -35,7 +35,9 @@ struct FixedPointView: View {
     
     @State private var selectedFunction = 1
     @State private var graphSize: CGFloat = 300
-    private let baseScale: Double = 100
+    // The oscillating preset (index 3) swings well past ±1.5 in y, so it needs
+    // a wider view than the other presets to keep its peaks from being cropped.
+    private var baseScale: Double { selectedFunction == 3 ? 65 : 100 }
     private var scale: Double { baseScale * Double(graphSize) / 300 }
     
     init(_ selectedFunction: Int = 1) {
@@ -225,5 +227,4 @@ struct FixedPointView: View {
 
 #Preview {
     FixedPointView()
-        .preferredColorScheme(.dark)
 }

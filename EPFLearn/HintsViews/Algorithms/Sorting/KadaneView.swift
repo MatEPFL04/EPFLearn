@@ -71,7 +71,7 @@ struct KadaneBars: View {
             var axis = Path()
             axis.move(to: CGPoint(x: 0, y: baseline))
             axis.addLine(to: CGPoint(x: size.width, y: baseline))
-            ctx.stroke(axis, with: .color(.white.opacity(0.2)), lineWidth: 1)
+            ctx.stroke(axis, with: .color(.primary.opacity(0.2)), lineWidth: 1)
 
             for (i, elm) in a.enumerated() {
                 let x = delta * (CGFloat(i) + 0.5)
@@ -146,7 +146,7 @@ struct KadaneView: View {
             HStack {
                 Text("Kadane").font(.caption).bold()
                 Spacer()
-                Text("somme : \(frame.curSum)   record : \(frame.bestSum)")
+                Text("sum: \(frame.curSum)   best: \(frame.bestSum)")
                     .font(.system(.caption2, design: .monospaced))
                     .foregroundStyle(.secondary)
                     .contentTransition(.numericText())
@@ -155,22 +155,22 @@ struct KadaneView: View {
             KadaneBars(frame: frame)
                 .frame(height: 200)
                 .padding(.vertical, 6)
-                .background(Color.black)
+                .background(Color(.secondarySystemBackground))
                 .clipShape(RoundedRectangle(cornerRadius: 12))
                 .overlay(RoundedRectangle(cornerRadius: 12).stroke(.gray.opacity(0.2)))
 
             if maxStep > 0 {
                 VStack(spacing: 4) {
                     Slider(value: $step, in: 0...Double(maxStep), step: 1)
-                    Text("Étape \(Int(step)) / \(maxStep)")
+                    Text("Step \(Int(step)) / \(maxStep)")
                         .font(.system(.caption2, design: .monospaced))
                         .foregroundStyle(.secondary)
                 }
             }
 
             HStack(spacing: 12) {
-                Button("Nouveau") { reset() }.buttonStyle(.bordered)
-                Button("Lancer") { run() }.buttonStyle(.borderedProminent)
+                Button("New") { reset() }.buttonStyle(.bordered)
+                Button("Run") { run() }.buttonStyle(.borderedProminent)
             }
 
             Picker("Shape", selection: $shape) {
@@ -179,7 +179,7 @@ struct KadaneView: View {
             .pickerStyle(.menu)
             .onChange(of: shape) { reset() }
 
-            Text("Éléments : \(n)")
+            Text("Elements: \(n)")
                 .font(.system(.caption2, design: .monospaced))
                 .foregroundStyle(.secondary)
             Slider(
@@ -188,7 +188,7 @@ struct KadaneView: View {
             )
             .onChange(of: n) { reset() }
             if shape == .random {
-                Text("Offset C : \(Int(offset))")
+                Text("Offset C: \(Int(offset))")
                     .font(.system(.caption2, design: .monospaced))
                     .foregroundStyle(.secondary)
                 Slider(value: $offset, in: -10...10, step: 1)

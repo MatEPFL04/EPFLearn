@@ -29,20 +29,19 @@ struct ForLoopView: View {
         let sum: Int?
         let cond: Bool?
         let bodyHot: Bool
-        let note: String?
     }
 
     private let frames: [Frame] = [
-        Frame(line: -1, i: nil, sum: nil, cond: nil,  bodyHot: false, note: nil),
-        Frame(line: 0,  i: nil, sum: 0,   cond: nil,  bodyHot: false, note: "sum starts at 0"),
-        Frame(line: 1,  i: 1,   sum: 0,   cond: true, bodyHot: false, note: "i = 1, check 1 <= 5"),
-        Frame(line: 2,  i: 1,   sum: 1,   cond: nil,  bodyHot: true,  note: "sum += 1  ->  1"),
-        Frame(line: 1,  i: 3,   sum: 1,   cond: true, bodyHot: false, note: "i += 2 -> 3, check 3 <= 5"),
-        Frame(line: 2,  i: 3,   sum: 4,   cond: nil,  bodyHot: true,  note: "sum += 3  ->  4"),
-        Frame(line: 1,  i: 5,   sum: 4,   cond: true, bodyHot: false, note: "i += 2 -> 5, check 5 <= 5"),
-        Frame(line: 2,  i: 5,   sum: 9,   cond: nil,  bodyHot: true,  note: "sum += 5  ->  9"),
-        Frame(line: 1,  i: 7,   sum: 9,   cond: false,bodyHot: false, note: "i += 2 -> 7, check 7 <= 5: exit"),
-        Frame(line: 4,  i: 7,   sum: 9,   cond: nil,  bodyHot: false, note: "print(sum) -> 9")
+        Frame(line: -1, i: nil, sum: nil, cond: nil,  bodyHot: false),
+        Frame(line: 0,  i: nil, sum: 0,   cond: nil,  bodyHot: false),
+        Frame(line: 1,  i: 1,   sum: 0,   cond: true, bodyHot: false),
+        Frame(line: 2,  i: 1,   sum: 1,   cond: nil,  bodyHot: true),
+        Frame(line: 1,  i: 3,   sum: 1,   cond: true, bodyHot: false),
+        Frame(line: 2,  i: 3,   sum: 4,   cond: nil,  bodyHot: true),
+        Frame(line: 1,  i: 5,   sum: 4,   cond: true, bodyHot: false),
+        Frame(line: 2,  i: 5,   sum: 9,   cond: nil,  bodyHot: true),
+        Frame(line: 1,  i: 7,   sum: 9,   cond: false,bodyHot: false),
+        Frame(line: 4,  i: 7,   sum: 9,   cond: nil,  bodyHot: false)
     ]
 
     private var total: Int { frames.count - 1 }
@@ -53,21 +52,20 @@ struct ForLoopView: View {
     private var bodiesDone: Int { [3, 5, 7].filter { $0 <= step }.count }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 10) {
-                PBHeader("For Loop")
+        VStack(alignment: .leading, spacing: 10) {
+            PBHeader("For Loop")
 
-                PBAdaptive {
-                    stage
-                } code: {
-                    PBCodePane(lines: paneLines, current: fr.line, accent: .green)
-                        .pbViewport()
-                }
-
-                PBStepper(step: $step, total: total, accent: .green, playing: $playing)
+            PBAdaptive {
+                stage
+            } code: {
+                PBCodePane(lines: paneLines, current: fr.line, accent: .green)
+                    .pbViewport()
             }
-            .padding(14)
+
+            PBStepper(step: $step, total: total, accent: .green, playing: $playing)
         }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .top)
         .background(Color(.systemGroupedBackground))
         .onReceive(timer) { _ in
             guard playing else { return }
@@ -89,7 +87,7 @@ struct ForLoopView: View {
     // MARK: - Stage: displayed variables
 
     private var stage: some View {
-        VStack(spacing: 18) {
+        VStack(spacing: 12) {
             HStack(spacing: 16) {
                 varBox(name: "i", value: fr.i, color: .cyan,
                        hot: fr.line == 1)
@@ -99,12 +97,9 @@ struct ForLoopView: View {
 
             history
         }
-        .padding(20)
-        .frame(minHeight: 210, alignment: .top)
+        .padding(16)
+        .frame(minHeight: 175, alignment: .top)
         .pbViewport()
-        .overlay(alignment: .bottomLeading) {
-            if let note = fr.note { PBNote(text: note).padding(9) }
-        }
         .animation(.spring(duration: 0.3), value: step)
     }
 
@@ -115,7 +110,7 @@ struct ForLoopView: View {
                 .foregroundColor(color)
             Text(value.map(String.init) ?? "·")
                 .font(.system(size: 40, weight: .black, design: .monospaced))
-                .foregroundColor(value == nil ? .white.opacity(0.2) : .white)
+                .foregroundColor(value == nil ? .primary.opacity(0.2) : .primary)
                 .contentTransition(.numericText())
                 .frame(width: 108, height: 76)
                 .background(RoundedRectangle(cornerRadius: 12)
@@ -132,26 +127,26 @@ struct ForLoopView: View {
         VStack(alignment: .leading, spacing: 6) {
             Text("SUM AFTER EACH PASS")
                 .font(.system(size: 8, weight: .bold)).tracking(0.8)
-                .foregroundColor(.white.opacity(0.35))
+                .foregroundColor(.primary.opacity(0.35))
             HStack(spacing: 8) {
                 ForEach(0..<iters.count, id: \.self) { k in
                     let done = k < bodiesDone
                     HStack(spacing: 5) {
                         Text("i=\(iters[k].i)")
                             .font(.system(size: 11, weight: .semibold, design: .monospaced))
-                            .foregroundColor(done ? .cyan : .white.opacity(0.25))
+                            .foregroundColor(done ? .cyan : .primary.opacity(0.25))
                         Image(systemName: "arrow.right")
                             .font(.system(size: 8, weight: .bold))
-                            .foregroundColor(.white.opacity(done ? 0.4 : 0.15))
+                            .foregroundColor(.primary.opacity(done ? 0.4 : 0.15))
                         Text("\(iters[k].sum)")
                             .font(.system(size: 12, weight: .bold, design: .monospaced))
-                            .foregroundColor(done ? .green : .white.opacity(0.25))
+                            .foregroundColor(done ? .green : .primary.opacity(0.25))
                     }
                     .padding(.horizontal, 9).padding(.vertical, 6)
                     .background(RoundedRectangle(cornerRadius: 9)
-                        .fill(done ? Color.green.opacity(0.12) : Color.white.opacity(0.04)))
+                        .fill(done ? Color.green.opacity(0.12) : Color.primary.opacity(0.04)))
                     .overlay(RoundedRectangle(cornerRadius: 9)
-                        .strokeBorder(done ? Color.green.opacity(0.35) : .white.opacity(0.08),
+                        .strokeBorder(done ? Color.green.opacity(0.35) : .primary.opacity(0.08),
                                       lineWidth: 1))
                 }
                 Spacer(minLength: 0)

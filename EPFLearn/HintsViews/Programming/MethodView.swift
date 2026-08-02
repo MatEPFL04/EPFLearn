@@ -28,13 +28,13 @@ struct FunctionView: View {
     private let frames: [Frame] = [
         Frame(line: -1, note: nil),
         Frame(line: 6, note: nil),
-        Frame(line: 7, note: "twice(a) is called - about to enter the function"),
+        Frame(line: 7, note: "twice(a) is called, about to enter the function"),
         Frame(line: 0, note: "enter: parameter a is created and gets a copy of 7"),
         Frame(line: 1, note: "a = a * 2 -> 14  (the parameter, not caller's a)"),
         Frame(line: 2, note: "a = a + 100 -> 114"),
         Frame(line: 3, note: "return sends 114 back"),
         Frame(line: 7, note: "now b receives it: b = 114 ; caller's a is still 7"),
-        Frame(line: -1, note: "same name, different boxes - caller untouched")
+        Frame(line: -1, note: "same name, different boxes: caller untouched")
     ]
 
     private var total: Int { frames.count - 1 }
@@ -57,31 +57,30 @@ struct FunctionView: View {
     private var callerSteady: Bool { (4...6).contains(step) }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 10) {
-                PBHeader("Functions")
+        VStack(alignment: .leading, spacing: 10) {
+            PBHeader("Functions")
 
-                PBAdaptive {
-                    stage
-                } code: {
-                    PBCodePane(lines: code.map { PBCodePane.Line(code: $0) },
-                               current: fr.line, accent: PB.num)
-                        .pbViewport()
-                }
-
-                PBStepper(step: $step, total: total, accent: PB.num)
+            PBAdaptive {
+                stage
+            } code: {
+                PBCodePane(lines: code.map { PBCodePane.Line(code: $0) },
+                           current: fr.line, accent: PB.num)
+                    .pbViewport()
             }
-            .padding(14)
+
+            PBStepper(step: $step, total: total, accent: PB.num)
         }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .top)
         .background(Color(.systemGroupedBackground))
     }
 
     private var stage: some View {
         GeometryReader { geo in
             let w = geo.size.width
-            let aP = CGPoint(x: w * 0.28, y: 58)
-            let bP = CGPoint(x: w * 0.66, y: 58)
-            let xP = CGPoint(x: w * 0.47, y: 178)
+            let aP = CGPoint(x: w * 0.28, y: 38)
+            let bP = CGPoint(x: w * 0.66, y: 38)
+            let xP = CGPoint(x: w * 0.47, y: 166)
 
             ZStack {
                 RoundedRectangle(cornerRadius: 12)
@@ -89,13 +88,13 @@ struct FunctionView: View {
                                   style: StrokeStyle(lineWidth: 1.2, dash: [5]))
                     .background(RoundedRectangle(cornerRadius: 12)
                         .fill(PB.num.opacity(paramAlive ? 0.05 : 0.015)))
-                    .frame(width: w * 0.64, height: 104)
-                    .position(x: w * 0.47, y: 174)
+                    .frame(width: w * 0.64, height: 100)
+                    .position(x: w * 0.47, y: 166)
 
                 Text("int twice(int a)")
                     .font(.system(size: 10, weight: .semibold, design: .monospaced))
                     .foregroundColor(PB.num.opacity(paramAlive ? 0.9 : 0.35))
-                    .position(x: w * 0.47, y: 136)
+                    .position(x: w * 0.47, y: 130)
 
                 Canvas { ctx, _ in
                     if copyArrow {
@@ -129,19 +128,10 @@ struct FunctionView: View {
             }
             .animation(.spring(duration: 0.3), value: step)
         }
-        .frame(height: 244)
+        .frame(height: 232)
         .pbViewport()
         .overlay(alignment: .bottomLeading) {
             if let note = fr.note { PBNote(text: note).padding(9) }
-        }
-        .overlay(alignment: .topTrailing) {
-            if step >= 7 {
-                HStack(spacing: 5) {
-                    PBChip(label: "a", value: "7", color: .cyan)
-                    PBChip(label: "b", value: "114", color: .green, hot: true)
-                }
-                .padding(9)
-            }
         }
     }
 
@@ -152,11 +142,11 @@ struct FunctionView: View {
                 Text(name).font(.system(size: 11, weight: .bold, design: .monospaced))
                     .foregroundColor(color)
                 Text(scope).font(.system(size: 8, design: .monospaced))
-                    .foregroundColor(.white.opacity(0.3))
+                    .foregroundColor(.primary.opacity(0.3))
             }
             Text(value.map(String.init) ?? "·")
                 .font(.system(size: 19, weight: .bold, design: .monospaced))
-                .foregroundColor(value == nil ? .white.opacity(0.2) : .white)
+                .foregroundColor(value == nil ? .primary.opacity(0.2) : .primary)
                 .contentTransition(.numericText())
                 .frame(width: 62, height: 40)
                 .background(RoundedRectangle(cornerRadius: 9).fill(color.opacity(value == nil ? 0.05 : 0.16)))
@@ -178,7 +168,7 @@ struct FunctionView: View {
         Text(text).font(.system(size: 10, weight: .bold, design: .monospaced))
             .foregroundColor(color)
             .padding(.horizontal, 7).padding(.vertical, 3)
-            .background(Capsule().fill(.black.opacity(0.5)))
+            .background(.thinMaterial, in: Capsule())
             .overlay(Capsule().strokeBorder(color.opacity(0.6), lineWidth: 1))
     }
 

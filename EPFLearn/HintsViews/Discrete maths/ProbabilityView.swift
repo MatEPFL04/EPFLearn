@@ -17,10 +17,10 @@ struct ProbabilityView: View {
 
         var title: String {
             switch self {
-            case .coin:    return "Pièce"
-            case .die:     return "Dé"
-            case .twoDice: return "2 dés"
-            case .cards:   return "Couleurs"
+            case .coin:    return "Coin"
+            case .die:     return "Die"
+            case .twoDice: return "2 dice"
+            case .cards:   return "Suits"
             }
         }
 

@@ -37,14 +37,14 @@ struct GraphLab: View {
     var body: some View {
         VStack(spacing: 14) {
             Text(lockedAlgo?.rawValue ?? algo.rawValue)
-                .font(.headline).foregroundColor(.white)
+                .font(.headline).foregroundColor(.primary)
 
             GeometryReader { proxy in
                 ZStack {
-                    Color.black
+                    Color(.secondarySystemBackground)
 
                     ForEach(edges.indices, id: \.self) { i in
-                        edges[i].stroke(edges[i].highlighted ? .cyan : .white.opacity(0.3),
+                        edges[i].stroke(edges[i].highlighted ? .cyan : .primary.opacity(0.3),
                                         lineWidth: edges[i].highlighted ? 3 : 1.5)
                     }
                     ForEach(vertices) { $0 }
@@ -66,18 +66,18 @@ struct GraphLab: View {
             }
             .frame(height: 300)  // ← HAUTEUR FIXE POUR LE GEOMETRYREADER
             .clipShape(RoundedRectangle(cornerRadius: 16))
-            .overlay(RoundedRectangle(cornerRadius: 16).stroke(.white.opacity(0.1)))
+            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.primary.opacity(0.1)))
 
             // Réglages
             VStack(spacing: 10) {
-                sliderRow(title: "Sommets", value: "\(n)") {
+                sliderRow(title: "Vertices", value: "\(n)") {
                     Slider(value: Binding(
                         get: { Double(n) },
                         set: { n = Int($0); if start >= n { start = n - 1 }; generate() }
                     ), in: Double(nRange.lowerBound)...Double(nRange.upperBound), step: 1)
                 }
 
-                sliderRow(title: "Départ", value: "\(start)") {
+                sliderRow(title: "Start", value: "\(start)") {
                     Slider(value: Binding(
                         get: { Double(start) },
                         set: { start = Int($0); reset() }
@@ -85,8 +85,8 @@ struct GraphLab: View {
                     .disabled(n <= 1)
                 }
 
-                Toggle("Graphe connexe", isOn: $connected)
-                    .tint(.cyan).foregroundColor(.white)
+                Toggle("Connected graph", isOn: $connected)
+                    .tint(.cyan).foregroundColor(.primary)
                     .onChange(of: connected) { _ in generate() }
             }
 
@@ -99,21 +99,20 @@ struct GraphLab: View {
             }
 
             HStack(spacing: 20) {
-                Button("Nouveau") { generate() }.buttonStyle(.bordered)
-                Button("Lancer") { run() }.buttonStyle(.borderedProminent).disabled(running)
+                Button("New") { generate() }.buttonStyle(.bordered)
+                Button("Run") { run() }.buttonStyle(.borderedProminent).disabled(running)
             }
         }
         .padding()
-        .background(Color.black.ignoresSafeArea())
-        .preferredColorScheme(.dark)
+        .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .onReceive(timer) { _ in tick() }
     }
 
-    // Ligne "titre … valeur" + slider, pour rester épuré
+    // Title + value + slider, one row, kept minimal
     @ViewBuilder
     private func sliderRow<S: View>(title: String, value: String, @ViewBuilder slider: () -> S) -> some View {
         HStack(spacing: 10) {
-            Text(title).font(.caption).foregroundColor(.white).frame(width: 64, alignment: .leading)
+            Text(title).font(.caption).foregroundColor(.primary).frame(width: 64, alignment: .leading)
             slider()
             Text(value).font(.caption.monospaced()).foregroundColor(.cyan).frame(width: 26, alignment: .trailing)
         }
@@ -187,5 +186,5 @@ struct DFSView: View {
 
 // MARK: - Previews
 
-#Preview("BFS – connexe") { BFSView(n: 6, connected: true) }
-#Preview("DFS – non connexe") { DFSView(n: 6, connected: false) }
+#Preview("BFS - connexe") { BFSView(n: 6, connected: true) }
+#Preview("DFS - non connexe") { DFSView(n: 6, connected: false) }

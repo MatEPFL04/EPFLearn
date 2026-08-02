@@ -48,7 +48,7 @@ extension Question {
                 "u and v are siblings, neither is an ancestor of the other"
             ],
             correctIndex: 0,
-            explanation: "By the parenthesis theorem, the intervals [d, f] are either disjoint or nested. Here [d[v], f[v]] sits strictly inside [d[u], f[u]], meaning v was fully discovered and finished while u was still on the stack — so v is a descendant of u.",
+            explanation: "By the parenthesis theorem, the intervals [d, f] are either disjoint or nested. Here [d[v], f[v]] sits strictly inside [d[u], f[u]], meaning v was fully discovered and finished while u was still on the stack, so v is a descendant of u.",
             visualization: .DFS
         ),
         Question(
@@ -93,7 +93,7 @@ extension Question {
                 "It always connects a vertex to its direct parent"
             ],
             correctIndex: 1,
-            explanation: "If level(v) ≥ level(u) + 2, then when u was dequeued, v would still be undiscovered and would be reached through u, making it a tree edge at level(u)+1 — a contradiction. So in an undirected BFS, non-tree edges only link vertices at equal or adjacent levels.",
+            explanation: "If level(v) ≥ level(u) + 2, then when u was dequeued, v would still be undiscovered and would be reached through u, making it a tree edge at level(u)+1, a contradiction. So in an undirected BFS, non-tree edges only link vertices at equal or adjacent levels.",
             visualization: .BFS
         ),
         Question(
@@ -121,7 +121,7 @@ extension Question {
                 "m(s) is smallest exactly for the source with the tallest BFS tree (most tree edges)"
             ],
             correctIndex: 0,
-            explanation: "Moving the source to an adjacent vertex shifts every distance by at most 1 (triangle inequality), so the deepest level can change by at most 1 between neighbors — check it by running two adjacent sources. The degree-based and 'all distinct' claims are false: a hub can still be far from one branch, and many sources often share the same m(s).",
+            explanation: "Moving the source to an adjacent vertex shifts every distance by at most 1 (triangle inequality), so the deepest level can change by at most 1 between neighbors; check it by running two adjacent sources. The degree-based and 'all distinct' claims are false: a hub can still be far from one branch, and many sources often share the same m(s).",
             visualization: .BFS
         )
     ]
@@ -138,7 +138,7 @@ extension Question {
                 "Because Prim sorts all edges first, like Kruskal"
             ],
             correctIndex: 1,
-            explanation: "The cut property states that for any partition of the vertices, the lightest edge crossing it is in some MST. Prim's cut is {tree} vs {rest}, and it always grabs the lightest crossing edge — hence always a safe edge. Note it need NOT be the globally smallest remaining edge, only the smallest crossing THIS cut.",
+            explanation: "The cut property states that for any partition of the vertices, the lightest edge crossing it is in some MST. Prim's cut is {tree} vs {rest}, and it always grabs the lightest crossing edge, hence always a safe edge. Note it need not be the globally smallest remaining edge, only the smallest crossing this cut.",
             visualization: .prim
         ),
         Question(
@@ -221,7 +221,7 @@ extension Question {
             options: [
                 "A minimum spanning forest with exactly V − (number of original components) edges",
                 "A disjoint forest containing exactly (number of original components + 1) trees",
-                "Nothing — stopping early triggers an error",
+                "Nothing: stopping early triggers an error",
                 "A single tree with exactly V − 1 edges anyway"
             ],
             correctIndex: 1,
@@ -256,7 +256,7 @@ extension Question {
                 "It works fine; only negative cycles break it"
             ],
             correctIndex: 1,
-            explanation: "Dijkstra's correctness relies on the assumption that extracting the minimum-tentative-distance vertex makes that distance final — true only with non-negative weights. A negative edge discovered later could shorten an already-settled vertex, but Dijkstra never reopens it, so the answer can be wrong even without a negative cycle. Bellman-Ford handles this correctly.",
+            explanation: "Dijkstra's correctness relies on the assumption that extracting the minimum-tentative-distance vertex makes that distance final, which is true only with non-negative weights. A negative edge discovered later could shorten an already-settled vertex, but Dijkstra never reopens it, so the answer can be wrong even without a negative cycle. Bellman-Ford handles this correctly.",
             visualization: .djikistra
         ),
         Question(
@@ -270,7 +270,7 @@ extension Question {
                 "It's final only if u is adjacent to the source"
             ],
             correctIndex: 0,
-            explanation: "With non-negative weights, when u is extracted as the vertex with minimum tentative distance, that distance is already optimal: any other path to u would have to pass through a not-yet-settled vertex whose distance is ≥ dist[u], plus a non-negative tail — so it can't be shorter. That's exactly why settled vertices are never reopened.",
+            explanation: "With non-negative weights, when u is extracted as the vertex with minimum tentative distance, that distance is already optimal: any other path to u would have to pass through a not-yet-settled vertex whose distance is ≥ dist[u], plus a non-negative tail, so it can't be shorter. That's exactly why settled vertices are never reopened.",
             visualization: .djikistra
         ),
         Question(
@@ -279,7 +279,7 @@ extension Question {
             hint: "Distances are from the source. Is the tree a property of the graph or of the source?",
             options: [
                 "Stays the same regardless of the source",
-                "Generally changes — it is rooted at the chosen source",
+                "Generally changes, since it is rooted at the chosen source",
                 "Always has the same edges as the MST",
                 "Always has height 1"
             ],
@@ -348,16 +348,16 @@ extension Question {
         ),
         Question(
             subject: .graphs,
-            text: "During Bellman-Ford, edges are relaxed in a fixed order each pass. Does that ORDER affect the final distances?",
+            text: "During Bellman-Ford, edges are relaxed in a fixed order each pass. Does that order affect the final distances?",
             hint: "Could a lucky order finish in fewer passes? Could it change the final numbers?",
             options: [
-                "Yes — a bad order gives wrong distances",
-                "No — the final distances are always the same; only how many passes are actually needed can differ",
-                "Yes — the order changes which vertices are reachable",
+                "Yes: a bad order gives wrong distances",
+                "No: the final distances are always the same; only how many passes are actually needed can differ",
+                "Yes: the order changes which vertices are reachable",
                 "Only if the graph has negative weights"
             ],
             correctIndex: 1,
-            explanation: "After V − 1 full passes the distances are correct regardless of edge order — order never changes the final answer. A favorable order may let distances converge in fewer passes (early exit when a pass makes no change), but the converged values are identical.",
+            explanation: "After V − 1 full passes the distances are correct regardless of edge order; order never changes the final answer. A favorable order may let distances converge in fewer passes (early exit when a pass makes no change), but the converged values are identical.",
             visualization: .bellmanford
         ),
     ]
@@ -375,7 +375,7 @@ extension Question {
                 "It means one of them is the source"
             ],
             correctIndex: 1,
-            explanation: "Two vertices in the same layer have no edge constraining their relative order, so swapping them yields another valid topological order. Spotting any such pair on the layout proves the order isn't unique — no need to regenerate the graph.",
+            explanation: "Two vertices in the same layer have no edge constraining their relative order, so swapping them yields another valid topological order. Spotting any such pair on the layout proves the order isn't unique, with no need to regenerate the graph.",
             visualization: .topologicalorder
         ),
         Question(

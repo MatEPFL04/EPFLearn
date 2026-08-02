@@ -2,7 +2,7 @@
 //  TrigonometricView.swift
 //  EPFLearn
 //
-//  Unit circle — cos, sin, tan. Standalone view, no complex mode.
+//  Unit circle - cos, sin, tan. Standalone view, no complex mode.
 //
 //  Fixed framing. The tangent is drawn to its true value and exits the
 //  frame: it's the Canvas clip that cuts it, not a ceiling. The segment
@@ -22,7 +22,7 @@ struct TrigoView: View {
     private var sinT: Double { sin(theta) }
 
     /// Low threshold: beyond this, the Path coordinates become absurd without
-    /// adding anything — the line is already off-screen.
+    /// adding anything - the line is already off-screen.
     private var tanT: Double? { abs(cosT) < 0.02 ? nil : sinT / cosT }
 
     var body: some View {
@@ -96,7 +96,7 @@ struct TrigoView: View {
     private var panel: some View {
         VStack(alignment: .leading, spacing: 2) {
             Text("Unit circle").font(.headline)
-            Text("Drag the point — it snaps to notable angles.")
+            Text("Drag the point: it snaps to notable angles.")
                 .font(.caption).foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
