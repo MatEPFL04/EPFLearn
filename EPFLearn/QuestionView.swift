@@ -20,9 +20,7 @@ struct QuestionView: View {
                 // Contenu de la question
                 ScrollView {
                     VStack(alignment: .leading, spacing: 20) {
-                        Text(vm.currentQuestion.text)
-                            .font(.title3)
-                            .fontWeight(.medium)
+                        QuestionBodyText(text: vm.currentQuestion.text)
 
                         ForEach(Array(vm.currentQuestion.options.enumerated()), id: \.offset) { index, option in
                             OptionButton(

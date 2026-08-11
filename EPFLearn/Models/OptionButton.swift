@@ -24,16 +24,28 @@ struct OptionButton: View {
                 .padding()
                 .background(backgroundColor)
                 .clipShape(RoundedRectangle(cornerRadius: 10))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .strokeBorder(borderColor, lineWidth: 1)
+                )
         }
         .buttonStyle(.plain)
         .foregroundStyle(foregroundColor)
     }
-    
+
     var backgroundColor: Color {
            switch state {
-           case .idle: return Color(.systemBackground)
+           case .idle: return Color(.secondarySystemBackground)
            case .correct: return .green.opacity(0.15)
            case .wrong: return .red.opacity(0.15)
+           }
+       }
+
+       var borderColor: Color {
+           switch state {
+           case .idle: return Color.primary.opacity(0.15)
+           case .correct: return .green.opacity(0.4)
+           case .wrong: return .red.opacity(0.4)
            }
        }
 
