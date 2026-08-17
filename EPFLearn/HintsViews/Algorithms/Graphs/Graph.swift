@@ -59,154 +59,110 @@ struct Edge: Identifiable {
 
 enum Graph {
 
-    // Place `count` points bien répartis : grille (cellules ~carrées selon le
-    // ratio de la zone) + jitter borné dans chaque cellule, puis mélange.
-    // L'amplitude limitée du jitter garantit un écart minimum entre cellules
-    // voisines (plus de nœuds collés). Signature + contrat identiques.
-    private static func scatter(_ count: Int,
-                                xRange: ClosedRange<CGFloat>,
-                                yRange: ClosedRange<CGFloat>) -> [CGPoint] {
-        guard count > 0 else { return [] }
-        
-        // Protection contre les ranges invalides
-        guard xRange.lowerBound <= xRange.upperBound,
-              yRange.lowerBound <= yRange.upperBound,
-              xRange.lowerBound.isFinite, xRange.upperBound.isFinite,
-              yRange.lowerBound.isFinite, yRange.upperBound.isFinite else {
-            // Ranges invalides → grille simple centrée autour de (100, 100)
-            let side = sqrt(Double(count)).rounded(.up)
-            let spacing: CGFloat = 40
-            var pts: [CGPoint] = []
-            for i in 0..<count {
-                let row = Int(i) / Int(side)
-                let col = Int(i) % Int(side)
-                pts.append(CGPoint(x: 100 + CGFloat(col) * spacing,
-                                   y: 100 + CGFloat(row) * spacing))
-            }
-            pts.shuffle()
-            return pts
-        }
-        
-        let w = max(xRange.upperBound - xRange.lowerBound, 1)
-        let h = max(yRange.upperBound - yRange.lowerBound, 1)
-
-        // Cols proportionnels au ratio largeur/hauteur -> cellules quasi carrées.
-        let aspect = Double(w / h)
-        var cols: Int
-        var rows: Int
-        
-        if aspect.isFinite && aspect > 0 {
-            let colsCalc = (Double(count) * aspect).squareRoot().rounded()
-            cols = colsCalc.isFinite ? max(1, Int(colsCalc)) : max(1, Int(sqrt(Double(count))))
-            cols = min(cols, count)
-            rows = Int(ceil(Double(count) / Double(cols)))
-        } else {
-            // Fallback : grille carrée
-            cols = max(1, Int(ceil(sqrt(Double(count)))))
-            rows = cols
-        }
-
-        let cw = w / CGFloat(cols)
-        let ch = h / CGFloat(rows)
-        
-        // Protection finale contre les NaN dans les cellules
-        guard cw.isFinite && ch.isFinite && cw > 0 && ch > 0 else {
-            // Dernière ligne de défense : grille uniforme simple
-            let side = sqrt(Double(count)).rounded(.up)
-            let stepX = w / max(1, CGFloat(side))
-            let stepY = h / max(1, CGFloat(side))
-            var pts: [CGPoint] = []
-            for i in 0..<count {
-                let row = CGFloat(i) / CGFloat(side)
-                let col = CGFloat(i).truncatingRemainder(dividingBy: CGFloat(side))
-                pts.append(CGPoint(x: xRange.lowerBound + col * stepX + stepX / 2,
-                                   y: yRange.lowerBound + row * stepY + stepY / 2))
-            }
-            pts.shuffle()
-            return pts
-        }
-
-        // Jitter centre +/-j : deux cellules adjacentes restent separees d'au
-        // moins (1 - 2j)*taille_cellule. j = 0.22 -> garde du desordre visuel
-        // tout en assurant ~0.56 cellule de marge.
-        let j: CGFloat = 0.22
-        func jitter() -> CGFloat { CGFloat.random(in: (0.5 - j)...(0.5 + j)) }
-
-        var cells: [CGPoint] = []
-        for r in 0..<rows {
-            for c in 0..<cols {
-                let x = xRange.lowerBound + (CGFloat(c) + jitter()) * cw
-                let y = yRange.lowerBound + (CGFloat(r) + jitter()) * ch
-                // Vérification finale avant d'ajouter le point
-                if x.isFinite && y.isFinite {
-                    cells.append(CGPoint(x: x, y: y))
-                }
-            }
-        }
-        cells.shuffle()
-        return Array(cells.prefix(count))
-    }
-
-    /// Génère un graphe. `connected == false` => deux composantes disjointes.
+    /// Builds a graph and lays it out so the drawing can be read.
+    ///
+    /// The old version scattered the vertices on a jittered grid and then
+    /// shuffled them, so a vertex's position said nothing about who it was
+    /// connected to: every edge was a random diagonal and, past a handful of
+    /// vertices, the circles sat almost on top of each other.
+    ///
+    /// Now the structure is built first and the vertices are placed on a ring
+    /// in breadth-first order, so neighbours end up side by side, the chords
+    /// stay short, and the spacing between two circles is fixed by the ring
+    /// rather than by chance. A disconnected graph gets one ring per component.
     static func generate(n: Int, extra: Int, connected: Bool = true,
                          in rect: CGRect) -> (vertices: [Vertex], edges: [Edge]) {
-        let pad: CGFloat = 24
-        let yRange = (rect.minY + pad)...(rect.maxY - pad)
+        guard n > 0, rect.width > 0, rect.height > 0 else { return ([], []) }
 
-        var pts: [CGPoint]
-        var edges: [Edge] = []
+        // 1. Structure, as index pairs. No self-loops, no repeated edge.
+        var pairs: [(Int, Int)] = []
+        var adj = [[Int]](repeating: [], count: n)
 
-        if connected || n < 2 {
-            pts = scatter(n, xRange: (rect.minX + pad)...(rect.maxX - pad), yRange: yRange)
-            if n > 1 {
-                for child in 1..<n {                  // arbre couvrant -> connexe
-                    let parent = Int.random(in: 0..<child)
-                    edges.append(Edge(from: parent, to: child, a: pts[parent], b: pts[child]))
-                }
-                for _ in 0..<extra {                  // arêtes en plus (cycles)
-                    let i = Int.random(in: 0..<n), j = (i + Int.random(in: 1..<n)) % n
-                    edges.append(Edge(from: i, to: j, a: pts[i], b: pts[j]))
-                }
-            }
-        } else {
-            // Deux groupes : [0, split) à gauche, [split, n) à droite.
-            let split = max(1, n / 2)
-            let mid = rect.midX
-            
-            // S'assurer que les ranges sont valides (lowerBound < upperBound)
-            let leftMin = rect.minX + pad
-            let leftMax = max(leftMin + 1, mid - pad)
-            let rightMin = max(leftMax + 1, mid + pad)
-            let rightMax = max(rightMin + 1, rect.maxX - pad)
-            
-            let left  = scatter(split,     xRange: leftMin...leftMax, yRange: yRange)
-            let right = scatter(n - split, xRange: rightMin...rightMax, yRange: yRange)
-            pts = left + right
+        func link(_ a: Int, _ b: Int) {
+            guard a != b, !adj[a].contains(b) else { return }
+            pairs.append((a, b))
+            adj[a].append(b)
+            adj[b].append(a)
+        }
 
-            func buildTree(_ range: Range<Int>) {
-                guard range.count > 1 else { return }
-                for child in (range.lowerBound + 1)..<range.upperBound {
-                    let parent = Int.random(in: range.lowerBound..<child)
-                    edges.append(Edge(from: parent, to: child, a: pts[parent], b: pts[child]))
-                }
-            }
-            buildTree(0..<split)
-            buildTree(split..<n)
-
-            // Arêtes en plus, mais UNIQUEMENT à l'intérieur d'un groupe
-            // (sinon on reconnecterait les deux composantes).
-            for _ in 0..<extra {
-                let range = Bool.random() ? 0..<split : split..<n
-                guard range.count > 1 else { continue }
-                let i = Int.random(in: range)
-                var j = Int.random(in: range)
-                if i == j { j = range.lowerBound + ((i - range.lowerBound + 1) % range.count) }
-                edges.append(Edge(from: i, to: j, a: pts[i], b: pts[j]))
+        // Two components need at least three vertices (an isolated one and a
+        // pair); below that the "connected" toggle has nothing to express.
+        let groups: [Range<Int>] = (connected || n < 3) ? [0..<n]
+                                                        : [0..<(n / 2), (n / 2)..<n]
+        for g in groups where g.count > 1 {
+            for child in (g.lowerBound + 1)..<g.upperBound {
+                link(Int.random(in: g.lowerBound..<child), child)   // spanning tree
             }
         }
 
-        let vertices = pts.enumerated().map { Vertex(id: $0.offset, pos: $0.element) }
+        // Extra edges close cycles, but never bridge two components.
+        var added = 0
+        var attempts = 0
+        while added < extra, attempts < 60 {
+            attempts += 1
+            guard let g = groups.randomElement(), g.count > 2 else { continue }
+            let before = pairs.count
+            link(Int.random(in: g), Int.random(in: g))
+            if pairs.count > before { added += 1 }
+        }
+
+        // 2. Layout: one ring per component, walked breadth-first.
+        var pos = [CGPoint](repeating: .zero, count: n)
+        let inset: CGFloat = 30
+        let boxes: [CGRect] = groups.count == 1
+            ? [rect.insetBy(dx: inset, dy: inset)]
+            : [CGRect(x: rect.minX, y: rect.minY, width: rect.width / 2, height: rect.height)
+                    .insetBy(dx: inset * 0.8, dy: inset),
+               CGRect(x: rect.midX, y: rect.minY, width: rect.width / 2, height: rect.height)
+                    .insetBy(dx: inset * 0.8, dy: inset)]
+
+        for (gi, g) in groups.enumerated() where !g.isEmpty {
+            let box = boxes[min(gi, boxes.count - 1)]
+            let centre = CGPoint(x: box.midX, y: box.midY)
+            // An ellipse, not a circle: a circle inscribed in a landscape canvas
+            // is capped by the height and wastes the width, which pushed the
+            // vertices closer together than they needed to be. Spreading them
+            // over the full width buys real distance between neighbours.
+            let rx = max(box.width / 2, 1)
+            let ry = max(box.height / 2, 1)
+            let order = breadthFirstOrder(of: g, adj: adj)
+
+            if order.count == 1 {
+                pos[order[0]] = centre
+                continue
+            }
+            for (k, v) in order.enumerated() {
+                // Start at the top and go clockwise; vertex 0 always sits there,
+                // which makes "start from 0" easy to follow across a rerun.
+                let angle = -CGFloat.pi / 2 + 2 * .pi * CGFloat(k) / CGFloat(order.count)
+                pos[v] = CGPoint(x: centre.x + rx * cos(angle),
+                                 y: centre.y + ry * sin(angle))
+            }
+        }
+
+        let vertices = (0..<n).map { Vertex(id: $0, pos: pos[$0]) }
+        let edges = pairs.map { Edge(from: $0.0, to: $0.1, a: pos[$0.0], b: pos[$0.1]) }
         return (vertices, edges)
+    }
+
+    /// Vertices of one component, in BFS order from its lowest index. Placing
+    /// the ring in this order is what keeps connected vertices near each other.
+    private static func breadthFirstOrder(of group: Range<Int>, adj: [[Int]]) -> [Int] {
+        var seen = Set<Int>()
+        var order: [Int] = []
+        for root in group where !seen.contains(root) {
+            var queue = [root]
+            seen.insert(root)
+            while !queue.isEmpty {
+                let u = queue.removeFirst()
+                order.append(u)
+                for v in adj[u] where group.contains(v) && !seen.contains(v) {
+                    seen.insert(v)
+                    queue.append(v)
+                }
+            }
+        }
+        return order
     }
 
     // Listes d'adjacence : [u] -> [v1, v2, ...]

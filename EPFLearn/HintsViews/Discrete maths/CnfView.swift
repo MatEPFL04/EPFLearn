@@ -8,34 +8,49 @@ struct CNFView: View {
     @State private var mode: Form = .cnf
     @State private var selected = 0
 
+    // p → q sits next to the four formulas it is usually compared with, so
+    // "equivalent or not" is settled by reading two tables, not by recall.
+    // The last two are deliberately on three variables: the table doubles in
+    // height, which is the point of "one row per assignment".
     private let formulas = [
         "p ↔ q",
         "p → q",
+        "¬p ∨ q",
+        "¬q → ¬p",
+        "¬(p ∧ ¬q)",
+        "q → p",
         "¬(p ∧ q)",
+        "¬p ∨ ¬q",
         "p ∨ ¬p",
-        "(p ∨ ¬q) ∧ (q ∨ ¬p)"
+        "p ∧ ¬p",
+        "(p ∨ ¬q) ∧ (q ∨ ¬p)",
+        "(p ∨ q) ∧ ¬r",
+        "(p ∧ q) ∨ (¬p ∧ r)"
     ]
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
+                VizHeader("Propositional Logic", subtitle: "Normal forms: a shape a formula can always be rewritten into.")
 
+                definitions
+
+                content
+
+                // Under the table, like every other picker in the app.
                 Picker("Form", selection: $mode) {
                     ForEach(Form.allCases, id: \.self) { Text($0.rawValue).tag($0) }
                 }
                 .pickerStyle(.segmented)
-
-                definitions
+                .labelsHidden()
 
                 Picker("Formula", selection: $selected) {
                     ForEach(Array(formulas.enumerated()), id: \.offset) { i, f in
                         Text(f).tag(i)
                     }
                 }
-                .pickerStyle(.wheel)
-                .frame(height: 120)
-
-                content
+                .pickerStyle(.menu)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
             .padding()
         }

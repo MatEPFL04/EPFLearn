@@ -20,6 +20,7 @@ struct SortingView: View {
 
     enum Shape: String, CaseIterable {
         case random       = "Random"
+        case sorted       = "Sorted"
         case reversed     = "Reversed"
         case almostSorted = "Almost sorted"
         case ksorted      = "k-sorted"
@@ -50,6 +51,8 @@ struct SortingView: View {
         switch shape {
         case .random:
             return (0..<n).map { _ in Int.random(in: 0...99) }
+        case .sorted:
+            return Array(0..<n)
         case .reversed:
             var a = Array(0..<n)
             for i in 0..<min(m, n) { a[i] = m - 1 - i }
@@ -91,14 +94,15 @@ struct SortingView: View {
     }
 
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 14) {
+            VizHeader("Sorting", subtitle: "How the work changes with the shape of the input.")
+
             panel
 
             if maxStep > 0 {
-                Slider(value: $step, in: 0...Double(maxStep), step: 1)
-                Text("Step \(Int(step)) / \(maxStep)")
-                    .font(.system(.caption2, design: .monospaced))
-                    .foregroundStyle(.secondary)
+                VizSlider(label: "Step", value: $step, range: 0...Double(maxStep),
+                          step: 1, accent: .cyan,
+                          valueText: "\(Int(step)) / \(maxStep)")
             } else {
                 Text("Choose an algorithm and run it!")
                     .font(.caption).foregroundStyle(.secondary)
@@ -109,7 +113,7 @@ struct SortingView: View {
                     Text(algorithm.rawValue).tag(algorithm)
                 }
             }
-            .pickerStyle(.segmented)
+            .pickerStyle(.menu)
             .labelsHidden()
             .onChange(of: algo) { frames = []; step = 0 }   // même tableau → on peut comparer
 
@@ -131,18 +135,15 @@ struct SortingView: View {
             .onChange(of: shape) { rebuild() }
 
             if shape == .reversed || shape == .rotated || shape == .ksorted {
-                Text(shape == .ksorted ? "k (max displacement) : \(Int(disorder))"
-                                       : "Disorder : \(Int(disorder))")
-                    .font(.system(.caption2, design: .monospaced))
-                    .foregroundStyle(.secondary)
-                Slider(value: $disorder, in: 0...Double(n), step: 1)
+                VizSlider(label: shape == .ksorted ? "k (max displacement)" : "Disorder",
+                          value: $disorder, range: 0...Double(n),
+                          step: 1, accent: .cyan, format: "%.0f")
                     .onChange(of: disorder) { rebuild() }
             }
 
-            Text("Number of elements : \(n)")
-                .font(.system(.caption2, design: .monospaced))
-                .foregroundStyle(.secondary)
-            Slider(value: Binding(get: { Double(n) }, set: { n = Int($0) }), in: 5...100, step: 1)
+            VizSlider(label: "Number of elements",
+                      intValue: Binding(get: { n }, set: { n = $0 }),
+                      range: 5...100, accent: .cyan)
                 .onChange(of: n) { rebuild() }
         }
         .padding()

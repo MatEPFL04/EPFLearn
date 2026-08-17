@@ -379,9 +379,9 @@ struct TaylorView: View {
     // MARK: Body
 
     var body: some View {
-        VStack(spacing: 14) {
+        VStack(spacing: 9) {
             
-            Text("Taylor Polynomials").font(.headline)
+            VizHeader("Taylor Polynomials", subtitle: "A polynomial matching the curve near one point.")
 
 
             plot
@@ -411,20 +411,15 @@ struct TaylorView: View {
             OrderSelector(order: $order, range: 1...6)
                 .frame(width: graphSize)
 
-            VStack(alignment: .leading, spacing: 4) {
-                HStack {
-                    Text("Centre a = \(centreLabel(center))")
-                    Spacer()
-                    Button("reset to 0") { center = 0 }
-                        .font(.caption2)
-                        .disabled(isCentred)
-                }
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                // No step: a continuous slider does not tick as it moves. The
-                // snapping is handled in the binding instead.
-                Slider(value: snappedCenter, in: centerRange)
-                    .tint(.orange)
+            // No step on the slider: a continuous slider does not tick as it
+            // moves. The snapping is handled in the binding instead.
+            HStack(spacing: 10) {
+                VizSlider(label: "Centre a", value: snappedCenter, range: centerRange,
+                          accent: .orange, valueText: centreLabel(center))
+                Button("reset") { center = 0 }
+                    .font(.caption2)
+                    .buttonStyle(.bordered)
+                    .disabled(isCentred)
             }
             .frame(width: graphSize)
         }

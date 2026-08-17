@@ -163,15 +163,17 @@ struct MatrixEditorView: View {
 
 // MARK: - Preset picker
 
-/// A reusable preset picker.
-/// ALWAYS positioned on the RIGHT in the control panel.
+/// A reusable preset picker, positioned on the right in the control panel.
+///
+/// A menu, like every other preset picker in the app: this used to be the one
+/// wheel picker in the whole project and it cost 80pt of height on its own.
 struct MatrixPresetPicker: View {
     @Binding var presetIndex: Int
     var presets: [MatrixPreset]
     var height: CGFloat = 88
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        VStack(alignment: .leading, spacing: 2) {
             Text("EXAMPLES")
                 .font(.system(size: 9, weight: .bold))
                 .tracking(0.7)
@@ -184,10 +186,8 @@ struct MatrixPresetPicker: View {
                         .tag(i)
                 }
             }
-            .pickerStyle(.wheel)
+            .pickerStyle(.menu)
             .labelsHidden()
-            .frame(height: height)
-            .clipped()
         }
     }
 }
@@ -231,24 +231,20 @@ struct MatrixControlPanel: View {
             .onChange(of: presetIndex) { onPresetChange() }
         }
         .padding(10)
-        .background(RoundedRectangle(cornerRadius: 13).fill(Color(.secondarySystemGroupedBackground)))
+        .background(RoundedRectangle(cornerRadius: 16).fill(Color(.secondarySystemGroupedBackground)))
     }
 }
 
 // MARK: - Shared 3D chrome
 
-/// Header used by every algebra view, so they all open the same way.
+/// Header used by every algebra view - the app-wide `VizHeader` under the name
+/// the algebra views already call it by.
 struct AlgebraHeader: View {
     let title: String
     let subtitle: String
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(title).font(.title3.bold())
-            Text(subtitle)
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-        }
+        VizHeader(title, subtitle: subtitle)
     }
 }
 
@@ -266,7 +262,9 @@ struct AlgebraViewport<HUD: View, Legend: View>: View {
 
     var distanceRange: ClosedRange<Double> = 4.5...16
     var home: (azimuth: Double, elevation: Double, distance: Double)
-    var height: CGFloat = 380
+    // 380 filled more than half a phone screen on its own and pushed the
+    // matrix and the controls below the fold.
+    var height: CGFloat = 300
     var accent: Color = .cyan
 
     let render: (GraphicsContext, CGSize) -> Void
@@ -355,21 +353,8 @@ struct MorphCard: View {
     var accent: Color = .cyan
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 0) {
-                Text("TRANSFORMATION")
-                    .font(.system(size: 9, weight: .bold))
-                    .tracking(0.7)
-                    .foregroundStyle(.secondary)
-                Spacer()
-                Text(readout)
-                    .font(.system(size: 10, weight: .heavy, design: .monospaced))
-                    .foregroundStyle(accent)
-            }
-            Slider(value: $morph, in: 0...1).tint(accent)
-        }
-        .padding(10)
-        .background(RoundedRectangle(cornerRadius: 13).fill(Color(.secondarySystemGroupedBackground)))
+        VizSlider(label: "Transformation", value: $morph, range: 0...1,
+                  accent: accent, valueText: readout)
     }
 
     private var readout: String {

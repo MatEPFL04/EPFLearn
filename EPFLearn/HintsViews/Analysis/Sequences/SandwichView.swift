@@ -19,14 +19,14 @@ private struct SqueezeCase: Identifiable {
 
 private let squeezeCases: [SqueezeCase] = [
     SqueezeCase(
-        id: 0, name: "sin(n²)/√n", boundLabel: "±1/√n",
-        middle: { sin(Double($0 * $0)) / sqrt(Double($0)) },
-        bound:  { 1 / sqrt(Double($0)) }
-    ),
-    SqueezeCase(
-        id: 1, name: "(−1)ⁿ/n", boundLabel: "±1/n",
+        id: 0, name: "(−1)ⁿ/n", boundLabel: "±1/n",
         middle: { ($0 % 2 == 0 ? 1.0 : -1.0) / Double($0) },
         bound:  { 1 / Double($0) }
+    ),
+    SqueezeCase(
+        id: 1, name: "sin(n²)/√n", boundLabel: "±1/√n",
+        middle: { sin(Double($0 * $0)) / sqrt(Double($0)) },
+        bound:  { 1 / sqrt(Double($0)) }
     ),
     SqueezeCase(
         id: 2, name: "cos(n)/n²", boundLabel: "±1/n²",
@@ -48,7 +48,7 @@ struct SandwichView: View {
         VStack(alignment: .leading, spacing: 12) {
 
             VStack(alignment: .leading, spacing: 2) {
-                Text("Squeeze Theorem").font(.headline)
+                VizHeader("Squeeze Theorem", subtitle: "Two bounds closing in force the middle to follow.")
                 Text("−\(c.boundLabel.dropFirst()) ≤ uₙ ≤ \(c.boundLabel.dropFirst())  with  uₙ = \(c.name)")
                     .font(.system(size: 12, design: .monospaced))
                     .foregroundStyle(.secondary)
@@ -72,14 +72,8 @@ struct SandwichView: View {
             legend
 
             HStack(spacing: 8) {
-                Text("n").font(.caption.bold()).foregroundStyle(SeqPalette.cursor).frame(width: 16)
-                Slider(value: .init(get: { Double(cursor) }, set: { cursor = Int($0) }),
-                       in: 1...Double(maxN), step: 1)
-                    .tint(SeqPalette.cursor)
-                Text("\(cursor)")
-                    .font(.system(.caption2, design: .monospaced))
-                    .foregroundStyle(.secondary)
-                    .frame(width: 30, alignment: .trailing)
+                VizSlider(label: "n", intValue: $cursor, range: 1...maxN,
+                          accent: SeqPalette.cursor)
             }
             .padding(.horizontal, 8)
 

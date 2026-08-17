@@ -1,215 +1,155 @@
 /// Interactive demonstration of the Pigeonhole Principle
 import SwiftUI
-import Combine
 
 struct PigeonholePrincipleView: View {
     @State private var pigeons: Int = 13
     @State private var holes: Int = 10
-    @State private var isAnimating = false
-    @State private var currentPigeonIndex = 0
-    @State private var distribution: [Int] = []
+    /// How many of the n items have been dropped in, scrubbed by the slider.
+    @State private var placed = 0
     @State private var showFormula = false
+
+    /// The fairest possible spread of the first `placed` items: even this one
+    /// cannot keep every hole below the bound, which is the whole point.
+    private var distribution: [Int] {
+        var d = Array(repeating: 0, count: holes)
+        for i in 0..<min(placed, pigeons) { d[i % holes] += 1 }
+        return d
+    }
     
     private var guaranteedMin: Int {
         Int(ceil(Double(pigeons) / Double(holes)))
     }
-    
+
+    /// The largest total that could still avoid the conclusion: if every hole
+    /// stopped one short of `guaranteedMin`, this is all the room there is.
+    private var capacityBelowBound: Int { holes * (guaranteedMin - 1) }
+
+    private var currentMax: Int { distribution.max() ?? 0 }
+
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-            // Header compact
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Pigeonhole Principle").font(.title.bold())
-                Text("⌈n/m⌉ = \(guaranteedMin) items minimum")
-                    .font(.system(.body, design: .monospaced))
-                    .foregroundStyle(.orange)
+        VStack(alignment: .leading, spacing: 12) {
+            VizHeader("Pigeonhole Principle",
+                      subtitle: "⌈\(pigeons)/\(holes)⌉ = \(guaranteedMin): some hole must hold at least \(guaranteedMin)",
+                      mono: true)
+
+            VStack(spacing: 6) {
+                VizSlider(label: "items  n",
+                          intValue: Binding(get: { pigeons },
+                                            set: { pigeons = $0; placed = min(placed, pigeons) }),
+                          range: 1...25, accent: .orange)
+                VizSlider(label: "holes  m", intValue: $holes, range: 1...12, accent: .orange)
             }
-            
-            // Contrôles inline compacts
-            HStack(spacing: 12) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Pigeons (n)").font(.caption.weight(.medium)).foregroundStyle(.secondary)
-                    HStack {
-                        Text("\(pigeons)")
-                            .font(.headline)
-                            .frame(minWidth: 35)
-                        Stepper("", value: $pigeons, in: 1...25)
-                            .labelsHidden()
-                    }
-                    .padding(8)
-                    .background(RoundedRectangle(cornerRadius: 8).fill(Color(.secondarySystemGroupedBackground)))
-                }
-                .onChange(of: pigeons) { _ in resetDistribution() }
-                
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Holes (m)").font(.caption.weight(.medium)).foregroundStyle(.secondary)
-                    HStack {
-                        Text("\(holes)")
-                            .font(.headline)
-                            .frame(minWidth: 35)
-                        Stepper("", value: $holes, in: 1...12)
-                            .labelsHidden()
-                    }
-                    .padding(8)
-                    .background(RoundedRectangle(cornerRadius: 8).fill(Color(.secondarySystemGroupedBackground)))
-                }
-                .onChange(of: holes) { _ in resetDistribution() }
-            }
-            
-            // Bouton d'animation
-            Button {
-                if isAnimating {
-                    stopAnimation()
-                } else {
-                    startAnimation()
-                }
-            } label: {
-                Label(isAnimating ? "Stop" : "Animate distribution", systemImage: isAnimating ? "stop.fill" : "play.fill")
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(.borderedProminent)
-            .tint(isAnimating ? .red : .orange)
-            .controlSize(.large)
-            .disabled(distribution.reduce(0, +) >= pigeons && !isAnimating)
-            
-            // Visualisation avec pigeons animés
-            VStack(alignment: .leading, spacing: 12) {
-                Text("Distribution").font(.headline)
-                
-                // Grille de trous avec compteur
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: min(holes, 4)), spacing: 10) {
-                    ForEach(0..<holes, id: \.self) { index in
-                        holeCard(index: index)
-                    }
+
+            // Le raisonnement, avant même de placer un pigeon : c'est lui qui
+            // rend le principe certain plutôt que probable.
+            argumentCard
+
+            StepSlider(label: "items placed",
+                       value: $placed,
+                       range: 0...pigeons,
+                       accent: .orange,
+                       valueText: "\(min(placed, pigeons)) / \(pigeons)")
+
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8),
+                                     count: holes <= 4 ? holes : (holes <= 9 ? 3 : 4)),
+                      spacing: 8) {
+                ForEach(0..<holes, id: \.self) { index in
+                    holeCard(index: index)
                 }
             }
-            .padding()
+            .padding(10)
+            .frame(maxWidth: .infinity)
             .background(RoundedRectangle(cornerRadius: 16).fill(Color(.secondarySystemGroupedBackground)))
-            
-            // Résultat
-            if !distribution.isEmpty, let maxCount = distribution.max(), maxCount > 0 {
-                VStack(spacing: 8) {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Guaranteed minimum")
-                                .font(.caption).foregroundStyle(.secondary)
-                            Text("\(guaranteedMin)")
-                                .font(.system(size: 32, weight: .bold))
-                                .foregroundStyle(.orange)
-                        }
-                        
-                        Spacer()
-                        
-                        VStack(alignment: .trailing, spacing: 4) {
-                            Text("Current max")
-                                .font(.caption).foregroundStyle(.secondary)
-                            Text("\(maxCount)")
-                                .font(.system(size: 32, weight: .bold))
-                                .foregroundStyle(maxCount >= guaranteedMin ? .green : .blue)
-                        }
-                    }
-                    
-                    if maxCount >= guaranteedMin {
-                        HStack {
-                            Image(systemName: "checkmark.circle.fill")
-                                .foregroundStyle(.green)
-                            Text("Principle verified!")
-                                .font(.callout.weight(.medium))
-                        }
-                        .transition(.scale.combined(with: .opacity))
-                    }
+
+            if currentMax > 0 {
+                HStack(spacing: 6) {
+                    Image(systemName: currentMax >= guaranteedMin ? "checkmark.circle.fill" : "circle.dashed")
+                        .foregroundStyle(currentMax >= guaranteedMin ? .green : .secondary)
+                    Text(currentMax >= guaranteedMin
+                         ? "Fullest hole holds \(currentMax): the bound is reached even by the fairest spread."
+                         : "Fullest hole holds \(currentMax) so far.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Spacer(minLength: 0)
                 }
-                .padding()
-                .background(RoundedRectangle(cornerRadius: 12).fill(Color.orange.opacity(0.08)))
             }
+
+            Spacer(minLength: 0)
         }
-        .padding(20)
-        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
         .background(Color(.systemGroupedBackground))
-        .onAppear {
-            resetDistribution()
-        }
     }
-    
+
+    /// Why the bound is a certainty and not a likelihood: try to keep every
+    /// hole below it and you simply run out of room.
+    private var argumentCard: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Why it cannot be avoided")
+                .font(.subheadline.weight(.semibold))
+
+            Text("Suppose every hole held at most \(guaranteedMin - 1).")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+
+            Text("\(holes) × \(guaranteedMin - 1) = \(capacityBelowBound)  \(capacityBelowBound < pigeons ? "<" : "≥")  \(pigeons)")
+                .font(.system(.callout, design: .monospaced).weight(.bold))
+                .foregroundStyle(capacityBelowBound < pigeons ? .orange : .secondary)
+
+            Text(capacityBelowBound < pigeons
+                 ? "There is not enough room for all \(pigeons), so at least one hole must reach \(guaranteedMin). No assumption is made about how the items are spread: this is a proof, not a probability."
+                 : "With so few items nothing is forced yet: any hole can stay at \(guaranteedMin - 1) or below.")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 12).fill(Color.orange.opacity(0.10)))
+        .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Color.orange.opacity(0.3)))
+    }
+
     private func holeCard(index: Int) -> some View {
         let count = distribution.indices.contains(index) ? distribution[index] : 0
         let isFull = count >= guaranteedMin
         
-        return VStack(spacing: 6) {
-            Text("#\(index + 1)")
-                .font(.caption2.weight(.bold))
+        // Items are stacked horizontally and capped: the count is the point,
+        // and a tall stack of birds is what made this view need scrolling.
+        return HStack(spacing: 5) {
+            Text("\(index + 1)")
+                .font(.system(size: 9, weight: .bold, design: .monospaced))
                 .foregroundStyle(.secondary)
-            
-            ZStack {
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(isFull ? Color.orange.opacity(0.15) : Color.blue.opacity(0.06))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .strokeBorder(isFull ? Color.orange : Color.gray.opacity(0.2), lineWidth: isFull ? 2 : 1)
-                    )
-                
-                VStack(spacing: 4) {
-                    // Pigeons empilés
-                    if count > 0 {
-                        VStack(spacing: -8) {
-                            ForEach(0..<min(count, 4), id: \.self) { index in
-                                Image(systemName: "bird.fill")
-                                    .font(.callout)
-                                    .foregroundStyle(isFull ? .orange : .blue)
-                            }
-                        }
-                        .transition(.scale.combined(with: .opacity))
-                    } else {
-                        Image(systemName: "tray")
-                            .font(.title3)
-                            .foregroundStyle(.gray.opacity(0.3))
-                    }
-                    
-                    Text("\(count)")
-                        .font(.headline.bold())
-                        .foregroundStyle(isFull ? .orange : (count > 0 ? .blue : .secondary))
-                        .contentTransition(.numericText())
+
+            HStack(spacing: -3) {
+                ForEach(0..<min(count, 3), id: \.self) { _ in
+                    Image(systemName: "bird.fill")
+                        .font(.system(size: 11))
+                        .foregroundStyle(isFull ? .orange : .blue)
+                }
+                if count == 0 {
+                    Image(systemName: "tray")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.gray.opacity(0.35))
                 }
             }
-            .frame(height: 90)
+
+            Spacer(minLength: 0)
+
+            Text("\(count)")
+                .font(.system(.subheadline, design: .rounded).bold())
+                .foregroundStyle(isFull ? .orange : (count > 0 ? .blue : .secondary))
+                .contentTransition(.numericText())
         }
+        .padding(.horizontal, 7)
+        .frame(height: 32)
+        .background(RoundedRectangle(cornerRadius: 9)
+            .fill(isFull ? Color.orange.opacity(0.15) : Color.blue.opacity(0.06)))
+        .overlay(RoundedRectangle(cornerRadius: 9)
+            .strokeBorder(isFull ? Color.orange : Color.gray.opacity(0.2), lineWidth: isFull ? 1.5 : 1))
         .animation(.spring(duration: 0.4), value: count)
     }
     
-    private func resetDistribution() {
-        stopAnimation()
-        distribution = Array(repeating: 0, count: holes)
-        currentPigeonIndex = 0
-    }
-    
-    private func startAnimation() {
-        isAnimating = true
-        animateNextPigeon()
-    }
-    
-    private func stopAnimation() {
-        isAnimating = false
-    }
-    
-    private func animateNextPigeon() {
-        guard isAnimating, currentPigeonIndex < pigeons else {
-            isAnimating = false
-            return
-        }
-        
-        withAnimation(.spring(duration: 0.4)) {
-            // Remplir séquentiellement: trouver le hole avec le minimum de pigeons
-            let minCount = distribution.min() ?? 0
-            let minIndex = distribution.firstIndex(of: minCount) ?? 0
-            
-            distribution[minIndex] += 1
-            currentPigeonIndex += 1
-        }
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            animateNextPigeon()
-        }
-    }
 }
  
 #Preview {

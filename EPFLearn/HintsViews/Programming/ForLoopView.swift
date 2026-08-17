@@ -2,157 +2,265 @@
 //  ForLoopView.swift
 //  EPFLearn
 //
-//  One idea: watch the loop's variables change on every executed line.
-//  init sets i, the condition is checked each pass, the body updates sum,
-//  and i += 2 advances - the two boxes tell the whole story.
+//  One idea: the highlighted line IS the story. The header line lights up on
+//  every check and every increment, the body line only when a pass happens.
+//
+//  In the nested mode the highlight bounces back to the inner header on each
+//  j++ and only occasionally up to the outer header: the inner loop spins,
+//  the outer one crawls.
 //
 
 import SwiftUI
-import Combine
 
 struct ForLoopView: View {
-    @State private var step = 0
-    @State private var playing = false
-    private let timer = Timer.publish(every: 0.7, on: .main, in: .common).autoconnect()
 
-    private let code = [
-        "int sum = 0;",
-        "for (int i = 1; i <= 5; i += 2) {",
-        "    sum += i;",
-        "}",
-        "print(sum);"
-    ]
-
-    private struct Frame {
-        let line: Int
-        let i: Int?
-        let sum: Int?
-        let cond: Bool?
-        let bodyHot: Bool
+    enum Mode: String, CaseIterable {
+        case single = "one loop"
+        case nested = "nested"
     }
 
-    private let frames: [Frame] = [
-        Frame(line: -1, i: nil, sum: nil, cond: nil,  bodyHot: false),
-        Frame(line: 0,  i: nil, sum: 0,   cond: nil,  bodyHot: false),
-        Frame(line: 1,  i: 1,   sum: 0,   cond: true, bodyHot: false),
-        Frame(line: 2,  i: 1,   sum: 1,   cond: nil,  bodyHot: true),
-        Frame(line: 1,  i: 3,   sum: 1,   cond: true, bodyHot: false),
-        Frame(line: 2,  i: 3,   sum: 4,   cond: nil,  bodyHot: true),
-        Frame(line: 1,  i: 5,   sum: 4,   cond: true, bodyHot: false),
-        Frame(line: 2,  i: 5,   sum: 9,   cond: nil,  bodyHot: true),
-        Frame(line: 1,  i: 7,   sum: 9,   cond: false,bodyHot: false),
-        Frame(line: 4,  i: 7,   sum: 9,   cond: nil,  bodyHot: false)
-    ]
+    @State private var mode: Mode = .single
+    @State private var step = 0
 
-    private var total: Int { frames.count - 1 }
-    private var fr: Frame { frames[min(step, total)] }
+    // for (int i = from; i < to; i += by)
+    @State private var from = 0
+    @State private var to = 4
+    @State private var by = 1
 
-    // Completed iterations, for the history strip.
-    private let iters: [(i: Int, sum: Int)] = [(1, 1), (3, 4), (5, 9)]
-    private var bodiesDone: Int { [3, 5, 7].filter { $0 <= step }.count }
+    @State private var outer = 2
+    @State private var inner = 3
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            PBHeader("For Loop")
+        VStack(alignment: .leading, spacing: 7) {
+            HStack {
+                PBHeader("For Loop")
+                Picker("", selection: $mode) {
+                    ForEach(Mode.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                }
+                .pickerStyle(.menu)
+                .labelsHidden()
+                .onChange(of: mode) { reset() }
+            }
+
+            if mode == .single {
+                VStack(spacing: 5) {
+                    PBScrub(label: "start i", value: $from, range: 0...8, accent: .cyan) { reset() }
+                    PBScrub(label: "run while i <", value: $to, range: 0...10, accent: .green) { reset() }
+                    PBScrub(label: "step i +=", value: $by, range: 1...4, accent: PB.num) { reset() }
+                }
+            } else {
+                VStack(spacing: 5) {
+                    PBScrub(label: "outer i <", value: $outer, range: 1...4, accent: .cyan) { reset() }
+                    PBScrub(label: "inner j <", value: $inner, range: 1...4, accent: PB.num) { reset() }
+                }
+            }
 
             PBAdaptive {
-                stage
+                mode == .single ? AnyView(singleStage) : AnyView(nestedStage)
             } code: {
-                PBCodePane(lines: paneLines, current: fr.line, accent: .green)
+                PBCodePane(lines: paneLines,
+                           current: mode == .single ? singleFrame.line : nestedFrame.line,
+                           accent: .green)
                     .pbViewport()
             }
 
-            PBStepper(step: $step, total: total, accent: .green, playing: $playing)
+            PBStepper(step: $step, total: total, accent: .green)
         }
-        .padding(14)
+        .padding(12)
         .frame(maxWidth: .infinity, alignment: .top)
         .background(Color(.systemGroupedBackground))
-        .onReceive(timer) { _ in
-            guard playing else { return }
-            if step < total { withAnimation(.spring(duration: 0.3)) { step += 1 } }
-            else { playing = false }
-        }
+    }
+
+    private func reset() { step = 0 }
+
+    private var total: Int {
+        mode == .single ? singleFrames.count - 1 : nestedFrames.count - 1
     }
 
     private var paneLines: [PBCodePane.Line] {
-        code.indices.map { idx in
-            var l = PBCodePane.Line(code: code[idx])
-            if idx == 1, let c = fr.cond {
-                l.badge = PBBadge(text: c ? "true" : "false", color: c ? .green : .pink)
+        if mode == .single {
+            return singleCode.indices.map { idx in
+                var l = PBCodePane.Line(code: singleCode[idx])
+                if idx == 1, let c = singleFrame.cond {
+                    l.badge = PBBadge(text: c ? "true" : "false", color: c ? .green : .pink)
+                }
+                return l
             }
+        }
+        let fr = nestedFrame
+        return nestedCode.indices.map { idx in
+            var l = PBCodePane.Line(code: nestedCode[idx])
+            if idx == 0, let i = fr.i { l.badge = PBBadge(text: "i=\(i)", color: .cyan) }
+            if idx == 1, let j = fr.j { l.badge = PBBadge(text: "j=\(j)", color: PB.num) }
             return l
         }
     }
 
-    // MARK: - Stage: displayed variables
+    // MARK: - One loop
 
-    private var stage: some View {
-        VStack(spacing: 12) {
-            HStack(spacing: 16) {
-                varBox(name: "i", value: fr.i, color: .cyan,
-                       hot: fr.line == 1)
-                varBox(name: "sum", value: fr.sum, color: .green,
-                       hot: fr.bodyHot)
+    private var singleCode: [String] {
+        ["int c = 0;",
+         "for (int i = \(from); i < \(to); i += \(by)) {",
+         "    c = c + 1;",
+         "}"]
+    }
+
+    private struct Frame {
+        let line: Int
+        let i: Int?
+        let cond: Bool?
+        let passes: Int
+        let note: String
+    }
+
+    /// Every check and every increment lands back on line 1, the header.
+    private var singleFrames: [Frame] {
+        var f: [Frame] = [Frame(line: -1, i: nil, cond: nil, passes: 0, note: "drag the step slider to run")]
+        f.append(Frame(line: 0, i: nil, cond: nil, passes: 0, note: "c = 0"))
+        var i = from, passes = 0, guardCount = 0
+        while guardCount < 40 {
+            guardCount += 1
+            let cond = i < to
+            f.append(Frame(line: 1, i: i, cond: cond, passes: passes,
+                           note: passes == 0 && !cond
+                             ? "\(i) < \(to) is false already: the body never runs"
+                             : "check \(i) < \(to) → \(cond)"))
+            if !cond { break }
+            passes += 1
+            f.append(Frame(line: 2, i: i, cond: nil, passes: passes, note: "pass \(passes)"))
+            i += by
+            f.append(Frame(line: 1, i: i, cond: nil, passes: passes,
+                           note: "back to the header: i += \(by) → \(i)"))
+        }
+        f.append(Frame(line: 3, i: i, cond: nil, passes: passes,
+                       note: "\(passes) pass\(passes == 1 ? "" : "es"), \(passes + 1) checks"))
+        return f
+    }
+
+    private var singleFrame: Frame { singleFrames[min(step, singleFrames.count - 1)] }
+
+    private var visitedIs: [Int] {
+        var out: [Int] = []
+        var i = from
+        while i < to, out.count < 40 { out.append(i); i += by }
+        return out
+    }
+
+    private var singleStage: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                PBChip(label: "i", value: singleFrame.i.map(String.init) ?? "·",
+                       color: .cyan, hot: singleFrame.line == 1)
+                PBChip(label: "passes", value: "\(singleFrame.passes)", color: .green, hot: true)
+                Spacer(minLength: 0)
             }
 
-            history
-        }
-        .padding(16)
-        .frame(minHeight: 175, alignment: .top)
-        .pbViewport()
-        .animation(.spring(duration: 0.3), value: step)
-    }
-
-    private func varBox(name: String, value: Int?, color: Color, hot: Bool) -> some View {
-        VStack(spacing: 6) {
-            Text(name)
-                .font(.system(size: 12, weight: .bold, design: .monospaced))
-                .foregroundColor(color)
-            Text(value.map(String.init) ?? "·")
-                .font(.system(size: 40, weight: .black, design: .monospaced))
-                .foregroundColor(value == nil ? .primary.opacity(0.2) : .primary)
-                .contentTransition(.numericText())
-                .frame(width: 108, height: 76)
-                .background(RoundedRectangle(cornerRadius: 12)
-                    .fill(color.opacity(value == nil ? 0.05 : 0.16)))
-                .overlay(RoundedRectangle(cornerRadius: 12)
-                    .strokeBorder(color.opacity(hot ? 1 : (value == nil ? 0.2 : 0.45)),
-                                  style: StrokeStyle(lineWidth: hot ? 2.5 : 1,
-                                                     dash: value == nil ? [4] : [])))
-                .shadow(color: hot ? color.opacity(0.7) : .clear, radius: 10)
-        }
-    }
-
-    private var history: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text("SUM AFTER EACH PASS")
-                .font(.system(size: 8, weight: .bold)).tracking(0.8)
-                .foregroundColor(.primary.opacity(0.35))
-            HStack(spacing: 8) {
-                ForEach(0..<iters.count, id: \.self) { k in
-                    let done = k < bodiesDone
-                    HStack(spacing: 5) {
-                        Text("i=\(iters[k].i)")
-                            .font(.system(size: 11, weight: .semibold, design: .monospaced))
-                            .foregroundColor(done ? .cyan : .primary.opacity(0.25))
-                        Image(systemName: "arrow.right")
-                            .font(.system(size: 8, weight: .bold))
-                            .foregroundColor(.primary.opacity(done ? 0.4 : 0.15))
-                        Text("\(iters[k].sum)")
+            // One tile per value i takes; filled as the body actually runs.
+            HStack(spacing: 5) {
+                if visitedIs.isEmpty {
+                    Text("no value of i satisfies i < \(to)")
+                        .font(.system(size: 10, design: .monospaced))
+                        .foregroundColor(.primary.opacity(0.4))
+                } else {
+                    ForEach(visitedIs.indices, id: \.self) { k in
+                        Text("\(visitedIs[k])")
                             .font(.system(size: 12, weight: .bold, design: .monospaced))
-                            .foregroundColor(done ? .green : .primary.opacity(0.25))
+                            .foregroundColor(k < singleFrame.passes ? .black : .primary.opacity(0.3))
+                            .frame(width: 26, height: 26)
+                            .background(RoundedRectangle(cornerRadius: 6)
+                                .fill(k < singleFrame.passes ? Color.green : Color.primary.opacity(0.07)))
                     }
-                    .padding(.horizontal, 9).padding(.vertical, 6)
-                    .background(RoundedRectangle(cornerRadius: 9)
-                        .fill(done ? Color.green.opacity(0.12) : Color.primary.opacity(0.04)))
-                    .overlay(RoundedRectangle(cornerRadius: 9)
-                        .strokeBorder(done ? Color.green.opacity(0.35) : .primary.opacity(0.08),
-                                      lineWidth: 1))
                 }
                 Spacer(minLength: 0)
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(10)
+        .padding(.bottom, 18)
+        .frame(maxWidth: .infinity, minHeight: 92, alignment: .topLeading)
+        .pbViewport()
+        .overlay(alignment: .bottomLeading) { PBNote(text: singleFrame.note).padding(7) }
+        .animation(.spring(duration: 0.22), value: step)
+    }
+
+    // MARK: - Nested loops
+
+    private var nestedCode: [String] {
+        ["for (int i = 0; i < \(outer); i++) {",
+         "    for (int j = 0; j < \(inner); j++) {",
+         "        print(i, j);",
+         "    }",
+         "}"]
+    }
+
+    private struct NFrame {
+        let line: Int
+        let i: Int?
+        let j: Int?
+        let runs: Int
+        let note: String
+    }
+
+    /// The highlight walks: outer header (i set) → inner header (j set) →
+    /// body → inner header (j++) → body … → inner header (j fails) → outer
+    /// header (i++). That bouncing is the whole lesson.
+    private var nestedFrames: [NFrame] {
+        var f: [NFrame] = [NFrame(line: -1, i: nil, j: nil, runs: 0, note: "drag the step slider to run")]
+        var runs = 0
+        for i in 0..<outer {
+            f.append(NFrame(line: 0, i: i, j: nil, runs: runs,
+                            note: i == 0 ? "outer starts: i = 0" : "outer advances: i = \(i)"))
+            for j in 0..<inner {
+                f.append(NFrame(line: 1, i: i, j: j, runs: runs,
+                                note: j == 0 ? "inner restarts from j = 0" : "inner advances: j = \(j)"))
+                runs += 1
+                f.append(NFrame(line: 2, i: i, j: j, runs: runs, note: "body run \(runs)"))
+            }
+            f.append(NFrame(line: 1, i: i, j: inner, runs: runs,
+                            note: "j = \(inner) fails j < \(inner): inner loop ends"))
+        }
+        f.append(NFrame(line: 4, i: nil, j: nil, runs: runs,
+                        note: "\(outer) outer passes × \(inner) inner = \(runs)"))
+        return f
+    }
+
+    private var nestedFrame: NFrame { nestedFrames[min(step, nestedFrames.count - 1)] }
+
+    private var nestedStage: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                PBChip(label: "i", value: nestedFrame.i.map(String.init) ?? "·", color: .cyan,
+                       hot: nestedFrame.line == 0)
+                PBChip(label: "j", value: nestedFrame.j.map(String.init) ?? "·", color: PB.num,
+                       hot: nestedFrame.line == 1)
+                PBChip(label: "runs", value: "\(nestedFrame.runs)", color: .green, hot: true)
+                Spacer(minLength: 0)
+            }
+
+            // One row per outer pass, one cell per inner pass.
+            VStack(alignment: .leading, spacing: 4) {
+                ForEach(0..<outer, id: \.self) { i in
+                    HStack(spacing: 4) {
+                        Text("i=\(i)")
+                            .font(.system(size: 9, weight: .bold, design: .monospaced))
+                            .foregroundColor(.cyan.opacity(nestedFrame.i == i ? 1 : 0.4))
+                            .frame(width: 26, alignment: .leading)
+                        ForEach(0..<inner, id: \.self) { j in
+                            let done = i * inner + j < nestedFrame.runs
+                            let now = nestedFrame.i == i && nestedFrame.j == j && nestedFrame.line == 2
+                            RoundedRectangle(cornerRadius: 5)
+                                .fill(done ? Color.green.opacity(now ? 1 : 0.4) : Color.primary.opacity(0.07))
+                                .frame(height: 20)
+                        }
+                    }
+                }
+            }
+        }
+        .padding(10)
+        .padding(.bottom, 18)
+        .frame(maxWidth: .infinity, minHeight: 92, alignment: .topLeading)
+        .pbViewport()
+        .overlay(alignment: .bottomLeading) { PBNote(text: nestedFrame.note).padding(7) }
+        .animation(.spring(duration: 0.2), value: step)
     }
 }
 

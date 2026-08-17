@@ -225,7 +225,7 @@ struct GaussView: View {
     static let warm = Color(red: 1.00, green: 0.80, blue: 0.26)
     static let warmUI = Color(red: 0.72, green: 0.50, blue: 0.00)
     static let cellW: CGFloat = 40
-    static let rowH: CGFloat = 30
+    static let rowH: CGFloat = 26
 
     /// One colour per equation, kept away from the red/green/blue used for
     /// x, y and z inside the equations themselves.
@@ -241,7 +241,7 @@ struct GaussView: View {
 
     /// x = 1, y = 2, z = 3.
     static let unique = GaussExample(
-        name: "Unique solution",
+        name: "One point",
         start: [[1, 2, 1, 8],
                 [2, 1, -1, 1],
                 [1, -1, 2, 5]],
@@ -283,7 +283,7 @@ struct GaussView: View {
 
     /// L₂ = 2·L₁ on both sides: one equation is pure redundancy.
     static let many = GaussExample(
-        name: "Infinitely many",
+        name: "A whole line",
         start: [[1, 1, 1, 3],
                 [2, 2, 2, 6],
                 [1, -1, 0, 0]],
@@ -329,7 +329,7 @@ struct GaussView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 7) {
                 AlgebraHeader(
                     title: "Gaussian Elimination",
                     subtitle: "Each equation is a plane. Row operations move the planes, never their intersection."
@@ -341,6 +341,7 @@ struct GaussView: View {
                     distance: $distance,
                     distanceRange: 6...20,
                     home: (azimuth: -0.9, elevation: 0.42, distance: 9.5),
+                    height: 210,
                     accent: GaussView.warm,
                     render: { ctx, size in render(ctx, size: size) },
                     hud: { hud },
@@ -350,7 +351,7 @@ struct GaussView: View {
                 stepControl
                 stage
             }
-            .padding(14)
+            .padding(10)
         }
         .background(Color(.systemGroupedBackground))
     }
@@ -559,7 +560,7 @@ struct GaussView: View {
     // MARK: - Stage
 
     private var stage: some View {
-        VStack(alignment: .leading, spacing: 9) {
+        VStack(alignment: .leading, spacing: 4) {
             stageLabel("SYSTEM")
 
             VStack(spacing: 0) {
@@ -569,7 +570,7 @@ struct GaussView: View {
             Rectangle()
                 .frame(height: 0.5)
                 .foregroundStyle(Color(.separator))
-                .padding(.vertical, 3)
+                .padding(.vertical, 1)
 
             stageLabel("AUGMENTED MATRIX")
 
@@ -577,7 +578,7 @@ struct GaussView: View {
                 ForEach(0..<3, id: \.self) { r in matrixRow(r) }
             }
         }
-        .padding(14)
+        .padding(8)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             LinearGradient(colors: [Color(.secondarySystemBackground),
@@ -721,136 +722,47 @@ struct GaussView: View {
 
     // MARK: - Step control
 
-    /// Buttons rather than a stepped slider: no haptic ticking, and the two
-    /// directions are separate targets instead of one thumb to aim at.
+    /// One slider, one menu, one line of prose. The slider sits directly under
+    /// the planes because it is what moves them; the example menu follows, in
+    /// the same style as every other picker in the app; and the prose lands
+    /// last, right above the matrix it describes.
     private var stepControl: some View {
-        HStack(alignment: .top, spacing: 12) {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack(spacing: 8) {
-                    stepButton("chevron.left", enabled: safeStep > 0) {
-                        move(to: safeStep - 1)
-                    }
-                    stepButton("chevron.right", enabled: safeStep < example.script.count) {
-                        move(to: safeStep + 1)
-                    }
-                    Text("STEP \(safeStep) / \(example.script.count)")
-                        .font(.system(size: 9, weight: .bold, design: .monospaced))
-                        .tracking(0.7)
-                        .foregroundStyle(.secondary)
-                    Spacer(minLength: 0)
-                }
+        VStack(alignment: .leading, spacing: 6) {
+            StepSlider(step: $step,
+                       total: example.script.count,
+                       accent: GaussView.warmUI,
+                       caption: captionText)
 
-                progressTrack
-
-                Text(captionText)
-                    .font(.system(size: 10.5))
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-
-            VStack(alignment: .leading, spacing: 0) {
-                Text("EXAMPLE")
+            // The operation about to be applied, spelled out the way it would
+            // be written by hand (the row badges only show it in shorthand),
+            // with the example menu sharing its row to save the height.
+            HStack(spacing: 8) {
+                Text(done ? "DONE" : "NEXT")
                     .font(.system(size: 9, weight: .bold))
                     .tracking(0.7)
                     .foregroundStyle(.secondary)
-                Picker("", selection: $exampleIndex) {
+                Text(pending?.matrixLabel ?? "the left block is the identity")
+                    .font(.system(size: 12.5, weight: .heavy, design: .monospaced))
+                    .foregroundStyle(done ? Color.green : GaussView.warm)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+
+                Spacer(minLength: 6)
+
+                Picker("Examples", selection: $exampleIndex) {
                     ForEach(GaussView.examples.indices, id: \.self) { i in
                         Text(GaussView.examples[i].name)
                             .font(.system(size: 13, weight: .medium))
                             .tag(i)
                     }
                 }
-                .pickerStyle(.wheel)
-                .frame(height: 82)
-                .clipped()
-                .onChange(of: exampleIndex) { _ in
-                    step = 0
-                }
-            }
-            .frame(width: 140)
-        }
-        .padding(10)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(RoundedRectangle(cornerRadius: 13).fill(Color(.secondarySystemGroupedBackground)))
-    }
-
-    private func stepButton(_ icon: String, enabled: Bool, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Image(systemName: icon)
-                .font(.system(size: 12, weight: .bold))
-                .frame(width: 34, height: 26)
-                .background(RoundedRectangle(cornerRadius: 7)
-                    .fill(enabled ? GaussView.warmUI.opacity(0.22) : Color.secondary.opacity(0.10)))
-                .foregroundStyle(enabled ? GaussView.warm : Color.secondary.opacity(0.5))
-        }
-        .buttonStyle(.plain)
-        .disabled(!enabled)
-    }
-
-    private var progressTrack: some View {
-        HStack(spacing: 3) {
-            ForEach(0...example.script.count, id: \.self) { i in
-                Capsule()
-                    .fill(i <= safeStep ? GaussView.warmUI : Color.secondary.opacity(0.2))
-                    .frame(height: 4)
-                    .onTapGesture { move(to: i) }
+                .pickerStyle(.menu)
+                .labelsHidden()
+                .onChange(of: exampleIndex) { _ in step = 0 }
             }
         }
     }
 
-    private func move(to target: Int) {
-        withAnimation(.easeInOut(duration: 0.3)) {
-            step = min(max(target, 0), example.script.count)
-        }
-    }
-
-    // MARK: - Verdict + script
-
-    private var verdictCard: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 6) {
-                Image(systemName: verdict.icon).font(.system(size: 13))
-                Text(verdict.title).font(.system(size: 12.5, weight: .bold))
-            }
-            .foregroundStyle(verdict.color)
-
-            Divider()
-
-            VStack(alignment: .leading, spacing: 3) {
-                ForEach(example.script.indices, id: \.self) { i in
-                    stepRow(i)
-                }
-            }
-        }
-        .padding(10)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(RoundedRectangle(cornerRadius: 13).fill(Color(.secondarySystemGroupedBackground)))
-    }
-
-    /// Kept in its own function with explicit types: nested ternaries inlined in
-    /// a ForEach are what blows up the type-checker.
-    private func stepRow(_ i: Int) -> some View {
-        let isCurrent: Bool = (i == safeStep)
-        let isPast: Bool = (i < safeStep)
-        let color: Color = isCurrent ? GaussView.warmUI
-                                     : (isPast ? Color.secondary : Color.gray.opacity(0.5))
-        let weight: Font.Weight = isCurrent ? .heavy : .semibold
-        let number: String = "\(i + 1)."
-        let label: String = example.script[i].op.matrixLabel
-
-        return HStack(spacing: 6) {
-            Text(number)
-                .font(.system(size: 9.5, design: .monospaced))
-                .foregroundStyle(Color.gray.opacity(0.6))
-                .frame(width: 14, alignment: .trailing)
-            Text(label)
-                .font(.system(size: 10.5, weight: weight, design: .monospaced))
-                .foregroundStyle(color)
-        }
-        .contentShape(Rectangle())
-        .onTapGesture { move(to: i) }
-    }
 }
 // MARK: - Formatting helpers
 

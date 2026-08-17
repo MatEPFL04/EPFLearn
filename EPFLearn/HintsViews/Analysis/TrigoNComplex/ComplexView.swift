@@ -41,6 +41,8 @@ struct ComplexPlaneView: View {
 
     @State private var grabbedZ2 = false
     @State private var dragging = false
+    /// Finger-to-tip offset in math units, held for the length of one drag.
+    @State private var grabOffset: (dx: Double, dy: Double) = (0, 0)
     /// Échelle gelée pendant un drag, pour ne pas zoomer sous le doigt.
     @State private var frozenFit: Double?
 
@@ -53,7 +55,7 @@ struct ComplexPlaneView: View {
     }
 
     var body: some View {
-        VStack(spacing: 14) {
+        VStack(spacing: 9) {
             plot.frame(maxWidth: 520, maxHeight: 520)
                 .aspectRatio(1, contentMode: .fit)
             panel
@@ -71,9 +73,13 @@ struct ComplexPlaneView: View {
                 frozenFit = fitRadius
                 dragging = true
                 grabbedZ2 = nearerToZ2(location, space)
+                let (fx, fy) = space.math(location)
+                let held = grabbedZ2 ? z2 : z1
+                grabOffset = (held.re - fx, held.im - fy)
             },
             onDragChanged: { location, space in
-                let (x, y) = space.math(location)
+                let (fx, fy) = space.math(location)
+                let x = fx + grabOffset.dx, y = fy + grabOffset.dy
                 let rawAngle = atan2(y, x)
                 
                 // Aimantation intelligente : si on est proche du cercle unité (r entre 0.85 et 1.15),
@@ -112,8 +118,8 @@ struct ComplexPlaneView: View {
         // Parallélogramme de la somme.
         if operation == .add {
             let tip = point(s, result)
-            ctx.line(point(s, z1), tip, TrigPalette.ghost.opacity(0.45), width: 1, dash: [4, 4])
-            ctx.line(point(s, z2), tip, TrigPalette.ghost.opacity(0.45), width: 1, dash: [4, 4])
+            ctx.line(point(s, z1), tip, TrigPalette.ghost.opacity(0.45), width: 1)
+            ctx.line(point(s, z2), tip, TrigPalette.ghost.opacity(0.45), width: 1)
         }
 
         vector(&ctx, s, z1, TrigPalette.radius, "z₁", width: 2.4,
@@ -149,7 +155,7 @@ struct ComplexPlaneView: View {
     @ViewBuilder
     private var panel: some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text("Complex Plane").font(.headline)
+            VizHeader("Complex Plane", subtitle: "Drag z₁ and z₂; read modulus and argument.")
             Text("Drag z₁ or z₂, the result follows.")
                 .font(.caption).foregroundStyle(.secondary)
         }

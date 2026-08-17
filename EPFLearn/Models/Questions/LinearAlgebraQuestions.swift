@@ -13,7 +13,7 @@ let matrixShapeQuestions = [
     Question(
         subject: .linearAlgebra,
         text: "What is the resulting dimension when multiplying a 3×2 matrix A by a 2×4 matrix B?",
-        hint: "Matrix multiplication AB is only defined if the number of columns in A equals the number of rows in B. The outer dimensions give the final size.",
+        hint: "The inner dimensions have to match, and the outer ones survive. Set the shapes in the view to check your answer.",
         options: [
             "3×4 matrix",
             "2×2 matrix",
@@ -27,7 +27,7 @@ let matrixShapeQuestions = [
     Question(
         subject: .linearAlgebra,
         text: "For any non-square matrix A of dimension m×n (where m ≠ n), which statement about its transpose Aᵀ is correct?",
-        hint: "Check the dimensions of A (m×n) and Aᵀ (n×m) to see which products are mathematically allowed.",
+        hint: "Pick the transpose operation and move the row and column sliders apart: watch which products the view still allows.",
         options: [
             "Only A·Aᵀ is well-defined",
             "Only Aᵀ·A is well-defined",
@@ -40,8 +40,8 @@ let matrixShapeQuestions = [
     ),
     Question(
         subject: .linearAlgebra,
-        text: "Let A be a 3×2 matrix and B be a 4×2 matrix. What is the resulting shape of the composite operation: ((A·Bᵀ)ᵀ)·A ?",
-        hint: "Simplify the expression using the property (X·Y)ᵀ = Yᵀ·Xᵀ before analyzing the dimensions step by step.",
+        text: "Let A be a 3×2 matrix and B be a 4×2 matrix. What is the shape of ((A·Bᵀ)ᵀ)·A?",
+        hint: "Use (X·Y)ᵀ = Yᵀ·Xᵀ to remove the outer transpose first, then count the dimensions left to right.",
         options: [
             "3×2 matrix",
             "4×3 matrix",
@@ -55,12 +55,12 @@ let matrixShapeQuestions = [
     Question(
         subject: .linearAlgebra,
         text: "Given matrices A (3×3) and B (3×2), what is the shape of the product A·B·Bᵀ·A?",
-        hint: "Track dimensions step by step from left to right.",
+        hint: "Build the chain in the view one multiplication at a time and carry the result shape into the next step.",
         options: [
             "3×2 matrix",
             "3×3 matrix",
             "2×2 matrix",
-            "The operation is undefined due to a dimension mismatch"
+            "Undefined: the dimensions do not match"
         ],
         correctIndex: 1,
         explanation: "Step by step: A·B is (3×3)×(3×2) = 3×2. Then A·B·Bᵀ is (3×2)×(2×3) = 3×3. Finally A·B·Bᵀ·A is (3×3)×(3×3) = 3×3.",
@@ -74,7 +74,7 @@ let gaussQuestions: [Question] = [
     Question(
             subject: .linearAlgebra,
             text: "A system of three equations turns out to describe only two distinct planes, and those two planes are not parallel. What is its solution set?",
-            hint: "Pick 'Infinitely many' and read L₁ and L₂ in the system block before touching the slider: divide the second by 2 in your head. T",
+            hint: "Pick 'A whole line' and step to the end: watch what the three planes have in common once one row empties.",
             options: [
                 "A single point",
                 "A line",
@@ -89,7 +89,7 @@ let gaussQuestions: [Question] = [
     Question(
         subject: .linearAlgebra,
         text: "During an elimination, one row becomes zero everywhere on the left of the bar while its constant on the right stays non-zero. What does the system look like?",
-        hint: "Pick 'No solution' and advance a single step, then read L₂ and the verdict card underneath.",
+        hint: "Pick 'No solution' and advance one step: read the row that empties on the left but not on the right.",
         options: [
             "It has a unique solution, that constant",
             "It has no solution at all",
@@ -103,7 +103,7 @@ let gaussQuestions: [Question] = [
     Question(
             subject: .linearAlgebra,
             text: "A system contains the two equations x + y + z = 2 and 2x + 2y + 2z = 5. What is their geometric relationship?",
-            hint: "Pick 'No solution' and read L₁ and L₂ in the system block before touching the slider. Divide the second one by 2 in your head.",
+            hint: "Pick 'No solution' and read L₁ and L₂ at step 0, before any operation runs.",
             options: [
                 "They describe the same plane",
                 "They describe two parallel planes that never meet",
@@ -117,7 +117,7 @@ let gaussQuestions: [Question] = [
     Question(
         subject: .linearAlgebra,
         text: "Two systems both have a second equation whose left-hand side is exactly twice the first equation's. One has no solution, the other has infinitely many. What settles which is which?",
-        hint: "Compare 'No solution' and 'Infinitely many' at step 0: the left blocks are identical, only the constant column differs. Then advance one step in each.",
+        hint: "Compare 'No solution' and 'A whole line' at step 0: only the constant column differs. Then step both once.",
         options: [
             "The number of unknowns involved",
             "Whether the constant is also doubled, or not",
@@ -135,12 +135,12 @@ let determinantQuestions = [
     Question(
         subject: .linearAlgebra,
         text: "What is det([[1, 0], [c, 1]])? How does varying c affect the area of the parallelogram spanned by the column vectors?",
-        hint: "Drag the vertex horizontally to change c. Does the base or the height of the parallelogram change?",
+        hint: "Drag one tip sideways so the parallelogram leans over, keeping the other vector put, and watch det.",
         options: [
             "det = 1",
             "det = 1 + c",
             "det = c",
-            "det = 0 for all c, because the matrix becomes singular"
+            "det = 0 for every c"
         ],
         correctIndex: 0,
         explanation: "det = 1 × 1 − 0 × c = 1. Geometrically, varying c creates a shear (transvection). The vertex slides parallel to the base, keeping both the base (length 1) and the height (1) constant. Therefore, the signed area remains exactly 1.",
@@ -149,12 +149,12 @@ let determinantQuestions = [
     Question(
         subject: .linearAlgebra,
         text: "If you scale one column vector v⃗ by a factor of 3, what happens to the determinant?",
-        hint: "Drag a vertex to triple the length of one column vector. What happens to the area?",
+        hint: "Set the length of v⃗₁ to 1 with the slider, read det, then set it to 3 and read det again.",
         options: [
-            "The determinant triples, because scaling one vector by 3 scales the height or base by 3",
-            "The determinant stays the same, because the other vector compensates",
-            "The determinant increases by 3² = 9, because both dimensions are affected",
-            "The determinant changes sign but not magnitude"
+            "It triples",
+            "It does not change",
+            "It is multiplied by 9",
+            "It changes sign but keeps its size"
         ],
         correctIndex: 0,
         explanation: "The determinant is linear in each column. Visually, multiplying v⃗ by 3 stretches the parallelogram in that direction by a factor of 3, equivalent to stacking 3 copies of the original parallelogram.",
@@ -162,13 +162,13 @@ let determinantQuestions = [
     ),
     Question(
         subject: .linearAlgebra,
-        text: "What happens to det(A) if you drag the column vectors so they cross over, reversing their orientation?",
-        hint: "Drag the vectors until v⃗₁ moves past v⃗₂. Watch the sign of the determinant.",
+        text: "The two column vectors of a 2×2 matrix A cross over each other, so the pair goes from counter-clockwise to clockwise. What happens to det(A)?",
+        hint: "Drag one vector past the other in the view and watch the sign of the determinant as they cross.",
         options: [
-            "det(A) flips sign, reflecting the orientation reversal",
-            "det(A) remains positive, because area cannot be negative",
-            "det(A) drops to zero at the crossing",
-            "det(A) becomes undefined"
+            "It flips sign",
+            "It stays positive: an area cannot be negative",
+            "It drops to zero and stays there",
+            "It becomes undefined"
         ],
         correctIndex: 0,
         explanation: "The determinant measures signed area. Reversing the orientation (switching from counter-clockwise to clockwise order) flips the sign of det(A) from positive to negative, even though the absolute area stays identical.",
@@ -183,11 +183,11 @@ let vectorSpaceQuestions = [
     Question(
             subject: .linearAlgebra,
             text: "You are given three vectors {v⃗₁, v⃗₂, v⃗₃} in ℝ². What can you immediately conclude?",
-            hint: "Think about the maximum dimension of ℝ² versus the number of vectors you have.",
+            hint: "Select ℝ²: the view hands you exactly two arrows, and that is not an accident. Set them so det ≠ 0, and they already reach every point of the plane between them. Where would a third one have to point to add anything?",
             options: [
-                "They must be linearly dependent, because dim(ℝ²) = 2",
-                "They form a valid basis because more vectors give better coverage",
-                "They automatically span a 3D subspace",
+                "They must be dependent, since dim(ℝ²) = 2",
+                "They form a basis: more vectors cover more",
+                "They span a 3D subspace",
                 "They must all be zero vectors"
             ],
             correctIndex: 0,
@@ -198,7 +198,7 @@ let vectorSpaceQuestions = [
     Question(
            subject: .linearAlgebra,
            text: "You apply a reflection across a line L to vector v⃗, producing v⃗'. Under what geometric condition does {v⃗, v⃗'} fail to form a basis for ℝ²?",
-           hint: "Move v⃗ around. Where does the original vector and its mirror image become collinear?",
+           hint: "A reflection keeps the length of v⃗, so v⃗' is v⃗ turned by some angle. Lay the two arrows exactly on top of one another, then make one the exact opposite of the other: det collapses to 0 both times. Which positions of v⃗ relative to L produce those two cases?",
            options: [
                "When v⃗ ∈ L or v⃗ ⊥ L",
                "Only when v⃗ ⊥ L",
@@ -212,26 +212,26 @@ let vectorSpaceQuestions = [
     
     Question(
             subject: .linearAlgebra,
-            text: "You rotate both e⃗₁ and e⃗₂ by 30° around the origin. What happens to their span and linear independence?",
-            hint: "Does rotation change the angle between vectors or destroy their ability to span ℝ²? Try moving them by the same rotation amount.",
+            text: "Two vectors v⃗₁ and v⃗₂ in ℝ² span a parallelogram. You rotate v⃗₂ about the origin, keeping its length, until it points the same way as v⃗₁. What happens to det?",
+            hint: "Turn v⃗₂ towards v⃗₁ and watch det shrink. What is left of the parallelogram when they line up?",
             options: [
-                "They remain independent and still span ℝ²",
-                "They lose independence because rotation bends their paths",
-                "Their span drops to 1D because they're no longer grid-aligned",
-                "They become a 3D basis because rotation adds depth"
+                "It reaches 0: the parallelogram has been squashed flat",
+                "It reaches its largest value, since the vectors agree",
+                "It stays the same: only the angle changed, not the lengths",
+                "It becomes negative but keeps its size"
             ],
             correctIndex: 0,
-            explanation: "Rigid rotations preserve lengths and angles. The vectors remain orthogonal (90° apart) and non-zero, forming a new orthonormal basis that spans the same ℝ².",
+            explanation: "det is the signed area of the parallelogram they span. Two vectors pointing the same way span no area at all, so det = 0 and the pair is no longer a basis. The lengths make no difference to that.",
             visualization: .determinant
         ),
     
     Question(
         subject: .linearAlgebra,
         text: "In ℝ³, you have a plane P = span{v⃗₁, v⃗₂}. You add w⃗ forming angle ε > 0 with P. Do {v⃗₁, v⃗₂, w⃗} form a basis for ℝ³?",
-        hint: "Slightly lift w⃗ out of the plane. Is the volume spanned completely flat (zero) or just very small?",
+        hint: "Independence is not a matter of degree: either w⃗ lies in the plane, or it does not. Lift it slightly in the view.",
         options: [
             "No, because ε is too small",
-            "Yes, because ε ≠ 0 means w⃗ ∉ P, so they're independent and span ℝ³",
+            "Yes: ε ≠ 0 puts w⃗ outside P, so the three are independent",
             "Only if w⃗ ⊥ P",
             "No, they only span a 2D subspace"
         ],
@@ -248,7 +248,7 @@ let matrix3DQuestions = [
     Question(
             subject: .linearAlgebra,
             text: "A rotation of ℝ³ about the z-axis leaves a non-zero vector v⃗ fixed, so that A·v⃗ = v⃗. Where does v⃗ lie?",
-            hint: "Pick 'Rotation about z', then try to find a v⃗ untouched by the linear transformation",
+            hint: "Pick 'Rotation about z' and drag v⃗ around: look for the direction whose golden image arrow never moves off it.",
             options: [
                 "In the xy-plane, perpendicular to the axis",
                 "Along the z-axis: v⃗ is an eigenvector with eigenvalue 1",
@@ -262,7 +262,7 @@ let matrix3DQuestions = [
     Question(
             subject: .linearAlgebra,
             text: "A matrix A has dependent columns, its second column being twice the first. A non-zero vector v⃗ = (2, −1, 0) belongs to ?",
-            hint: "Pick 'Dependent columns', drag the v⃗ cells to (2, −1, 0) and watch the golden A·v⃗ arrow. WHere does it land ?",
+            hint: "Pick 'Dependent columns', set v⃗ to (2, −1, 0) and watch where the golden A·v⃗ arrow lands.",
             options: [
                 "The image of A",
                 "The kernel of A",
@@ -276,30 +276,30 @@ let matrix3DQuestions = [
     
     Question(
         subject: .linearAlgebra,
-        text: "Why is the canonical basis {e⃗₁, e⃗₂, e⃗₃} fundamentally associated with the identity matrix I?",
-        hint: "Select 'Identity' and observe how each colored arrow points exactly along the standard basis directions.",
+        text: "What are the columns of the identity matrix I?",
+        hint: "Each column of a matrix is where one basis vector lands. I leaves every vector where it is.",
         options: [
-            "Because the columns of I are exactly {e⃗₁, e⃗₂, e⃗₃}, so I·v⃗ = v⃗ for all v⃗",
-            "Because any diagonal matrix with identical entries defaults to I",
-            "Because det(I) equals the sum of the basis vectors",
-            "Because changing basis always transforms any matrix into I"
+            "e⃗₁, e⃗₂, e⃗₃",
+            "All zero",
+            "All equal to (1, 1, 1)",
+            "Whatever basis you happen to be using"
         ],
         correctIndex: 0,
-        explanation: "The columns of a matrix represent where the basis vectors land. Since I has columns {e⃗₁, e⃗₂, e⃗₃}, it maps each basis vector to itself: I·e⃗ᵢ = e⃗ᵢ. Thus I·v⃗ = v⃗ for all v⃗. The identity is not 'neutral by convention', it's the unique map whose columns are the basis you're reading coordinates in.",
+        explanation: "A column says where a basis vector is sent, and I sends each one to itself, so its columns are e⃗₁, e⃗₂, e⃗₃. That is exactly why I·v⃗ = v⃗ for every v⃗.",
         visualization: .linearTransformations
     ),
     Question(
             subject: .linearAlgebra,
-            text: "Under the projection onto the xy-plane, the vectors v⃗ = (1, 1, 1) and w⃗ = (1, 1, 0) have the same image. What does that say about the transformation?",
-            hint: "Pick 'Projection onto xy' and set v⃗ to (1, 1, 1), then to (1, 1, 0).",
+            text: "The map P(x, y, z) = (x, y, 0) sends both (1, 1, 1) and (1, 1, 0) to (1, 1, 0). What does that say about P?",
+            hint: "Pick 'Projection onto xy', set v⃗ to (1, 1, 1) then (1, 1, 0), and compare the two golden arrows.",
             options: [
-                "It is not injective: distinct vectors share an image, but surjective with ℝ³ spanned by the transformation",
-                "It is injective, since the two vectors are close together",
-                "It is not injective: distinct vectors share an image, but not surjective as the kernel has dimension 1.",
-                "It is surjective onto ℝ³"
+                "It is not injective, and not surjective onto ℝ³",
+                "It is not injective, but surjective onto ℝ³",
+                "It is injective, since the two inputs are different",
+                "It is invertible"
             ],
             correctIndex: 0,
-            explanation: "Two different inputs landing on the same output makes A non-injective, and the difference v⃗ − w⃗ = (0, 0, 1) sits in the kernel. In fact, every vector of the form (0,0,c), with c in ℝ, belongs to the kernel, a line in ℝ³, meaning the image has dimension 2.",
+            explanation: "Two different inputs with one output means P is not injective, and their difference (0, 0, 1) sits in the kernel. The image is only the xy-plane, so P is not onto ℝ³ either.",
             visualization: .linearTransformations
         ),
     
@@ -311,23 +311,23 @@ let matrix3DQuestions = [
 let imagesQuestions = [
     Question(
         subject: .linearAlgebra,
-        text: "Why is the canonical basis {e⃗₁, e⃗₂, e⃗₃} the basis associated with the identity matrix?",
-        hint: "Select 'Identity'. Each column of a matrix is the image of one basis vector. What must those images be for v⃗ to survive untouched?",
+        text: "A 3×3 matrix A satisfies A·v⃗ = v⃗ for every v⃗. What is A?",
+        hint: "Pick 'Identity' in the examples: every point of the lattice stays exactly where it started. Read off where e⃗₁, e⃗₂ and e⃗₃ land: each one is a column of A.",
         options: [
-            "Because the columns of I are exactly {e⃗₁, e⃗₂, e⃗₃}, so I·v⃗ = v₁·e⃗₁ + v₂·e⃗₂ + v₃·e⃗₃ = v⃗",
-            "Because det(I) = 1, and any matrix with det = 1 preserves coordinates",
-            "Because I is symmetric, so it cannot favor one axis",
-            "Because I is the only matrix with entries in {0, 1}"
+            "The identity: its columns are e⃗₁, e⃗₂, e⃗₃",
+            "Any matrix with det = 1",
+            "Any symmetric matrix",
+            "Any diagonal matrix"
         ],
         correctIndex: 0,
-        explanation: "Writing v⃗ = v₁·e⃗₁ + v₂·e⃗₂ + v₃·e⃗₃ and applying linearity: A·v⃗ = v₁·(A·e⃗₁) + v₂·(A·e⃗₂) + v₃·(A·e⃗₃). A matrix is entirely determined by where it sends the basis vectors (its columns). Asking A·v⃗ = v⃗ for all v⃗ forces A·e⃗ᵢ = e⃗ᵢ, i.e., A = I. The identity is not 'neutral by convention'; it's the unique map whose columns are the basis you're using. (det = 1 is weaker: rotations also have det = 1.)",
+        explanation: "A column of a matrix is where a basis vector lands. Demanding A·e⃗ᵢ = e⃗ᵢ fixes all three columns at once, so A = I. det = 1 is far weaker: rotations have det = 1 too and move plenty of vectors.",
         visualization: .image
     ),
 
     Question(
         subject: .linearAlgebra,
-        text: "For the a linear transformation such that the columns of the matrix form a horizontal plane, what is im A?",
-        hint: "Select 'Plane · rank 2'. The third column c⃗₃ = c⃗₁ + c⃗₂ is redundant. Watch the transformation, what is the dimension of the resulting shape ?",
+        text: "A 3×3 matrix has columns c⃗₁ = (1,0,0), c⃗₂ = (0,1,0) and c⃗₃ = (1,1,0). What is im A?",
+        hint: "Pick 'Plane · rank 2' in the examples. The image is spanned by the columns, so check whether the third one adds a direction the first two miss.",
         options: [
             "im A = ℝ³: three non-zero columns always span all of ℝ³",
             "im A is the xy-plane (dim 2): c⃗₃ is redundant, so the image flattens",
@@ -341,7 +341,7 @@ let imagesQuestions = [
     Question(
         subject: .linearAlgebra,
         text: "For the zero matrix 0, what are dim(ker 0) and dim(im 0)?",
-        hint: "Select 'Zero map'. Every lattice point collapses to the origin. Count the dimensions.",
+        hint: "Pick 'Zero map' in the examples: every point lands on the origin. What is left of the image?",
         options: [
             "dim(ker 0) = 3, dim(im 0) = 0",
             "dim(ker 0) = 0, dim(im 0) = 0",
@@ -354,8 +354,8 @@ let imagesQuestions = [
     ),
     Question(
         subject: .linearAlgebra,
-        text: "For the projection onto xy (third column is 0⃗), what are dim(ker A) and the vector spanning it?",
-        hint: "Select 'Projection onto xy'. Watch which axis collapses to the origin while the xy-plane stays flat.",
+        text: "For P(x, y, z) = (x, y, 0), what is dim(ker P) and which vector spans that kernel?",
+        hint: "Pick 'Projection onto xy' in the examples and watch which direction collapses onto the origin.",
         options: [
             "dim(ker A) = 0: the kernel is {0⃗}",
             "dim(ker A) = 1, spanned by e⃗₃ = (0, 0, 1)",
@@ -369,7 +369,7 @@ let imagesQuestions = [
     Question(
         subject: .linearAlgebra,
         text: "A 3×3 matrix collapses points onto a single line. What are rank(T) and dim(ker T)?",
-        hint: "Select 'Line · rank 1' to see this collapse. Rank Theorem: dim(ker T) + dim(im T) = 3.",
+        hint: "Pick 'Line · rank 1' in the examples: the whole lattice lands on one line. That line is the image, so one dimension survives and rank-nullity accounts for the other two.",
         options: [
             "rank(T) = 2, dim(ker T) = 1",
             "rank(T) = 1, dim(ker T) = 2",
@@ -381,16 +381,16 @@ let imagesQuestions = [
         visualization: .image),
     Question(
         subject: .linearAlgebra,
-        text: "For a shear matrix (I + the value 1 in entry (1,3)), which points in ℝ³ remain fixed?",
-        hint: "Select 'Shear' and rotate the view. Which plane stays still while other layers slide sideways?",
+        text: "A shear maps (x, y, z) to (x + z, y, z). Which points of ℝ³ stay exactly where they are?",
+        hint: "Pick 'Shear' in the examples and rotate it: a point moves only if the amount added to x is non-zero.",
         options: [
-            "The xy-plane (z = 0), because the shear only affects x based on z",
-            "Only the origin (0, 0, 0)",
-            "The yz-plane (x = 0)",
-            "No points are fixed"
+            "Every point with z = 0, that is the whole xy-plane",
+            "Only the origin",
+            "Every point with x = 0, that is the yz-plane",
+            "No point stays fixed"
         ],
         correctIndex: 0,
-        explanation: "With 2 in position (1,3), the transformation modifies x' = x + 2z. Any point with z = 0 (the entire xy-plane) remains stationary, while points above/below slide sideways.",
+        explanation: "The map only shifts x, and it shifts it by z. So a point moves unless z = 0, which leaves the entire xy-plane fixed while the layers above and below slide sideways.",
         visualization: .image
     ),
 

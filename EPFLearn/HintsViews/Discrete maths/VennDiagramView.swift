@@ -14,7 +14,14 @@ struct VennDiagramView: View {
         case unionAB = "A ∪ B", interAB = "A ∩ B"
         case aMinusB = "A \\ B", bMinusA = "B \\ A"
         case symmAB = "A △ B", compA = "Aᶜ"
-           // 3 sets
+        // Written forms of the same regions. A set identity is only checkable
+        // if both sides of it can be shaded, so every expression the questions
+        // offer gets its own entry, even when two entries paint the same area:
+        // that coincidence is the thing to notice.
+        case aInterCompB = "A ∩ Bᶜ", compAInterB = "Aᶜ ∩ B"
+        case compUnionAB = "(A ∪ B)ᶜ", compAInterCompB = "Aᶜ ∩ Bᶜ"
+        case compInterAB = "(A ∩ B)ᶜ", compAUnionCompB = "Aᶜ ∪ Bᶜ"
+          // 3 sets
         case unionABC = "A ∪ B ∪ C", interABC = "A ∩ B ∩ C"
         case pairAB = "A ∩ B (among 3)"
         case exactlyOne = "Exactly one", none3 = "None"
@@ -37,6 +44,18 @@ struct VennDiagramView: View {
                 return "In exactly one of the two (symmetric difference)."
             case .compA:
                 return "All of Ω except A"
+            case .aInterCompB:
+                return "In A and outside B."
+            case .compAInterB:
+                return "Outside A and in B."
+            case .compUnionAB:
+                return "Outside the union."
+            case .compAInterCompB:
+                return "Outside A and outside B."
+            case .compInterAB:
+                return "Everything except the overlap."
+            case .compAUnionCompB:
+                return "Outside A, or outside B, or both."
             case .unionABC:
                 return "In at least one of the three."
             case .interABC:
@@ -49,30 +68,33 @@ struct VennDiagramView: View {
                 return "In none of the three: (A∪B∪C)ᶜ."
             }
         }
-
     }
 
     @State private var threeSets = false
     @State private var region: Region = .unionAB
-    @State private var cA = CGPoint(x: 125, y: 150)
-    @State private var cB = CGPoint(x: 195, y: 150)
-    @State private var cC = CGPoint(x: 160, y: 205)
-    @State private var rA: CGFloat = 72
-    @State private var rB: CGFloat = 72
-    @State private var rC: CGFloat = 72
 
-    let board: CGFloat = 320
+    @State private var cA = CGPoint(x: 100, y: 122)
+    @State private var cB = CGPoint(x: 160, y: 122)
+    @State private var cC = CGPoint(x: 130, y: 168)
+    @State private var rA: CGFloat = 60
+    @State private var rB: CGFloat = 60
+    @State private var rC: CGFloat = 60
+
+    let board: CGFloat = 260
     let fill = Color.blue.opacity(0.45)
 
     private var regions: [Region] {
         threeSets
         ? [.unionABC, .interABC, .pairAB, .exactlyOne, .none3]
-        : [.a, .b, .unionAB, .interAB, .aMinusB, .bMinusA, .symmAB, .compA]
+        : [.a, .b, .compA, .unionAB, .interAB, .aMinusB, .bMinusA, .symmAB,
+           .aInterCompB, .compAInterB, .compUnionAB, .compAInterCompB,
+           .compInterAB, .compAUnionCompB]
     }
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 16) {
+            VStack(spacing: 10) {
+                VizHeader("Sets", subtitle: "Union, intersection and complement, drawn as regions.")
 
                 Toggle("Third circle on the diagram", isOn: $threeSets)
                     .onChange(of: threeSets) { _, on in
@@ -98,12 +120,13 @@ struct VennDiagramView: View {
                     .font(.footnote).foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
-                    .frame(maxWidth: board, minHeight: 40)
+                    .frame(maxWidth: board, minHeight: 26)
 
                 Picker("Region", selection: $region) {
                     ForEach(regions) { Text($0.rawValue).tag($0) }
                 }
                 .pickerStyle(.menu)
+
             }
             .padding()
         }
@@ -116,7 +139,7 @@ struct VennDiagramView: View {
     private func draw(_ ctx: inout GraphicsContext, _ size: CGSize) {
         let a = disc(cA, rA), b = disc(cB, rB), c = disc(cC, rC)
         let universe = Path(CGRect(x: 0, y: 0, width: size.width, height: size.height))
-        // --- Remplissage de la région choisie (opacité uniforme) ---
+        
         switch region {
         case .a:
             ctx.fill(a, with: .color(fill))
@@ -124,7 +147,7 @@ struct VennDiagramView: View {
             ctx.fill(b, with: .color(fill))
         case .unionAB:
             var u = Path(); u.addPath(a); u.addPath(b)
-            ctx.fill(u, with: .color(fill))                       // union = 1 seul remplissage
+            ctx.fill(u, with: .color(fill))
         case .interAB:
             ctx.drawLayer { l in l.clip(to: a); l.fill(b, with: .color(fill)) }
         case .aMinusB:
@@ -136,6 +159,27 @@ struct VennDiagramView: View {
             ctx.drawLayer { l in l.clip(to: a, options: .inverse); l.fill(b, with: .color(fill)) }
         case .compA:
             ctx.drawLayer { l in l.clip(to: a, options: .inverse); l.fill(universe, with: .color(fill)) }
+        case .aInterCompB:
+            ctx.drawLayer { l in l.clip(to: b, options: .inverse); l.fill(a, with: .color(fill)) }
+        case .compAInterB:
+            ctx.drawLayer { l in l.clip(to: a, options: .inverse); l.fill(b, with: .color(fill)) }
+        case .compUnionAB, .compAInterCompB:
+            ctx.drawLayer { l in
+                l.clip(to: a, options: .inverse)
+                l.clip(to: b, options: .inverse)
+                l.fill(universe, with: .color(fill))
+            }
+        case .compInterAB, .compAUnionCompB:
+            // Everything except the overlap. There is no "inverse of an
+            // intersection" clip, so it is painted as its three disjoint
+            // pieces: A without B, B without A, and the outside of the union.
+            ctx.drawLayer { l in l.clip(to: b, options: .inverse); l.fill(a, with: .color(fill)) }
+            ctx.drawLayer { l in l.clip(to: a, options: .inverse); l.fill(b, with: .color(fill)) }
+            ctx.drawLayer { l in
+                l.clip(to: a, options: .inverse)
+                l.clip(to: b, options: .inverse)
+                l.fill(universe, with: .color(fill))
+            }
         case .unionABC:
             var u = Path(); u.addPath(a); u.addPath(b); u.addPath(c)
             ctx.fill(u, with: .color(fill))
@@ -162,13 +206,13 @@ struct VennDiagramView: View {
         ctx.stroke(b, with: .color(.blue), lineWidth: 2)
         if threeSets { ctx.stroke(c, with: .color(.blue), lineWidth: 2) }
 
-        // --- Poignées (points centraux) ---
+        // --- Handles ---
         for center in (threeSets ? [cA, cB, cC] : [cA, cB]) {
             ctx.fill(Path(ellipseIn: CGRect(x: center.x - 3, y: center.y - 3, width: 6, height: 6)),
                      with: .color(.blue.opacity(0.7)))
         }
 
-        // --- Étiquettes ---
+        // --- Labels ---
         ctx.draw(Text("A").font(.headline).foregroundColor(.blue),
                  at: CGPoint(x: cA.x - rA * 0.55, y: cA.y - rA * 0.55))
         ctx.draw(Text("B").font(.headline).foregroundColor(.blue),
@@ -179,11 +223,12 @@ struct VennDiagramView: View {
         }
         ctx.draw(Text("Ω").font(.caption).foregroundColor(.gray),
                  at: CGPoint(x: size.width - 22, y: 22))
+
+        // --- Region Sizes (inclusion-exclusion) ---
     }
 }
 
-// Cercle transparent déplaçable au doigt, borné au plateau,
-// avec une poignée sur le bord pour changer son rayon.
+// Draggable disc view
 struct DraggableDisc: View {
     let board: CGFloat
     let knobAngle: Double

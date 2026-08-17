@@ -36,10 +36,15 @@ private let mapCases: [MapCase] = [
             f: { $0 * $0 * $0 }, domain: -4...4, codomain: -4...4,
             injective: true, surjective: true),
 
-    MapCase(id: 3, chip: "eˣ", formula: "f(x) = eˣ",
-            domainLabel: "ℝ", codomainLabel: "ℝ",
-            f: { exp($0) }, domain: -4...4, codomain: -4...4,
-            injective: true, surjective: false),
+    // eˣ is a bijection ℝ → ℝ₊, and the ruler has to be able to show it. The
+    // bounded stand-in for ℝ₊ therefore starts at the smallest value the bounded
+    // stand-in for the domain actually reaches, and not at 0: eˣ never attains 0,
+    // so a codomain starting there paints a red "unreached" tick under a green
+    // "surjective" badge and puts a level with no preimage on the slider.
+    MapCase(id: 3, chip: "eˣ  onto ℝ₊", formula: "f(x) = eˣ",
+            domainLabel: "ℝ", codomainLabel: "ℝ₊",
+            f: { exp($0) }, domain: -6...4, codomain: exp(-6)...4,
+            injective: true, surjective: true),
 
     MapCase(id: 4, chip: "x³ − 3x", formula: "f(x) = x³ − 3x",
             domainLabel: "ℝ", codomainLabel: "ℝ",
@@ -134,7 +139,7 @@ struct InjectionSurjectionView: View {
     var body: some View {
         VStack(spacing: 10) {
 
-            Text("Injectivity & Surjectivity").font(.headline)
+            VizHeader("Injectivity & Surjectivity", subtitle: "Count the preimages of a horizontal line.")
 
             Text("\(current.formula),   \(current.domainLabel) → \(current.codomainLabel)")
                 .font(.system(size: 14, weight: .medium, design: .monospaced))
@@ -207,13 +212,10 @@ struct InjectionSurjectionView: View {
             .labelsHidden()
             .frame(width: graphSize)
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text("y = \(level, specifier: "%.2f")")
-                    .font(.caption).foregroundStyle(.secondary)
-                Slider(value: $level,
-                       in: current.codomain.lowerBound...current.codomain.upperBound)
-            }
-            .frame(width: graphSize - 40)
+            VizSlider(label: "y", value: $level,
+                      range: current.codomain.lowerBound...current.codomain.upperBound,
+                      step: 0.1, accent: .orange)
+                .frame(width: graphSize - 40)
 
             HStack(spacing: 5) {
                 Image(systemName: verdict.icon)
@@ -250,7 +252,7 @@ struct InjectionSurjectionView: View {
             for i in 0..<steps {
                 let y = lo + (hi - lo) * Double(i) / Double(steps)
                 let yNext = lo + (hi - lo) * Double(i + 1) / Double(steps)
-                let reached = segs.contains { y >= $0.0 - 1e-6 && y <= $0.1 + 1e-6 }
+                let reached = segs.contains { $0.0 <= yNext + 1e-6 && $0.1 >= y - 1e-6 }
                 var p = Path()
                 p.move(to: CGPoint(x: 6, y: cs.toScreen(x: 0, y: y).y))
                 p.addLine(to: CGPoint(x: 6, y: cs.toScreen(x: 0, y: yNext).y))

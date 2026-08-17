@@ -258,7 +258,7 @@ struct DarbouxView: View {
         let integral = fn.antiderivative.map { $0(b) - $0(a) }
 
         VStack(spacing: 9) {
-            Text("Darboux Sums").font(.headline)
+            VizHeader("Darboux Sums", subtitle: "Lower and upper staircases squeeze the area from both sides.")
             
             plot(slices)
 
@@ -275,6 +275,8 @@ struct DarbouxView: View {
             .frame(width: graphSize)
 
             readout(lower: now.lower, upper: now.upper, integral: integral)
+
+            note(gap: now.upper - now.lower, integral: integral, span: b - a)
 
             RefinementControl(level: $level,
                               range: DarbouxView.minLevel...DarbouxView.maxLevel,
@@ -383,6 +385,30 @@ struct DarbouxView: View {
     }
 
     // MARK: Readout
+
+    /// The three numbers on their own do not say what is happening. On the
+    /// Dirichlet comb in particular the screen is a solid black band and a
+    /// reading of "S⁺ 30.00", with nothing to say whether the sum is large
+    /// because the function is or because the gap simply never closes. One
+    /// line of prose, keyed to the case on screen.
+    private func note(gap: Double, integral: Double?, span: Double) -> some View {
+        let integrable = integral != nil
+        let text: String = integrable
+            ? "Gap S⁺ − S⁻ = \(String(format: "%.2f", gap)). Each + halves every slice, and the gap shrinks with it: the two staircases close on the same number from either side, and that number is ∫f."
+            : "Every slice, however short, holds both rationals and irrationals, so inf = 0 and sup = 1 on all of them. S⁻ stays 0 and S⁺ stays b − a = \(String(format: "%.2f", span)) at every depth: the gap never closes, and f is not Riemann integrable. The black band is the graph: the value jumps between 0 and 1 in every interval."
+
+        return HStack(alignment: .top, spacing: 6) {
+            Image(systemName: integrable ? "info.circle.fill" : "exclamationmark.triangle.fill")
+                .font(.system(size: 10))
+                .foregroundStyle(integrable ? Color.secondary : Color.orange)
+            Text(text)
+                .font(.system(size: 10.5))
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+        }
+        .frame(width: graphSize, alignment: .leading)
+    }
 
     private func readout(lower: Double, upper: Double, integral: Double?) -> some View {
         HStack(spacing: 10) {

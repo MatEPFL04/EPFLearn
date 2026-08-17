@@ -32,7 +32,7 @@ struct TAFView: View {
     let functions: [(Double) -> Double] = [Self.f1, Self.f2, Self.f3, Self.f4, Self.f5]
 
     func functionName(_ i: Int) -> String {
-        ["0.5x + 0.2 (Affine)", "x³ - x", "cos(πx)", "x⁴ - x²", "|x|"][i]
+        ["0.5x + 0.2 (Affine)", "x³ − x", "cos(πx)", "x⁴ − x²", "|x|"][i]
     }
 
     enum Functions: Int, CaseIterable { case f1, f2, f3, f4, f5 }
@@ -92,10 +92,10 @@ struct TAFView: View {
         let slope   = (f(b) - f(a)) / (b - a)
         let cPoints = findAllC(f: f, a: a, b: b)
 
-        VStack(spacing: 14) {
+        VStack(spacing: 9) {
 
             VStack(alignment: .leading, spacing: 2) {
-                Text("Mean Value Theorem").font(.headline)
+                VizHeader("Mean Value Theorem", subtitle: "Somewhere the tangent matches the slope between a and b.")
                 Text("f(x) = \(functionName(selectedFunction))")
                     .font(.system(size: 12, design: .monospaced))
                     .foregroundStyle(.secondary)
@@ -142,7 +142,7 @@ struct TAFView: View {
                 
                 // Indicateur visuel explicite en cas d'échec du MVT dû à la non-dérivabilité
                 if cPoints.isEmpty && selectedFunction == 4 {
-                    Text("No point c found (Non-differentiable at x=0)")
+                    Text("No point c found: f is not differentiable at x = 0")
                         .font(.caption.bold())
                         .foregroundStyle(.red)
                         .padding(6)
@@ -170,8 +170,16 @@ struct TAFView: View {
 
             // Sliders ajustés
             VStack(spacing: 10) {
-                labeledSlider(label: "Bound a", value: $a) { if a >= b - 0.1 { b = a + 0.1 } }
-                labeledSlider(label: "Bound b", value: $b) { if b <= a + 0.1 { a = b - 0.1 } }
+                // One stop of clearance is kept between the two, and the pusher
+                // is capped so it cannot leave the lattice or the range.
+                labeledSlider(label: "Bound a", value: $a) {
+                    a = min(a, 1.45)
+                    if b < a + 0.05 { b = a + 0.05 }
+                }
+                labeledSlider(label: "Bound b", value: $b) {
+                    b = max(b, -1.45)
+                    if a > b - 0.05 { a = b - 0.05 }
+                }
             }
             .frame(width: graphSize - 40)
         }
@@ -199,13 +207,9 @@ struct TAFView: View {
     @ViewBuilder
     private func labeledSlider(label: String, value: Binding<Double>,
                                 onChange: @escaping () -> Void) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("\(label) = \(value.wrappedValue, specifier: "%.2f")")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            Slider(value: value, in: -1.4...1.4, step: 0.01)
-                .onChange(of: value.wrappedValue) { onChange() }
-        }
+        VizSlider(label: label, value: value, range: -1.5...1.5, step: 0.05,
+                  accent: .orange)
+            .onChange(of: value.wrappedValue) { onChange() }
     }
 }
 

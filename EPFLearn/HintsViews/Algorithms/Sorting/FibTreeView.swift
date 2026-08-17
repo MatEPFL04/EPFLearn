@@ -149,48 +149,37 @@ struct FibTreeView: View {
     @State private var n: Double = 6
     @State private var memoized = false
     @State private var revealed = 0
-    @State private var isPlaying = false
-
-    private let timer = Timer.publish(every: 0.08, on: .main, in: .common).autoconnect()
 
     private var tree: FibTree { makeTree(n: Int(n)) }
     private var maxReveal: Int { memoized ? distinctSub(Int(n)) : totalCalls(Int(n)) }
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                Text("Dynamic Programming").font(.largeTitle.bold())
+            VStack(alignment: .leading, spacing: 12) {
+                VizHeader("Dynamic Programming", subtitle: "fib(n) = fib(n−1) + fib(n−2)", mono: true)
 
                 treeSection
                 costSection
                 controlsSection
                 explanationSection
             }
-            .padding(20)
+            .padding(14)
         }
         .background(Color(.systemGroupedBackground))
         .onAppear { revealed = maxReveal }
-        .onChange(of: memoized) { revealed = 0; isPlaying = true }    // bascule de mode → relance
-        .onChange(of: n) { isPlaying = false; revealed = maxReveal }  // pendant le drag : redimensionne en direct
-        .onReceive(timer) { _ in
-            guard isPlaying else { return }
-            guard revealed < maxReveal else { isPlaying = false; return }
-            let stepSize = max(1, maxReveal / 40)   // ~40 frames quelle que soit la taille → durée constante
-            revealed = min(revealed + stepSize, maxReveal)
-        }
+        // Switching mode or resizing the tree keeps the whole tree on screen;
+        // the reveal slider is what walks the calls, in either direction.
+        .onChange(of: memoized) { revealed = maxReveal }
+        .onChange(of: n) { revealed = maxReveal }
     }
 
     // MARK: Arbre
 
     private var treeSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("fib(n) = fib(n−1) + fib(n−2)")
-                .font(.system(.subheadline, design: .monospaced))
-                .foregroundStyle(.secondary)
-
+        VStack(alignment: .leading, spacing: 10) {
             Canvas { ctx, size in draw(ctx, size: size) }
                 .frame(maxWidth: .infinity)
-                .frame(height: 240)
+                .frame(height: 190)
                 .background(RoundedRectangle(cornerRadius: 12).fill(Color(.secondarySystemBackground)))
                 .clipShape(RoundedRectangle(cornerRadius: 12))
 
@@ -267,7 +256,7 @@ struct FibTreeView: View {
     // MARK: Coût
 
     private var costSection: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 8) {
             costRow(title: "Recursive (calls without memo)",
                     value: tree.totalNodes, color: .red, icon: "arrow.triangle.branch")
             Divider()
@@ -296,35 +285,23 @@ struct FibTreeView: View {
     // MARK: Contrôles
 
     private var controlsSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 10) {
             Picker("Mode", selection: $memoized) {
                 Text("Non-memoized").tag(false)
                 Text("Memoized").tag(true)
             }
-            .pickerStyle(.segmented)
+            .pickerStyle(.menu)
+            .labelsHidden()
 
-            VStack(alignment: .leading, spacing: 6) {
-                HStack {
-                    Text("n = \(Int(n))").font(.subheadline.weight(.medium))
-                    Spacer()
-                    Text("\(min(revealed, maxReveal)) / \(maxReveal)")
-                        .font(.caption.monospacedDigit())
-                        .foregroundStyle(.secondary)
-                }
-                Slider(value: $n, in: 1...8, step: 1) { editing in
-                    if !editing { revealed = 0; isPlaying = true }   // relâché → relance l'animation
-                }
-            }
+            VizSlider(label: "n", value: $n, range: 1...8, step: 1,
+                      accent: .cyan, format: "%.0f")
 
-            Button {
-                if isPlaying { isPlaying = false }
-                else { revealed = 0; isPlaying = true }
-            } label: {
-                Label(isPlaying ? "Pause" : "Replay",
-                      systemImage: isPlaying ? "pause.fill" : "play.fill")
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(.borderedProminent)
+            StepSlider(label: "Calls revealed",
+                       value: Binding(get: { min(revealed, maxReveal) },
+                                      set: { revealed = $0 }),
+                       range: 0...max(maxReveal, 0),
+                       accent: .cyan,
+                       valueText: "\(min(revealed, maxReveal)) / \(maxReveal)")
         }
         .padding()
         .background(RoundedRectangle(cornerRadius: 16).fill(Color(.secondarySystemGroupedBackground)))
@@ -337,9 +314,9 @@ struct FibTreeView: View {
             Text(memoized ? "With memoization" : "Without memoization")
                 .font(.headline)
             Text(memoized
-                 ? "Each value is computed only once: the grayed-out branches are cache hits, and the tree collapses to n+1 calls → O(n)."
-                 : "The same subproblems are recomputed again and again: the number of calls explodes exponentially → O(φⁿ).")
-                .font(.callout)
+                 ? "Each value is computed once; the grey branches are cache hits, so the tree collapses to n+1 calls → O(n)."
+                 : "The same subproblems are recomputed over and over: the number of calls explodes → O(φⁿ).")
+                .font(.footnote)
                 .foregroundStyle(.secondary)
         }
         .padding()

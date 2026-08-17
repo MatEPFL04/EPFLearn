@@ -61,19 +61,21 @@ struct BinarySearchView: View {
     private var targetIndex: Int? { arrayBin.firstIndex(of: target) }
 
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 14) {
+            VizHeader("Searching", subtitle: "Halving a sorted array against scanning it end to end.")
+
             panel(title: "Binary search", frames: framesBin, step: stepBin)
             if framesBin.count > 1 {
-                Slider(value: $stepBin, in: 0...Double(framesBin.count - 1), step: 1)
-                Text("Binary: \(Int(stepBin)) / \(framesBin.count - 1)")
-                    .font(.system(.caption2, design: .monospaced)).foregroundStyle(.secondary)
+                VizSlider(label: "Binary step", value: $stepBin,
+                          range: 0...Double(framesBin.count - 1), step: 1, accent: .cyan,
+                          valueText: "\(Int(stepBin)) / \(framesBin.count - 1)")
             }
 
             panel(title: "Linear search", frames: framesLin, step: stepLin)
             if framesLin.count > 1 {
-                Slider(value: $stepLin, in: 0...Double(framesLin.count - 1), step: 1)
-                Text("Linear: \(Int(stepLin)) / \(framesLin.count - 1)")
-                    .font(.system(.caption2, design: .monospaced)).foregroundStyle(.secondary)
+                VizSlider(label: "Linear step", value: $stepLin,
+                          range: 0...Double(framesLin.count - 1), step: 1, accent: .cyan,
+                          valueText: "\(Int(stepLin)) / \(framesLin.count - 1)")
             }
 
             Text("Target: \(target)")
@@ -85,10 +87,8 @@ struct BinarySearchView: View {
                 Button("Search") { run() }.buttonStyle(.borderedProminent)
             }
 
-            Text("Number of elements in the array: \(Int(n))")
-                .font(.system(.caption, design: .monospaced))
-                .foregroundStyle(.secondary)
-            Slider(value: $n, in: 1...100, step: 1)
+            VizSlider(label: "Number of elements", value: $n, range: 1...100,
+                      step: 1, accent: .cyan, format: "%.0f")
                 .onChange(of: n) {
                     reset()
                 }

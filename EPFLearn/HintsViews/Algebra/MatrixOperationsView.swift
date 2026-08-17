@@ -20,8 +20,9 @@ struct MatrixOperationsView: View {
         case add = "Add (A+B)"
         case transpose = "Transpose (Aᵀ)"
         case scalar = "Scalar Multiply (2A)"
-        
+
         var id: Self { self }
+
     }
     
     private var aRows: Int { max(1, min(4, Int(matrixARows.rounded()))) }
@@ -31,107 +32,67 @@ struct MatrixOperationsView: View {
     
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                Text("Matrix Operations").font(.largeTitle.bold())
-                
+            VStack(alignment: .leading, spacing: 12) {
+                VizHeader("Matrix Operations", subtitle: "Which shapes fit together, and what comes out.")
+
+                // Picture first, then the pickers and the sliders that drive it -
+                // the same order as every other visualization in the app.
+                visualizationSection
                 operationPickerSection
                 controlsSection
-                visualizationSection
             }
-            .padding(20)
+            .padding(14)
         }
         .background(Color(.systemGroupedBackground))
     }
     
+    /// A menu, under the picture, exactly like the preset pickers in the other
+    /// views. It started as a 120pt wheel above the matrices, which is what
+    /// made this view read as a different app from the rest.
+    private func sectionLabel(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: 9, weight: .bold))
+            .tracking(0.7)
+            .foregroundStyle(.secondary)
+    }
+
     private var operationPickerSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Operation").font(.subheadline.weight(.medium))
-            Picker("Operation", selection: $operation) {
-                ForEach(Operation.allCases) { op in
-                    Text(op.rawValue).tag(op)
-                }
+        Picker("Operation", selection: $operation) {
+            ForEach(Operation.allCases) { op in
+                Text(op.rawValue).tag(op)
             }
-            .pickerStyle(.wheel)
-            .labelsHidden()
-            .frame(height: 120)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
         }
+        .pickerStyle(.menu)
+        .labelsHidden()
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
     
     private var controlsSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Matrix A dimensions").font(.headline)
+        VStack(alignment: .leading, spacing: 10) {
+            sectionLabel("MATRIX A")
             
-            HStack(spacing: 16) {
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack {
-                        Text("Rows")
-                            .font(.subheadline.weight(.medium))
-                        Spacer()
-                        Text("\(aRows)")
-                            .font(.subheadline.monospacedDigit().weight(.semibold))
-                            .padding(.horizontal, 8).padding(.vertical, 2)
-                            .background(Capsule().fill(Color.pink.opacity(0.15)))
-                            .foregroundStyle(.pink)
-                    }
-                    Slider(value: $matrixARows, in: 1...4, step: 1).tint(.pink)
-                }
-                
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack {
-                        Text("Columns")
-                            .font(.subheadline.weight(.medium))
-                        Spacer()
-                        Text("\(aCols)")
-                            .font(.subheadline.monospacedDigit().weight(.semibold))
-                            .padding(.horizontal, 8).padding(.vertical, 2)
-                            .background(Capsule().fill(Color.pink.opacity(0.15)))
-                            .foregroundStyle(.pink)
-                    }
-                    Slider(value: $matrixACols, in: 1...4, step: 1).tint(.pink)
-                }
+            HStack(spacing: 12) {
+                VizSlider(label: "Rows", value: $matrixARows, range: 1...4, step: 1,
+                          accent: .pink, valueText: "\(aRows)")
+                VizSlider(label: "Columns", value: $matrixACols, range: 1...4, step: 1,
+                          accent: .pink, valueText: "\(aCols)")
             }
             
             if operation == .multiply || operation == .add {
-                Text("Matrix B dimensions").font(.headline)
+                sectionLabel("MATRIX B")
                 
-                HStack(spacing: 16) {
-                    VStack(alignment: .leading, spacing: 6) {
-                        HStack {
-                            Text("Rows")
-                                .font(.subheadline.weight(.medium))
-                            Spacer()
-                            Text("\(bRows)")
-                                .font(.subheadline.monospacedDigit().weight(.semibold))
-                                .padding(.horizontal, 8).padding(.vertical, 2)
-                                .background(Capsule().fill(Color.purple.opacity(0.15)))
-                                .foregroundStyle(.purple)
-                        }
-                        Slider(value: $matrixBRows, in: 1...4, step: 1).tint(.purple)
-                    }
-                    
-                    VStack(alignment: .leading, spacing: 6) {
-                        HStack {
-                            Text("Columns")
-                                .font(.subheadline.weight(.medium))
-                            Spacer()
-                            Text("\(bCols)")
-                                .font(.subheadline.monospacedDigit().weight(.semibold))
-                                .padding(.horizontal, 8).padding(.vertical, 2)
-                                .background(Capsule().fill(Color.purple.opacity(0.15)))
-                                .foregroundStyle(.purple)
-                        }
-                        Slider(value: $matrixBCols, in: 1...4, step: 1).tint(.purple)
-                    }
+                HStack(spacing: 12) {
+                    VizSlider(label: "Rows", value: $matrixBRows, range: 1...4, step: 1,
+                              accent: .purple, valueText: "\(bRows)")
+                    VizSlider(label: "Columns", value: $matrixBCols, range: 1...4, step: 1,
+                              accent: .purple, valueText: "\(bCols)")
                 }
             }
         }
     }
     
     private var visualizationSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Visualization").font(.headline)
-            
+        VStack(alignment: .leading, spacing: 12) {
             switch operation {
             case .multiply:
                 multiplyVisualization

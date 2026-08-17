@@ -15,10 +15,20 @@ struct SettingsView: View {
     @State private var showError = false
     @State private var errorMessage = ""
 
+    @AppStorage("dailyReminderEnabled") private var reminderEnabled = false
+    @State private var showReminderDeniedAlert = false
+
     @Query private var allRecords: [QuizResultRecord]
 
     private var myRecordCount: Int {
         allRecords.filter { $0.userID == profile.id }.count
+    }
+
+    private var hasCompletedQuizToday: Bool {
+        let today = Calendar.current.startOfDay(for: .now)
+        return allRecords.contains {
+            $0.userID == profile.id && Calendar.current.startOfDay(for: $0.date) == today
+        }
     }
 
     private var appVersion: String {
@@ -37,6 +47,15 @@ struct SettingsView: View {
                     Text("Your data")
                 } footer: {
                     Text("LearnViz has no accounts. Everything you do stays on this device and is never uploaded.")
+                }
+
+                Section {
+                    Toggle("Daily reminder", isOn: $reminderEnabled)
+                        .onChange(of: reminderEnabled) { _, isOn in
+                            handleReminderToggle(isOn)
+                        }
+                } footer: {
+                    Text("A single evening nudge if you haven't practiced yet, never on a day you already have.")
                 }
 
                 Section {
@@ -76,6 +95,26 @@ struct SettingsView: View {
                 Button("OK", role: .cancel) { }
             } message: {
                 Text(errorMessage)
+            }
+            .alert("Notifications are off", isPresented: $showReminderDeniedAlert) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text("Enable notifications for LearnScope in the Settings app to get a daily reminder.")
+            }
+        }
+    }
+
+    private func handleReminderToggle(_ isOn: Bool) {
+        guard isOn else {
+            ReminderManager.cancel()
+            return
+        }
+        ReminderManager.requestAuthorization { granted in
+            if granted {
+                ReminderManager.reschedule(hasCompletedQuizToday: hasCompletedQuizToday)
+            } else {
+                reminderEnabled = false
+                showReminderDeniedAlert = true
             }
         }
     }

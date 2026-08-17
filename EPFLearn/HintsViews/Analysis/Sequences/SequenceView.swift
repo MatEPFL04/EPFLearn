@@ -141,7 +141,7 @@ struct SequenceView: View {
         VStack(alignment: .leading, spacing: 12) {
 
             VStack(alignment: .leading, spacing: 2) {
-                Text("Subsequences").font(.headline)
+                VizHeader("Subsequences", subtitle: "Picking out terms along one index pattern.")
                 Text("uₙ = \(preset.displayName)")
                     .font(.system(size: 12, design: .monospaced))
                     .foregroundStyle(.secondary)
@@ -178,24 +178,13 @@ struct SequenceView: View {
                 .font(.caption2)
             }
 
-            HStack(spacing: 8) {
-                Text("n")
-                    .font(.caption.bold())
-                    .foregroundStyle(SeqPalette.term)
-                    .frame(width: 16)
-                Slider(
-                    value: .init(get: { Double(shown) },
-                                 set: { shown = Int($0) }),
-                    in: 1...Double(seq.count),
-                    step: 1
-                )
-                .tint(SeqPalette.term)
-                Text("\(currentN)")
-                    .font(.system(.caption2, design: .monospaced))
-                    .foregroundStyle(.secondary)
-                    .frame(width: 34, alignment: .trailing)
-            }
-            .padding(.horizontal, 8)
+            VizSlider(label: "n",
+                      value: Binding(get: { Double(shown) }, set: { shown = Int($0) }),
+                      range: 1...Double(seq.count),
+                      step: 1,
+                      accent: SeqPalette.term,
+                      valueText: "\(currentN)")
+                .padding(.horizontal, 8)
 
             SeqReadout(
                 badge: "n = \(currentN)",

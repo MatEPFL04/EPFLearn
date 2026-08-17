@@ -28,6 +28,10 @@ struct AbstractionView: View {
         "}"
     ]
 
+    /// The loop header and the one call site inside it.
+    private let loopLine = 9
+    private let callLine = 10
+
     private enum Card: Equatable {
         case circle, square
 
@@ -46,41 +50,53 @@ struct AbstractionView: View {
         let note: String?
     }
 
-    private let frames: [Frame] = [
-        Frame(line: -1, highlight: nil, calledMethod: nil, result: nil,
-              note: "Shape only declares what every shape must offer, not how"),
-        Frame(line: 1, highlight: nil, calledMethod: nil, result: nil,
-              note: "abstract area() has no body, so Shape alone is incomplete: Java refuses 'new Shape()'"),
-        Frame(line: 4, highlight: .circle, calledMethod: nil, result: nil,
-              note: "Circle extends Shape and writes its own area(): π · r²"),
-        Frame(line: 7, highlight: .square, calledMethod: nil, result: nil,
-              note: "Square extends Shape and writes a different area(): s · s"),
-        Frame(line: 10, highlight: .circle, calledMethod: "Circle.area()", result: "12.56",
-              note: "watch: sh is declared as Shape, but Java checks the real object first. It's a Circle, so Circle's area() runs"),
-        Frame(line: 10, highlight: .square, calledMethod: "Square.area()", result: "9.00",
-              note: nil)
-    ]
+    private var frames: [Frame] {
+        [
+            Frame(line: -1, highlight: nil, calledMethod: nil, result: nil,
+                  note: "Shape says what, not how"),
+            Frame(line: 1, highlight: nil, calledMethod: nil, result: nil,
+                  note: "no body → new Shape() is refused"),
+            Frame(line: 4, highlight: .circle, calledMethod: nil, result: nil,
+                  note: "Circle writes its own area()"),
+            Frame(line: 7, highlight: .square, calledMethod: nil, result: nil,
+                  note: "Square writes a different area()"),
+            // The loop header gets its own frame before each call: the point is
+            // that one call site is reached twice, with sh bound differently.
+            Frame(line: loopLine, highlight: .circle, calledMethod: nil, result: nil,
+                  note: "pass 1: sh is the Circle"),
+            Frame(line: callLine, highlight: .circle, calledMethod: "Circle.area()", result: "12.56",
+                  note: "sh is a Circle → Circle.area() runs"),
+            Frame(line: loopLine, highlight: .square, calledMethod: nil, result: nil,
+                  note: "pass 2: sh is the Square"),
+            Frame(line: callLine, highlight: .square, calledMethod: "Square.area()", result: "9.00",
+                  note: "same line, the real object picks the body"),
+        ]
+    }
 
     private var total: Int { frames.count - 1 }
     private var fr: Frame { frames[min(step, total)] }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 7) {
             PBHeader("Abstraction")
 
             PBAdaptive {
                 stage
             } code: {
-                PBCodePane(lines: code.map { PBCodePane.Line(code: $0) },
-                           current: fr.line, accent: PB.num, maxVisibleLines: 12)
+                PBCodePane(lines: paneLines, current: fr.line,
+                           accent: PB.num, maxVisibleLines: 9)
                     .pbViewport()
             }
 
             PBStepper(step: $step, total: total, accent: PB.num)
         }
-        .padding(14)
+        .padding(12)
         .frame(maxWidth: .infinity, alignment: .top)
         .background(Color(.systemGroupedBackground))
+    }
+
+    private var paneLines: [PBCodePane.Line] {
+        code.map { PBCodePane.Line(code: $0) }
     }
 
     private var stage: some View {
@@ -92,11 +108,11 @@ struct AbstractionView: View {
                 blueprint(.square)
             }
         }
-        .padding(14)
-        .frame(minHeight: 190)
+        .padding(10)
+        .frame(minHeight: 150)
         .pbViewport()
         .overlay(alignment: .bottomLeading) {
-            if let note = fr.note { PBNote(text: note).padding(9) }
+            if let note = fr.note { PBNote(text: note).padding(7) }
         }
         .animation(.spring(duration: 0.3), value: step)
     }
@@ -138,15 +154,17 @@ struct AbstractionView: View {
     private func blueprint(_ card: Card) -> some View {
         let active = fr.highlight == card
         return VStack(spacing: 6) {
+            // Tinted rather than grey when idle: three shades of grey on one
+            // card read as disabled, not as "not the one running right now".
             Text(card.name)
                 .font(.system(size: 13, weight: .bold, design: .monospaced))
-                .foregroundColor(active ? card.color : .primary.opacity(0.4))
+                .foregroundColor(card.color.opacity(active ? 1 : 0.6))
             Text("extends Shape")
                 .font(.system(size: 8, design: .monospaced))
-                .foregroundColor(.primary.opacity(0.3))
+                .foregroundColor(card.color.opacity(active ? 0.7 : 0.45))
             Text("area() = \(card.formula)")
                 .font(.system(size: 10, weight: .semibold, design: .monospaced))
-                .foregroundColor(active ? card.color : .primary.opacity(0.35))
+                .foregroundColor(card.color.opacity(active ? 1 : 0.55))
                 .padding(.top, 2)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)

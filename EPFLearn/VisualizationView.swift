@@ -33,7 +33,7 @@ struct VisualizationView: View {
             TAFView(2)
             
         case .fixedPoint:
-            FixedPointView(1)
+            FixedPointView(0)
             
      
         case .lhopital:     LHopitalView()
@@ -93,7 +93,7 @@ struct VisualizationView: View {
             
 
         case .DFS: DFSView(n: 6, connected: false)
-        case .BFS: BFSView(n: 3, connected: true)
+        case .BFS: BFSView(n: 6, connected: true)
         case .prim: PrimView()
         case .kruskal: KruskalView()
         case .djikistra: DijkstraView()
@@ -109,23 +109,81 @@ struct VisualizationView: View {
                 ScrollView {
                     vizContent
                         .frame(maxWidth: .infinity)
+                        // On a tall screen (iPad) the content is often shorter
+                        // than the viewport; centering it instead of pinning
+                        // it to the top avoids a dead gap under the plot.
+                        .frame(minHeight: proxy.size.height, alignment: .center)
                 }
                 .clipped()
+                // One ground for every subject: the views used to differ on
+                // whether they painted a background at all.
+                .background(Color(.systemGroupedBackground))
                 .environment(\.plotWidth, proxy.size.width)
                 .safeAreaInset(edge: .bottom) {
                     if !hint.isEmpty {
-                        Text(hint)
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(nil)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .padding()
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(.regularMaterial)
+                        HintCallout(text: hint)
                     }
                 }
             }
         }
+}
+
+/// The hint used to be grey footnote text on a material bar and read as a
+/// caption nobody was meant to act on. It is now a badged, orange-tinted
+/// callout, collapsible so a long hint never swallows the view it points at.
+struct HintCallout: View {
+    let text: String
+    @State private var expanded = true
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Button {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) {
+                    expanded.toggle()
+                }
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "lightbulb.fill")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(.white)
+                        .frame(width: 22, height: 22)
+                        .background(Circle().fill(.orange))
+
+                    Text("HINT")
+                        .font(.system(size: 11, weight: .heavy))
+                        .kerning(1.2)
+                        .foregroundStyle(.orange)
+
+                    Spacer(minLength: 0)
+
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(.orange.opacity(0.7))
+                        .rotationEffect(.degrees(expanded ? 0 : -90))
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+
+            if expanded {
+                Text(text)
+                    .font(.callout)
+                    .foregroundStyle(.primary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, 6)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.orange.opacity(0.12))
+        .background(.regularMaterial)
+        .overlay(alignment: .top) {
+            Rectangle().fill(.orange.opacity(0.5)).frame(height: 1)
+        }
+    }
 }
 
 #Preview {

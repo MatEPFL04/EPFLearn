@@ -7,161 +7,176 @@
 
 import SwiftUI
 
-/// Interactive binomial coefficients and Pascal's triangle visualization
+/// Pascal's triangle, kept to one screen: the triangle itself and a detail
+/// card that only appears once an entry is tapped.
 struct BinomialCoefficientsView: View {
-    @State private var rows: Int = 5
+    @State private var rows: Int = 7
     @State private var selectedN: Int? = nil
     @State private var selectedK: Int? = nil
-    
+
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                // Header compact
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Pascal's Triangle").font(.title.bold())
-                    Text("Each value = sum of two above")
-                        .font(.body)
-                        .foregroundStyle(.secondary)
-                }
-                
-                // Contrôle rows
-                HStack {
-                    Text("Rows")
-                        .font(.subheadline.weight(.medium))
-                        .foregroundStyle(.secondary)
-                    
-                    Stepper("\(rows)", value: $rows, in: 2...6)
-                        .frame(maxWidth: 200)
-                }
-                .padding(12)
-                .background(RoundedRectangle(cornerRadius: 8).fill(Color(.secondarySystemGroupedBackground)))
-                
-                // Sélection interactive
-                if let n = selectedN, let k = selectedK {
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Text("C(\(n),\(k)) = \(binomialCoefficient(n, k))")
-                                .font(.headline.monospaced())
-                                .foregroundStyle(.purple)
-                            Spacer()
-                            Button {
-                                withAnimation {
-                                    selectedN = nil
-                                    selectedK = nil
-                                }
-                            } label: {
-                                Image(systemName: "xmark.circle.fill")
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-                        
-                        // Montrer la propriété de Pascal
-                        if n > 0 {
-                            if k == 0 || k == n {
-                                Text("Edge: always = 1")
-                                    .font(.caption.monospaced())
-                                    .foregroundStyle(.orange)
-                            } else {
-                                Text("= C(\(n-1),\(k-1)) + C(\(n-1),\(k))")
-                                    .font(.caption.monospaced())
-                                    .foregroundStyle(.orange)
-                            }
-                        }
-                    }
-                    .padding(12)
-                    .background(RoundedRectangle(cornerRadius: 12).fill(Color.purple.opacity(0.1)))
-                    .transition(.scale.combined(with: .opacity))
-                }
-                
-                // Pascal's Triangle avec flèches visuelles
-                VStack(spacing: 8) {
-                    ForEach(0..<rows, id: \.self) { n in
-                        HStack(spacing: 8) {
-                            ForEach(0...n, id: \.self) { k in
-                                let value = binomialCoefficient(n, k)
-                                let isSelected = (selectedN == n && selectedK == k)
-                                // Highlight both parents: C(n-1, k-1) AND C(n-1, k)
-                                let isPartOfSum: Bool = {
-                                    guard let sel = selectedN, let selK = selectedK else { return false }
-                                    if n != sel - 1 { return false }
-                                    // C(sel, selK) = C(n, k-1) + C(n, k)
-                                    return k == selK - 1 || k == selK
-                                }()
-                                
-                                Text("\(value)")
-                                    .font(.system(size: cellFontSize, weight: isSelected ? .bold : .regular, design: .rounded))
-                                    .foregroundStyle(isSelected ? .white : (isPartOfSum ? .orange : .purple))
-                                    .frame(width: cellSize, height: cellSize)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .fill(isSelected ? Color.purple : (isPartOfSum ? Color.orange.opacity(0.2) : Color.purple.opacity(0.08)))
-                                    )
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .strokeBorder(isPartOfSum ? Color.orange : Color.clear, lineWidth: 2)
-                                    )
-                                    .scaleEffect(isSelected ? 1.1 : 1.0)
-                                    .onTapGesture {
-                                        withAnimation(.spring(duration: 0.3)) {
-                                            if selectedN == n && selectedK == k {
-                                                selectedN = nil
-                                                selectedK = nil
-                                            } else {
-                                                selectedN = n
-                                                selectedK = k
-                                            }
-                                        }
-                                    }
-                            }
-                        }
+        VStack(alignment: .leading, spacing: 10) {
+            VizHeader("Binomial Coefficients", subtitle: "C(n,k) is the number of k-element subsets of a set of n.")
+
+            VizSlider(label: "Pascal rows", intValue: $rows, range: 2...9,
+                      accent: .blue, caption: "up to n = \(rows - 1)")
+                .onChange(of: rows) { newValue in
+                    if let n = selectedN, n >= newValue {
+                        selectedN = nil
+                        selectedK = nil
                     }
                 }
-                .padding()
-                .background(RoundedRectangle(cornerRadius: 16).fill(Color(.secondarySystemGroupedBackground)))
-                
-                // Propriété visuelle
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Pascal's Identity")
-                        .font(.headline)
-                    
-                    HStack(spacing: 8) {
-                        Image(systemName: "arrow.down.left")
-                            .foregroundStyle(.orange)
-                        Text("+")
-                            .font(.title3.bold())
-                        Image(systemName: "arrow.down.right")
-                            .foregroundStyle(.orange)
-                        Text("=")
-                            .font(.title3.bold())
-                        Image(systemName: "arrow.down")
-                            .foregroundStyle(.purple)
-                    }
+
+            triangle
+
+            if let n = selectedN, let k = selectedK {
+                selectionCard(n: n, k: k)
+            } else {
+                Label("Tap an entry to see where it comes from.", systemImage: "hand.tap")
                     .font(.caption)
-                    
-                    Text("Tap any number to see how it's the sum of the two above it!")
-                        .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer(minLength: 0)
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .topLeading)
+    }
+
+    // MARK: - The triangle
+
+    private var triangle: some View {
+        VStack(spacing: 5) {
+            ForEach(0..<rows, id: \.self) { n in
+                HStack(spacing: 4) {
+                    ForEach(0...n, id: \.self) { k in
+                        cell(n: n, k: k)
+                    }
+                }
+            }
+        }
+        .padding(.vertical, 10)
+        .padding(.horizontal, 8)
+        .frame(maxWidth: .infinity)
+        .background(Color(.secondarySystemBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .overlay(RoundedRectangle(cornerRadius: 10).stroke(.gray.opacity(0.2)))
+    }
+
+    private func cell(n: Int, k: Int) -> some View {
+        let value = binomialCoefficient(n, k)
+        let isSelected = (selectedN == n && selectedK == k)
+        // Both parents of the selected entry: C(n,k) = C(n-1,k-1) + C(n-1,k).
+        let isParent: Bool = {
+            guard let sel = selectedN, let selK = selectedK else { return false }
+            guard n == sel - 1 else { return false }
+            return k == selK - 1 || k == selK
+        }()
+        // Spelled out rather than nested in ternaries: the type checker chokes
+        // on three-deep colour conditionals inside a modifier chain.
+        let foreground: Color
+        let background: Color
+        let border: Color
+        if isSelected {
+            foreground = .white; background = .purple; border = .clear
+        } else if isParent {
+            foreground = .orange; background = Color.orange.opacity(0.22); border = .orange
+        } else {
+            foreground = .purple; background = Color.purple.opacity(0.08); border = .clear
+        }
+
+        return Text("\(value)")
+            .font(.system(size: cellFontSize, weight: isSelected ? .bold : .regular, design: .rounded))
+            .foregroundStyle(foreground)
+            .lineLimit(1)
+            .minimumScaleFactor(0.5)
+            .frame(width: cellSize, height: cellSize)
+            .background(RoundedRectangle(cornerRadius: 7).fill(background))
+            .overlay(RoundedRectangle(cornerRadius: 7).strokeBorder(border, lineWidth: 1.5))
+            .scaleEffect(isSelected ? 1.08 : 1.0)
+            .onTapGesture {
+                withAnimation(.spring(duration: 0.3)) {
+                    if selectedN == n && selectedK == k {
+                        selectedN = nil
+                        selectedK = nil
+                    } else {
+                        selectedN = n
+                        selectedK = k
+                    }
+                }
+            }
+    }
+
+    // MARK: - Detail of the tapped entry
+
+    private func selectionCard(n: Int, k: Int) -> some View {
+        VStack(alignment: .leading, spacing: 7) {
+            HStack {
+                Text("C(\(n),\(k)) = \(binomialCoefficient(n, k))")
+                    .font(.headline.monospaced())
+                    .foregroundStyle(.purple)
+                Spacer()
+                Button {
+                    withAnimation {
+                        selectedN = nil
+                        selectedK = nil
+                    }
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
                         .foregroundStyle(.secondary)
                 }
-                .padding()
-                .background(RoundedRectangle(cornerRadius: 12).fill(Color.orange.opacity(0.08)))
             }
-            .padding(20)
+
+            if k == 0 || k == n {
+                detailRow(.orange, "Edge of the row: always 1.")
+            } else {
+                detailRow(.orange,
+                          "C(\(n-1),\(k-1)) + C(\(n-1),\(k)) = \(binomialCoefficient(n-1, k-1)) + \(binomialCoefficient(n-1, k))   (the two orange parents)")
+            }
         }
-        .background(Color(.systemGroupedBackground))
+        .padding(10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(.secondarySystemBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .overlay(RoundedRectangle(cornerRadius: 10).stroke(.gray.opacity(0.2)))
+        .transition(.opacity)
     }
-    
+
+    private func detailRow(_ tint: Color, _ text: String) -> some View {
+        HStack(alignment: .top, spacing: 7) {
+            Circle().fill(tint).frame(width: 5, height: 5).padding(.top, 6)
+            Text(text)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    // MARK: - Metrics
+
     private var cellSize: CGFloat {
-        rows <= 4 ? 55 : 50
+        switch rows {
+        case ...4: return 46
+        case 5:    return 42
+        case 6:    return 38
+        case 7:    return 34
+        case 8:    return 30
+        default:   return 27
+        }
     }
-    
+
     private var cellFontSize: CGFloat {
-        rows <= 4 ? 18 : 16
+        switch rows {
+        case ...5: return 17
+        case 6, 7: return 14
+        default:   return 12
+        }
     }
-    
+
     private func binomialCoefficient(_ n: Int, _ k: Int) -> Int {
         guard k >= 0, k <= n else { return 0 }
         if k == 0 || k == n { return 1 }
-        
+
         let k = min(k, n - k)
         var result = 1
         for i in 0..<k {

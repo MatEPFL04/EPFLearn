@@ -240,21 +240,19 @@ struct TrigSlider: View {
     let range: ClosedRange<Double>
     let tint: Color
     var asMultipleOfPi = false
+    /// Applied to whatever the thumb produces. The canvas magnetises a dragged
+    /// point onto the notable angles; without the same treatment here, the two
+    /// controls disagree about which values of θ exist.
+    var snap: ((Double) -> Double)? = nil
+
+    private var proxy: Binding<Double> {
+        Binding(get: { value },
+                set: { new in value = snap.map { $0(new) } ?? new })
+    }
 
     var body: some View {
-        // Marge horizontale volontaire : un slider collé au bord entre en
-        // conflit avec le geste de retour.
-        HStack(spacing: 8) {
-            Text(title)
-                .font(.caption.bold())
-                .foregroundStyle(tint)
-                .frame(width: 26, alignment: .leading)
-            Slider(value: $value, in: range).tint(tint)
-            Text(asMultipleOfPi ? String(format: "%.2fπ", value / .pi)
-                                : String(format: "%.2f", value))
-                .font(.system(.caption2, design: .monospaced))
-                .foregroundStyle(.secondary)
-                .frame(width: 46, alignment: .trailing)
-        }
+        VizSlider(label: title, value: proxy, range: range, accent: tint,
+                  valueText: asMultipleOfPi ? String(format: "%.2fπ", value / .pi)
+                                            : String(format: "%.2f", value))
     }
 }

@@ -169,18 +169,16 @@ struct QuickSortView: View {
     private var maxStep: Int { max(0, max(framesShuf.count, framesStruct.count) - 1) }
 
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 14) {
+            VizHeader("Quicksort", subtitle: "The pivot decides how evenly the array splits.")
 
             panel(title: "Random array", frame: displayed(framesShuf, baseShuf))
             panel(title: input.rawValue,  frame: displayed(framesStruct, baseStruct))
 
             if maxStep > 0 {
-                VStack(spacing: 4) {
-                    Slider(value: $step, in: 0...Double(maxStep), step: 1)
-                    Text("Step \(Int(step)) / \(maxStep)")
-                        .font(.system(.caption2, design: .monospaced))
-                        .foregroundStyle(.secondary)
-                }
+                VizSlider(label: "Step", value: $step, range: 0...Double(maxStep),
+                          step: 1, accent: .cyan,
+                          valueText: "\(Int(step)) / \(maxStep)")
             }
 
             HStack(spacing: 12) {

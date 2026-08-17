@@ -30,6 +30,14 @@ struct VectorSpaceView: View {
 
     init(is3D: Bool = true) {
         _is3D = State(initialValue: is3D)
+        // The planar view is the determinant view: it opens on the identity,
+        // the one pair whose det every other example is read against. v3 keeps
+        // its default so switching to ℝ³ still lands on an independent trio.
+        if !is3D {
+            _v1 = State(initialValue: V3(1, 0, 0))
+            _v2 = State(initialValue: V3(0, 1, 0))
+            _presetIndex = State(initialValue: 1)   // "Identity" in planarPresets
+        }
     }
 
     static let warm = Color(red: 1.00, green: 0.80, blue: 0.26)
@@ -53,6 +61,23 @@ struct VectorSpaceView: View {
         is3D ? MatrixPreset.sharedPresets : MatrixPreset.planarPresets
     }
 
+    /// The length of v⃗₁, kept as a binding so a slider can scale that column
+    /// without changing its direction. Dragging a tip can only ever set a
+    /// length by eye, which left "what does tripling a column do to det?"
+    /// impossible to check.
+    private var v1Length: Binding<Double> {
+        Binding(
+            get: { (v1.x * v1.x + v1.y * v1.y).squareRoot() },
+            set: { new in
+                let current = (v1.x * v1.x + v1.y * v1.y).squareRoot()
+                guard current > 0.0001 else { v1 = V3(new, 0, 0); return }
+                let k = new / current
+                v1 = V3(v1.x * k, v1.y * k, 0)
+                presetIndex = 0
+            }
+        )
+    }
+
     private var camAzimuth: Double { is3D ? azimuth : -.pi / 2 }
     private var camElevation: Double { is3D ? elevation : .pi / 2 - 0.0006 }
 
@@ -61,9 +86,9 @@ struct VectorSpaceView: View {
             VStack(alignment: .leading, spacing: 10) {
                 viewport
                 if !is3D {
-                    Text("Drag either dot on the graph to rotate or rescale that vector.")
-                        .font(.system(size: 10.5))
-                        .foregroundStyle(.secondary)
+                    VizSlider(label: "length of v₁", value: v1Length, range: 0.5...4,
+                              accent: .cyan, format: "%.2f",
+                              caption: "Drag either dot on the graph to turn a vector; use this to scale v⃗₁ exactly.")
                 }
                 controlDeck
                 analysisCard
@@ -90,7 +115,7 @@ struct VectorSpaceView: View {
             Canvas { ctx, size in
                 render(ctx, size: size)
             }
-            .frame(height: 360)
+            .frame(height: 300)   // matches the other algebra viewports, and keeps the readouts on screen
             .background(
                 LinearGradient(colors: [Color(.secondarySystemBackground),
                                         Color(.tertiarySystemBackground)],
@@ -145,11 +170,41 @@ struct VectorSpaceView: View {
                 guard let idx = draggingVector,
                       let math = p.unprojectToZPlane(g.location) else { return }
 
-                let clamped = V3(min(max(math.x, -4), 4), min(max(math.y, -4), 4), 0)
+                let snapped = snapDirection(math, against: idx == 0 ? w2 : w1)
+                let clamped = V3(min(max(snapped.x, -4), 4), min(max(snapped.y, -4), 4), 0)
                 if idx == 0 { v1 = clamped } else { v2 = clamped }
                 presetIndex = 0
             }
             .onEnded { _ in draggingVector = nil }
+    }
+
+    /// Aimantation. det = 0 is the state this view exists to show, and it needs
+    /// the two arrows to be exactly collinear - which no fingertip ever manages
+    /// on its own. So while a tip is dragged, its direction snaps onto the other
+    /// vector's line (pointing the same way or the opposite way) and onto the
+    /// axes. Only the direction is snapped; the length stays wherever the finger
+    /// put it, since none of the questions turn on it.
+    private func snapDirection(_ p: V3, against other: V3) -> V3 {
+        let r = (p.x * p.x + p.y * p.y).squareRoot()
+        guard r > 0.15 else { return p }
+        let angle = atan2(p.y, p.x)
+
+        // The other vector's line first, so it wins whenever it nearly
+        // coincides with an axis: collinearity is what we are aiming for.
+        var targets: [Double] = []
+        if (other.x * other.x + other.y * other.y).squareRoot() > 0.15 {
+            let a = atan2(other.y, other.x)
+            targets += [a, a + .pi]
+        }
+        targets += [0, .pi / 2, .pi, -.pi / 2]
+
+        // ~7°, matching the tolerance the trig view uses for the same job.
+        let tolerance = 0.12
+        for t in targets {
+            let d = atan2(sin(angle - t), cos(angle - t))
+            if abs(d) < tolerance { return V3(r * cos(t), r * sin(t), 0) }
+        }
+        return p
     }
 
     private var hud: some View {
@@ -198,7 +253,7 @@ struct VectorSpaceView: View {
                     Text("ℝ²").tag(false)
                     Text("ℝ³").tag(true)
                 }
-                .pickerStyle(.segmented)
+                .pickerStyle(.menu)
                 .labelsHidden()
                 Text(is3D ? "three vectors, three coordinates"
                           : "two vectors, two coordinates")
@@ -218,7 +273,7 @@ struct VectorSpaceView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(10)
-        .background(RoundedRectangle(cornerRadius: 13).fill(Color(.secondarySystemGroupedBackground)))
+        .background(RoundedRectangle(cornerRadius: 16).fill(Color(.secondarySystemGroupedBackground)))
     }
 
     private func sectionLabel(_ s: String) -> some View {
@@ -253,7 +308,7 @@ struct VectorSpaceView: View {
         }
         .padding(10)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(RoundedRectangle(cornerRadius: 13).fill(Color(.secondarySystemGroupedBackground)))
+        .background(RoundedRectangle(cornerRadius: 16).fill(Color(.secondarySystemGroupedBackground)))
     }
 
     private var columnCount: Int { is3D ? 3 : 2 }

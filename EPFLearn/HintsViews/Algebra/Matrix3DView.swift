@@ -305,7 +305,7 @@ struct Matrix3DView: View {
         }
         .padding(10)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(RoundedRectangle(cornerRadius: 13).fill(Color(.secondarySystemGroupedBackground)))
+        .background(RoundedRectangle(cornerRadius: 16).fill(Color(.secondarySystemGroupedBackground)))
     }
 
     /// Av = x·Ae₁ + y·Ae₂ + z·Ae₃, the "by columns" reading of the product.
@@ -535,22 +535,33 @@ struct Matrix3DView: View {
     // Test vector v and its image Av, both labelled, with plumb lines to the floor
     private func drawVectors(_ ctx: GraphicsContext, _ p: Projector, _ A: M3) {
         let img = A.apply(vector)
+        let vTip = p.project(vector)
+        let avTip = p.project(img)
+
+        // Whenever A fixes v the two tips land on the same pixel, and with the
+        // identity that is the very first thing on screen. Both labels would
+        // then print on top of each other, so they are split apart vertically
+        // instead: v⃗ above the tip, Av⃗ below it.
+        let crowded: Bool = {
+            guard let a = vTip, let b = avTip else { return false }
+            return hypot(a.x - b.x, a.y - b.y) < 30
+        }()
 
         arrow(ctx, p, from: .zero, to: vector,
               color: Matrix3DView.vSceneColor.opacity(0.55), width: 2.5, dashed: true)
         plumb(ctx, p, vector, color: Matrix3DView.vSceneColor.opacity(0.25))
-        if let tip = p.project(vector) {
+        if let tip = vTip {
             ctx.draw(Text("v⃗").font(.system(size: 14, weight: .heavy))
                         .foregroundStyle(Matrix3DView.vSceneColor),
-                     at: CGPoint(x: tip.x + 14, y: tip.y - 12))
+                     at: CGPoint(x: tip.x + 14, y: tip.y - (crowded ? 26 : 12)))
         }
 
         arrow(ctx, p, from: .zero, to: img, color: Matrix3DView.avSceneColor, width: 5)
         plumb(ctx, p, img, color: Matrix3DView.avSceneColor.opacity(0.35))
-        if let tip = p.project(img) {
+        if let tip = avTip {
             ctx.draw(Text("Av⃗").font(.system(size: 14, weight: .heavy))
                         .foregroundStyle(Matrix3DView.avSceneColor),
-                     at: CGPoint(x: tip.x + 18, y: tip.y - 12))
+                     at: CGPoint(x: tip.x + 20, y: tip.y + (crowded ? 16 : -12)))
         }
     }
 

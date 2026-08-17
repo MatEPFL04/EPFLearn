@@ -115,17 +115,14 @@ struct PBAdaptive<Stage: View, Code: View>: View {
     }
 }
 
-/// Title + optional trailing control on one row (used by every view header).
+/// Title + optional trailing control on one row. A thin name for the app-wide
+/// `VizHeader`, so the programming views open exactly like every other subject.
 struct PBHeader<Trailing: View>: View {
     let title: String
     @ViewBuilder var trailing: Trailing
 
     var body: some View {
-        HStack(alignment: .firstTextBaseline) {
-            Text(title).font(.title.bold())
-            Spacer()
-            trailing
-        }
+        VizHeader(title: title) { trailing }
     }
 }
 
@@ -155,21 +152,21 @@ struct PBCodePane: View {
     let lines: [Line]
     let current: Int
     var accent: Color = .cyan
-    var maxVisibleLines: Int = 11
+    var maxVisibleLines: Int = 9
 
-    private let rowHeight: CGFloat = 27
+    private let rowHeight: CGFloat = 21
 
     var body: some View {
         ScrollViewReader { proxy in
             ScrollView(.vertical, showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 1) {
                     ForEach(lines.indices, id: \.self) { i in
                         row(i).id(i)
                     }
                 }
-                .padding(10)
+                .padding(7)
             }
-            .frame(height: rowHeight * CGFloat(min(lines.count, maxVisibleLines)) + 20)
+            .frame(height: rowHeight * CGFloat(min(lines.count, maxVisibleLines)) + 14)
             .onAppear { scrollToCurrent(proxy, animated: false) }
             .onChange(of: current) { _ in scrollToCurrent(proxy, animated: true) }
         }
@@ -195,12 +192,12 @@ struct PBCodePane: View {
     private func row(_ i: Int) -> some View {
         HStack(spacing: 10) {
             Text("\(i + 1)")
-                .font(.system(size: 11, design: .monospaced))
+                .font(.system(size: 9, design: .monospaced))
                 .foregroundColor(.primary.opacity(0.25))
-                .frame(width: 16, alignment: .trailing)
+                .frame(width: 13, alignment: .trailing)
 
             PB.java(lines[i].code)
-                .font(.system(size: 13.5, weight: .medium, design: .monospaced))
+                .font(.system(size: 12, weight: .medium, design: .monospaced))
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
 
@@ -215,10 +212,10 @@ struct PBCodePane: View {
                     .transition(.scale.combined(with: .opacity))
             }
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 4.5)
+        .padding(.horizontal, 7)
+        .padding(.vertical, 2)
         .background(
-            RoundedRectangle(cornerRadius: 7)
+            RoundedRectangle(cornerRadius: 6)
                 .fill(i == current ? accent.opacity(0.16) : .clear)
         )
         .overlay(alignment: .leading) {
@@ -230,63 +227,22 @@ struct PBCodePane: View {
     }
 }
 
-// MARK: - Debugger stepper
+// MARK: - Stepper
+//
+// A thin name for the app-wide StepSlider so the programming views keep
+// reading in their own vocabulary. Dragging the slider is the only way to
+// move: the play button that used to sit here advanced the code whether or
+// not the student had finished reading the current line.
 
 struct PBStepper: View {
     @Binding var step: Int
     let total: Int
     var accent: Color = .cyan
-    var playing: Binding<Bool>? = nil
+    /// One short line about the frame currently shown.
+    var caption: String? = nil
 
     var body: some View {
-        HStack(spacing: 12) {
-            Button {
-                withAnimation(.spring(duration: 0.25)) { step = 0 }
-                playing?.wrappedValue = false
-            } label: {
-                Image(systemName: "backward.end.fill")
-            }
-            .disabled(step == 0)
-
-            Button {
-                withAnimation(.spring(duration: 0.25)) { step = max(0, step - 1) }
-            } label: {
-                Image(systemName: "chevron.left")
-            }
-            .disabled(step == 0)
-
-            Spacer()
-            Text("\(step) / \(total)")
-                .font(.system(size: 13, weight: .bold, design: .monospaced))
-                .foregroundStyle(.secondary)
-            Spacer()
-
-            if let playing {
-                Button {
-                    if step >= total { step = 0 }
-                    playing.wrappedValue.toggle()
-                } label: {
-                    Image(systemName: playing.wrappedValue ? "pause.fill" : "play.fill")
-                }
-            }
-
-            Button {
-                withAnimation(.spring(duration: 0.25)) { step = min(total, step + 1) }
-            } label: {
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 15, weight: .bold))
-                    .frame(width: 46, height: 30)
-                    .background(RoundedRectangle(cornerRadius: 8).fill(accent))
-                    .foregroundColor(.white)
-            }
-            .buttonStyle(.plain)
-            .disabled(step == total)
-            .opacity(step == total ? 0.35 : 1)
-        }
-        .font(.system(size: 14, weight: .semibold))
-        .padding(.horizontal, 12)
-        .padding(.vertical, 9)
-        .background(RoundedRectangle(cornerRadius: 13).fill(Color(.secondarySystemGroupedBackground)))
+        StepSlider(step: $step, total: total, accent: accent, caption: caption)
     }
 }
 
@@ -330,7 +286,11 @@ struct PBNote: View {
     }
 }
 
-// MARK: - Scrub control (drag ↔ to edit, like the algebra ScrubCell)
+// MARK: - Parameter control
+//
+// Every number a student can change - the loop bound, the score, the bit
+// offset - is edited with the same slider as the step, so there is exactly
+// one gesture to learn in the whole app.
 
 struct PBScrub: View {
     let label: String
@@ -339,43 +299,8 @@ struct PBScrub: View {
     var accent: Color = .cyan
     var onEdit: () -> Void = {}
 
-    @State private var anchor: Int? = nil
-
     var body: some View {
-        HStack(spacing: 10) {
-            Text(label.uppercased())
-                .font(.system(size: 9, weight: .bold))
-                .tracking(0.7)
-                .foregroundStyle(.secondary)
-
-            Text("\(value)")
-                .font(.system(size: 20, weight: .bold, design: .monospaced))
-                .foregroundStyle(accent)
-                .contentTransition(.numericText())
-                .frame(minWidth: 44, alignment: .leading)
-
-            Spacer()
-
-            Text("drag ↔ to edit")
-                .font(.system(size: 9))
-                .foregroundStyle(.tertiary)
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .background(RoundedRectangle(cornerRadius: 13).fill(Color(.secondarySystemGroupedBackground)))
-        .contentShape(Rectangle())
-        .gesture(
-            DragGesture(minimumDistance: 2)
-                .onChanged { g in
-                    if anchor == nil { anchor = value }
-                    guard let a = anchor else { return }
-                    let next = min(max(a + Int(g.translation.width / 6), range.lowerBound), range.upperBound)
-                    if next != value {
-                        value = next
-                        onEdit()
-                    }
-                }
-                .onEnded { _ in anchor = nil }
-        )
+        StepSlider(label: label, value: $value, range: range,
+                   accent: accent, onEdit: onEdit)
     }
 }

@@ -100,6 +100,8 @@ struct AttemptRow: View {
 
 struct StatisticsView: View {
     @Binding var scores: [ResultQCM]
+    var streak: Int
+    var onStartReview: (Subject) -> Void
 
     // How many attempts stay visible before collapsing
     private let previewCount = 5
@@ -148,9 +150,70 @@ struct StatisticsView: View {
         showAllAttempts ? attempts : Array(attempts.prefix(previewCount))
     }
 
+    /// The topic most worth revisiting: lowest success rate, but only surfaced
+    /// once there's an actual track record and it's genuinely below par - a
+    /// single unlucky run shouldn't nag.
+    private var weakestTopic: CategoryStat? {
+        categoryStats
+            .filter { $0.attempts >= 2 && $0.rate < 0.75 }
+            .min { $0.rate < $1.rate }
+    }
+
     var body: some View {
         NavigationStack {
             List {
+                if streak > 0 {
+                    Section {
+                        HStack(spacing: 12) {
+                            Text("🔥")
+                                .font(.title2)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("\(streak)-day streak")
+                                    .font(.headline)
+                                Text(streak == 1
+                                     ? "Complete a quiz tomorrow to keep it going"
+                                     : "Keep it going, come back tomorrow")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                        }
+                        .padding(.vertical, 4)
+                    }
+                }
+
+                if let weak = weakestTopic {
+                    Section {
+                        Button {
+                            onStartReview(weak.subject)
+                        } label: {
+                            HStack(spacing: 14) {
+                                Image(systemName: "target")
+                                    .font(.title2)
+                                    .foregroundStyle(weak.subject.color)
+                                    .frame(width: 36)
+
+                                VStack(alignment: .leading, spacing: 3) {
+                                    Text("Focus review: \(weak.subject.displayName)")
+                                        .font(.headline)
+                                        .foregroundStyle(.primary)
+                                    Text("\(Int((weak.rate * 100).rounded()))% correct so far, practice this topic")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+
+                                Spacer()
+
+                                Image(systemName: "chevron.right")
+                                    .font(.caption.weight(.bold))
+                                    .foregroundStyle(.secondary)
+                            }
+                            .padding(.vertical, 4)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+
                 if !categoryStats.isEmpty {
                     Section("Success rate by topic") {
                         ForEach(categoryStats) { stat in

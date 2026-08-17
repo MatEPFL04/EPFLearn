@@ -198,9 +198,9 @@ struct MeanThmView: View {
         let rootCount = pieces.reduce(0) { $0 + $1.roots.count }
         let dotRadius: CGFloat = sectionCount <= 12 ? 5 : 3
 
-        VStack(spacing: 14) {
+        VStack(spacing: 9) {
             
-            Text("Mean Value Theorem (Integrals)").font(.headline)
+            VizHeader("Mean Value Theorem (Integrals)", subtitle: "One rectangle of the same area as the region.")
 
 
             ZStack {
@@ -248,13 +248,9 @@ struct MeanThmView: View {
             .labelsHidden()
             .frame(width: graphSize)
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Number of sections: \(Int(sectionCount))")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                Slider(value: $sectionCount, in: 2...40, step: 1)
-            }
-            .frame(width: graphSize - 40)
+            VizSlider(label: "Number of sections", value: $sectionCount,
+                      range: 1...40, step: 1, accent: .orange, format: "%.0f")
+                .frame(width: graphSize - 40)
         }
         .padding()
         .adaptivePlot($graphSize)

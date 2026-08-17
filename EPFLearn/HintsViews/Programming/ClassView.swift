@@ -10,20 +10,35 @@
 import SwiftUI
 
 struct ClassView: View {
-    @State private var step = 0
 
-    private let code = [
-        "class Counter {",
-        "    int count = 0;",
-        "    void inc() { count++; }",
-        "}",
-        "",
-        "Counter a = new Counter();",
-        "Counter b = new Counter();",
-        "a.inc();",
-        "a.inc();",
-        "b.inc();"
-    ]
+    /// Two objects or one object under two names. The second variant exists
+    /// because "Counter b = a" is the case the aliasing question asks about,
+    /// and drawing only "b = new Counter()" left that question with nothing
+    /// on screen to check it against.
+    enum Variant: String, CaseIterable {
+        case separate, alias
+
+        var label: String { self == .separate ? "two objects" : "one object, two names" }
+        var declLine: String {
+            self == .separate ? "Counter b = new Counter();" : "Counter b = a;"
+        }
+    }
+
+    @State private var step = 0
+    @State private var variant: Variant = .separate
+
+    private var code: [String] {
+        ["class Counter {",
+         "    int count = 0;",
+         "    void inc() { count++; }",
+         "}",
+         "",
+         "Counter a = new Counter();",
+         variant.declLine,
+         "a.inc();",
+         "a.inc();",
+         "b.inc();"]
+    }
 
     private struct Frame {
         let line: Int
@@ -36,30 +51,59 @@ struct ClassView: View {
     }
 
     private var frames: [Frame] {
-        [
-            Frame(line: 0, aLive: false, bLive: false, aCount: 0, bCount: 0, target: nil,
-                  note: "the class is only a blueprint, no object yet"),
-            Frame(line: 5, aLive: true, bLive: false, aCount: 0, bCount: 0, target: nil,
-                  note: "new Counter(): instance a, its own count = 0"),
-            Frame(line: 6, aLive: true, bLive: true, aCount: 0, bCount: 0, target: nil,
-                  note: "new Counter(): instance b, a separate count = 0"),
-            Frame(line: 7, aLive: true, bLive: true, aCount: 1, bCount: 0, target: "a",
-                  note: "a.inc(): this = a, so a.count++"),
-            Frame(line: 8, aLive: true, bLive: true, aCount: 2, bCount: 0, target: "a",
-                  note: "a.inc() again: a.count = 2, b untouched"),
-            Frame(line: 9, aLive: true, bLive: true, aCount: 2, bCount: 1, target: "b",
-                  note: "b.inc(): this = b, only b.count changes"),
-            Frame(line: -1, aLive: true, bLive: true, aCount: 2, bCount: 1, target: nil,
-                  note: "two instances, two independent states")
-        ]
+        switch variant {
+        case .separate:
+            return [
+                Frame(line: 0, aLive: false, bLive: false, aCount: 0, bCount: 0, target: nil,
+                      note: "the class is only a blueprint, no object yet"),
+                Frame(line: 5, aLive: true, bLive: false, aCount: 0, bCount: 0, target: nil,
+                      note: "new Counter(): instance a, its own count = 0"),
+                Frame(line: 6, aLive: true, bLive: true, aCount: 0, bCount: 0, target: nil,
+                      note: "new Counter(): instance b, a separate count = 0"),
+                Frame(line: 7, aLive: true, bLive: true, aCount: 1, bCount: 0, target: "a",
+                      note: "a.inc(): this = a, so a.count++"),
+                Frame(line: 8, aLive: true, bLive: true, aCount: 2, bCount: 0, target: "a",
+                      note: "a.inc() again: a.count = 2, b untouched"),
+                Frame(line: 9, aLive: true, bLive: true, aCount: 2, bCount: 1, target: "b",
+                      note: "b.inc(): this = b, only b.count changes"),
+                Frame(line: -1, aLive: true, bLive: true, aCount: 2, bCount: 1, target: nil,
+                      note: "two instances, two independent states")
+            ]
+        case .alias:
+            // One 'new', so one object throughout: both counts track the same
+            // field, which is the whole point of the variant.
+            return [
+                Frame(line: 0, aLive: false, bLive: false, aCount: 0, bCount: 0, target: nil,
+                      note: "the class is only a blueprint, no object yet"),
+                Frame(line: 5, aLive: true, bLive: false, aCount: 0, bCount: 0, target: nil,
+                      note: "new Counter(): instance a, its own count = 0"),
+                Frame(line: 6, aLive: true, bLive: true, aCount: 0, bCount: 0, target: nil,
+                      note: "Counter b = a: no second new, so b names that same instance"),
+                Frame(line: 7, aLive: true, bLive: true, aCount: 1, bCount: 1, target: "a",
+                      note: "a.inc(): count = 1, and b reads that very field"),
+                Frame(line: 8, aLive: true, bLive: true, aCount: 2, bCount: 2, target: "a",
+                      note: "a.inc() again: count = 2, so b.count is 2 as well"),
+                Frame(line: 9, aLive: true, bLive: true, aCount: 3, bCount: 3, target: "b",
+                      note: "b.inc(): the same field once more, count = 3"),
+                Frame(line: -1, aLive: true, bLive: true, aCount: 3, bCount: 3, target: nil,
+                      note: "one instance, one state, reachable under either name")
+            ]
+        }
     }
 
     private var total: Int { frames.count - 1 }
     private var fr: Frame { frames[min(step, total)] }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            PBHeader("Classes")
+        VStack(alignment: .leading, spacing: 7) {
+            PBHeader(title: "Classes") {
+                Picker("", selection: $variant) {
+                    ForEach(Variant.allCases, id: \.self) { Text($0.label).tag($0) }
+                }
+                .pickerStyle(.menu)
+                .labelsHidden()
+                .onChange(of: variant) { step = 0 }
+            }
 
             PBAdaptive {
                 stage
@@ -71,7 +115,7 @@ struct ClassView: View {
 
             PBStepper(step: $step, total: total, accent: .cyan)
         }
-        .padding(14)
+        .padding(12)
         .frame(maxWidth: .infinity, alignment: .top)
         .background(Color(.systemGroupedBackground))
     }
@@ -88,18 +132,26 @@ struct ClassView: View {
                     .foregroundColor(.primary.opacity(0.5))
             }
             HStack(spacing: 14) {
-                instance("a", live: fr.aLive, count: fr.aCount,
-                         color: .cyan, active: fr.target == "a")
-                instance("b", live: fr.bLive, count: fr.bCount,
-                         color: Color(red: 0.72, green: 0.52, blue: 1.0),
-                         active: fr.target == "b")
+                if variant == .alias {
+                    // One box, and once 'Counter b = a' has run, both names on
+                    // it. Two boxes here would draw the very mistake the
+                    // aliasing question is asking about.
+                    instance(fr.bLive ? "a, b" : "a", live: fr.aLive, count: fr.aCount,
+                             color: .cyan, active: fr.target != nil)
+                } else {
+                    instance("a", live: fr.aLive, count: fr.aCount,
+                             color: .cyan, active: fr.target == "a")
+                    instance("b", live: fr.bLive, count: fr.bCount,
+                             color: Color(red: 0.72, green: 0.52, blue: 1.0),
+                             active: fr.target == "b")
+                }
             }
         }
-        .padding(14)
-        .frame(minHeight: 195)
+        .padding(10)
+        .frame(minHeight: 158)
         .pbViewport()
         .overlay(alignment: .bottomLeading) {
-            if let note = fr.note { PBNote(text: note).padding(9) }
+            if let note = fr.note { PBNote(text: note).padding(7) }
         }
         .animation(.spring(duration: 0.3), value: step)
     }
@@ -112,11 +164,6 @@ struct ClassView: View {
                 Text("class Counter")
                     .font(.system(size: 13, weight: .bold, design: .monospaced))
                     .foregroundColor(.primary.opacity(0.85))
-                Text("blueprint")
-                    .font(.system(size: 9, weight: .semibold, design: .monospaced))
-                    .foregroundColor(.primary.opacity(0.35))
-                    .padding(.horizontal, 6).padding(.vertical, 2)
-                    .background(Capsule().fill(.primary.opacity(0.06)))
             }
             HStack(spacing: 10) {
                 Text("int count")
@@ -153,11 +200,11 @@ struct ClassView: View {
                     .font(.system(size: 9, weight: .semibold, design: .monospaced))
                     .foregroundColor(.primary.opacity(0.4))
                 Text(live ? "\(count)" : "·")
-                    .font(.system(size: 30, weight: .black, design: .monospaced))
+                    .font(.system(size: 24, weight: .black, design: .monospaced))
                     .foregroundColor(live ? .primary : .primary.opacity(0.15))
                     .contentTransition(.numericText())
             }
-            .frame(width: 96, height: 76)
+            .frame(width: 84, height: 60)
             .background(RoundedRectangle(cornerRadius: 10)
                 .fill(color.opacity(live ? (active ? 0.24 : 0.12) : 0.03)))
             .overlay(RoundedRectangle(cornerRadius: 10)

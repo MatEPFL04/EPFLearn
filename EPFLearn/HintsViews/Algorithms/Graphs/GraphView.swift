@@ -1,6 +1,4 @@
 
-import Combine
-
 import SwiftUI
 
 struct GraphLab: View {
@@ -21,7 +19,7 @@ struct GraphLab: View {
     @State private var frames: [GraphFrame] = []
     @State private var step = 0
 
-    private let nRange = 2...12
+    private let nRange = 3...8
 
     init(n: Int, directed: Bool, connected: Bool = true, lockedAlgo: Algo? = nil) {
         self.directed = directed
@@ -31,13 +29,11 @@ struct GraphLab: View {
         _connected = State(initialValue: connected)
     }
 
-    private let timer = Timer.publish(every: 1.0, on: .main, in: .common).autoconnect()
-    private var running: Bool { step < frames.count }
 
     var body: some View {
-        VStack(spacing: 14) {
-            Text(lockedAlgo?.rawValue ?? algo.rawValue)
-                .font(.headline).foregroundColor(.primary)
+        VStack(spacing: 10) {
+            VizHeader(lockedAlgo?.rawValue ?? algo.rawValue,
+                      subtitle: "Visit order from one start vertex.")
 
             GeometryReader { proxy in
                 ZStack {
@@ -64,26 +60,22 @@ struct GraphLab: View {
                     }
                 }
             }
-            .frame(height: 300)  // ← HAUTEUR FIXE POUR LE GEOMETRYREADER
+            .frame(height: 270)   // fixed: the GeometryReader needs a height; 270 spreads the ring without pushing the controls off screen
             .clipShape(RoundedRectangle(cornerRadius: 16))
             .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.primary.opacity(0.1)))
 
             // Réglages
             VStack(spacing: 10) {
-                sliderRow(title: "Vertices", value: "\(n)") {
-                    Slider(value: Binding(
-                        get: { Double(n) },
-                        set: { n = Int($0); if start >= n { start = n - 1 }; generate() }
-                    ), in: Double(nRange.lowerBound)...Double(nRange.upperBound), step: 1)
-                }
+                VizSlider(label: "Vertices",
+                          intValue: Binding(get: { n },
+                                            set: { n = $0; if start >= n { start = n - 1 }; generate() }),
+                          range: nRange)
 
-                sliderRow(title: "Start", value: "\(start)") {
-                    Slider(value: Binding(
-                        get: { Double(start) },
-                        set: { start = Int($0); reset() }
-                    ), in: 0...Double(max(n - 1, 0)), step: 1)
+                VizSlider(label: "Start",
+                          intValue: Binding(get: { start },
+                                            set: { start = $0; buildFrames() }),
+                          range: 0...max(n - 1, 0))
                     .disabled(n <= 1)
-                }
 
                 Toggle("Connected graph", isOn: $connected)
                     .tint(.cyan).foregroundColor(.primary)
@@ -94,43 +86,21 @@ struct GraphLab: View {
                 Picker("", selection: $algo) {
                     ForEach(Algo.allCases, id: \.self) { Text($0.rawValue).tag($0) }
                 }
-                .pickerStyle(.segmented)
-                .onChange(of: algo) { _ in reset() }
+                .pickerStyle(.menu)
+                .labelsHidden()
+                .onChange(of: algo) { _ in buildFrames() }
             }
 
-            HStack(spacing: 20) {
-                Button("New") { generate() }.buttonStyle(.bordered)
-                Button("Run") { run() }.buttonStyle(.borderedProminent).disabled(running)
+            HStack(spacing: 10) {
+                StepSlider(step: $step, total: frames.count, accent: .cyan)
+                Button("New") { generate() }
+                    .buttonStyle(.bordered)
+                    .tint(.cyan)
             }
         }
         .padding()
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
-        .onReceive(timer) { _ in tick() }
-    }
-
-    // Title + value + slider, one row, kept minimal
-    @ViewBuilder
-    private func sliderRow<S: View>(title: String, value: String, @ViewBuilder slider: () -> S) -> some View {
-        HStack(spacing: 10) {
-            Text(title).font(.caption).foregroundColor(.primary).frame(width: 64, alignment: .leading)
-            slider()
-            Text(value).font(.caption.monospaced()).foregroundColor(.cyan).frame(width: 26, alignment: .trailing)
-        }
-    }
-
-    private func tick() {
-        guard step < frames.count else { return }
-        let f = frames[step]
-        withAnimation(.easeOut(duration: 0.25)) {
-            for i in vertices.indices {
-                vertices[i].fill = f.fill[i]
-                vertices[i].label = f.label[i]
-            }
-            for i in edges.indices {
-                edges[i].highlighted = f.on.contains(i)
-            }
-        }
-        step += 1
+        .onChange(of: step) { _ in applyState() }
     }
 
     private func generate() {
@@ -140,29 +110,41 @@ struct GraphLab: View {
         vertices = g.vertices
         edges = g.edges
         if start >= n { start = max(0, n - 1) }
-        reset()
+        buildFrames()
     }
 
-    private func run() {
+    /// The whole traversal is computed as soon as the graph exists, so the
+    /// slider can walk it in both directions; nothing advances on its own.
+    private func buildFrames() {
         let count = vertices.count
-        guard count > 0 else { return }
+        guard count > 0 else { frames = []; step = 0; return }
         let adj = Graph.adjacency(n: count, edges: edges, directed: directed)
         let em  = Graph.edgeMap(n: count, edges)
-        reset()
         frames = (algo == .bfs)
             ? Graph.bfsFrames(start, n: count, adj, em)
             : Graph.dfsFrames(start, n: count, adj, em)
         step = 0
+        applyState()
     }
 
-    private func reset() {
-        for i in vertices.indices {
-            vertices[i].fill = (i == start) ? .cyan : .gray
-            vertices[i].label = (i == start) ? "0" : "∞"
+    /// Step 0 is the untouched graph; step k is the state after k frames.
+    private func applyState() {
+        withAnimation(.easeOut(duration: 0.25)) {
+            guard step > 0, !frames.isEmpty else {
+                for i in vertices.indices {
+                    vertices[i].fill = (i == start) ? .cyan : .gray
+                    vertices[i].label = (i == start) ? "0" : "∞"
+                }
+                for i in edges.indices { edges[i].highlighted = false }
+                return
+            }
+            let f = frames[min(step, frames.count) - 1]
+            for i in vertices.indices where i < f.fill.count {
+                vertices[i].fill = f.fill[i]
+                vertices[i].label = f.label[i]
+            }
+            for i in edges.indices { edges[i].highlighted = f.on.contains(i) }
         }
-        for i in edges.indices { edges[i].highlighted = false }
-        frames = []
-        step = 0
     }
 }
 
@@ -186,5 +168,5 @@ struct DFSView: View {
 
 // MARK: - Previews
 
-#Preview("BFS - connexe") { BFSView(n: 6, connected: true) }
-#Preview("DFS - non connexe") { DFSView(n: 6, connected: false) }
+#Preview("BFS, connected") { BFSView(n: 6, connected: true) }
+#Preview("DFS, disconnected") { DFSView(n: 6, connected: false) }

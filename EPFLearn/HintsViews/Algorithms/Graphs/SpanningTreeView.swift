@@ -101,7 +101,7 @@ enum MST {
         for idx in order {
             let e = edges[idx]
             states[idx] = .candidate
-            snap(idx, "Edge \(e.u)-\(e.v) (weight \(e.w)): examine it.")
+            snap(idx, "Edge (\(e.u), \(e.v)) of weight \(e.w): examine it.")
             if dsu.union(e.u, e.v) {
                 states[idx] = .tree; total += e.w
                 fills[e.u] = treeNode; fills[e.v] = treeNode
@@ -148,7 +148,7 @@ enum MST {
                 guard let b = best else { break }
                 let e = edges[b]
                 states[b] = .candidate
-                snap(b, "Smallest edge leaving the tree: \(e.u)-\(e.v) (weight \(e.w)).")
+                snap(b, "Smallest edge leaving the tree: (\(e.u), \(e.v)), weight \(e.w).")
                 states[b] = .tree; total += e.w
                 let newV = inTree[e.u] ? e.v : e.u
                 inTree[newV] = true; fills[newV] = treeNode
@@ -243,13 +243,11 @@ struct SpanningTreeLab: View {
     @State private var edges: [STEdge] = []
     @State private var frames: [STFrame] = []
     @State private var idx = 0
-    @State private var playing = false
     @State private var size: CGSize = .zero
 
-    private let nRange = 2...12
-    private let timer = Timer.publish(every: 1.0, on: .main, in: .common).autoconnect()
+    private let nRange = 3...8
 
-    init(n: Int = 7, connected: Bool = true, lockedAlgo: MST.Algo? = nil) {
+    init(n: Int = 6, connected: Bool = true, lockedAlgo: MST.Algo? = nil) {
         self.lockedAlgo = lockedAlgo
         _n = State(initialValue: n)
         _connected = State(initialValue: connected)
@@ -259,9 +257,9 @@ struct SpanningTreeLab: View {
     private var current: STFrame? { frames.indices.contains(idx) ? frames[idx] : nil }
 
     var body: some View {
-        VStack(spacing: 14) {
-            Text(lockedAlgo?.rawValue ?? algo.rawValue)
-                .font(.headline).foregroundColor(.primary)
+        VStack(spacing: 10) {
+            VizHeader(lockedAlgo?.rawValue ?? algo.rawValue,
+                      subtitle: "Cheapest set of edges that still connects everything.")
 
             GeometryReader { proxy in
                 ZStack {
@@ -286,25 +284,21 @@ struct SpanningTreeLab: View {
                     }
                 }
             }
-            .frame(height: 300)  // ← HAUTEUR FIXE
+            .frame(height: 250)   // fixed: the GeometryReader needs a height; the ring is spread by width, so this is the height the controls can spare
             .clipShape(RoundedRectangle(cornerRadius: 16))
             .overlay(RoundedRectangle(cornerRadius: 16).stroke(.primary.opacity(0.1)))
 
             // Settings
             VStack(spacing: 10) {
-                sliderRow(title: "Vertices", value: "\(n)") {
-                    Slider(value: Binding(
-                        get: { Double(n) },
-                        set: { n = Int($0); if start >= n { start = n - 1 }; generate() }
-                    ), in: Double(nRange.lowerBound)...Double(nRange.upperBound), step: 1)
-                }
+                VizSlider(label: "Vertices",
+                          intValue: Binding(get: { n },
+                                            set: { n = $0; if start >= n { start = n - 1 }; generate() }),
+                          range: nRange)
                 if (lockedAlgo ?? algo) == .prim {
-                    sliderRow(title: "Start", value: "\(start)") {
-                        Slider(value: Binding(
-                            get: { Double(start) },
-                            set: { start = Int($0); rebuildFrames() }
-                        ), in: 0...Double(max(n - 1, 0)), step: 1)
-                    }
+                    VizSlider(label: "Start",
+                              intValue: Binding(get: { start },
+                                                set: { start = $0; rebuildFrames() }),
+                              range: 0...max(n - 1, 0))
                 }
                 Toggle("Connected graph", isOn: $connected)
                     .tint(.cyan).foregroundColor(.primary)
@@ -315,7 +309,8 @@ struct SpanningTreeLab: View {
                 Picker("", selection: $algo) {
                     ForEach(MST.Algo.allCases, id: \.self) { Text($0.rawValue).tag($0) }
                 }
-                .pickerStyle(.segmented)
+                .pickerStyle(.menu)
+                .labelsHidden()
                 .onChange(of: algo) { _ in rebuildFrames() }
             }
 
@@ -336,36 +331,15 @@ struct SpanningTreeLab: View {
                     .clipShape(RoundedRectangle(cornerRadius: 8))
             }
 
-            // Playback controls
-            HStack(spacing: 18) {
-                Button { idx = 0; playing = false } label: { Image(systemName: "backward.end.fill") }
-                Button { if idx > 0 { idx -= 1 } } label: { Image(systemName: "backward.fill") }
-                Button { playing.toggle() } label: {
-                    Image(systemName: playing ? "pause.circle.fill" : "play.circle.fill")
-                        .font(.system(size: 34))
-                }
-                Button { if idx < frames.count - 1 { idx += 1 } } label: { Image(systemName: "forward.fill") }
-                Button { idx = frames.count - 1; playing = false } label: { Image(systemName: "forward.end.fill") }
-                Spacer()
-                Button("New") { generate() }.buttonStyle(.bordered)
+            HStack(spacing: 10) {
+                StepSlider(step: $idx, total: max(frames.count - 1, 0), accent: .cyan)
+                Button("New") { generate() }
+                    .buttonStyle(.bordered)
+                    .tint(.cyan)
             }
-            .tint(.cyan)
         }
         .padding()
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
-        .onReceive(timer) { _ in
-            guard playing, !frames.isEmpty else { return }
-            if idx < frames.count - 1 { idx += 1 } else { playing = false }
-        }
-    }
-
-    @ViewBuilder
-    private func sliderRow<S: View>(title: String, value: String, @ViewBuilder slider: () -> S) -> some View {
-        HStack(spacing: 10) {
-            Text(title).font(.caption).foregroundColor(.primary).frame(width: 64, alignment: .leading)
-            slider()
-            Text(value).font(.caption.monospaced()).foregroundColor(.cyan).frame(width: 26, alignment: .trailing)
-        }
     }
 
     private func generate() {
@@ -383,27 +357,26 @@ struct SpanningTreeLab: View {
             ? MST.kruskalFrames(n: n, edges: edges)
             : MST.primFrames(n: n, edges: edges, start: start)
         idx = 0
-        playing = false
     }
 }
 
 // MARK: - Ready-to-plug views
 
 struct KruskalView: View {
-    var n: Int = 7
+    var n: Int = 6
     var connected: Bool = true
     var body: some View { SpanningTreeLab(n: n, connected: connected, lockedAlgo: .kruskal) }
 }
 
 struct PrimView: View {
-    var n: Int = 7
+    var n: Int = 6
     var connected: Bool = true
     var body: some View { SpanningTreeLab(n: n, connected: connected, lockedAlgo: .prim) }
 }
 
 /// Free version (Kruskal/Prim picker).
 struct MSTView: View {
-    var n: Int = 7
+    var n: Int = 6
     var connected: Bool = true
     var body: some View { SpanningTreeLab(n: n, connected: connected) }
 }

@@ -105,7 +105,7 @@ extension Question {
             derivativeQuestions,sequenceQuestions,meanTheoremQuestions,TFIQuestions,TAFQuestions,
             fixedPointQuestions,convergenceQuestions,lhopitalQuestions,sandwichQuestions,taylorQuestions
         ]
-        return banks.map { $0.shuffled().first! }.shuffled()
+        return banks.compactMap { $0.randomElement() }.shuffled()
         
     }
     
@@ -114,7 +114,7 @@ extension Question {
         let banks = [
             determinantQuestions,vectorSpaceQuestions,gaussQuestions,imagesQuestions,matrix3DQuestions, matrixShapeQuestions
         ]
-        return banks.map { $0.shuffled().first! }.shuffled()
+        return banks.compactMap { $0.randomElement() }.shuffled()
         
     }
     static func sampleQuestionsArrays() -> [Question] {
@@ -128,7 +128,7 @@ extension Question {
             quicksortQuestions,
             kadaneQuestions
         ]
-        return banks.map { $0.shuffled().first! }.shuffled()
+        return banks.compactMap { $0.randomElement() }.shuffled()
     }
     
     static func sampleQuestionsGraphs() -> [Question] {
@@ -139,9 +139,10 @@ extension Question {
             primQuestions,
             kruskalQuestions,
             bellmanQuestion,
-            djikistraQuestion
+            djikistraQuestion,
+            topoQuestions
         ]
-        return banks.map { $0.shuffled().first! }.shuffled()
+        return banks.compactMap { $0.randomElement() }.shuffled()
             
     }
     
@@ -152,7 +153,7 @@ extension Question {
             recurrenceQuestions, closedFormQuestions, probabilityQuestions,
             expectationQuestions, propositionalLogicQuestions,
         ]
-        return banks.map { $0.shuffled().first! }.shuffled()
+        return banks.compactMap { $0.randomElement() }.shuffled()
     }
     
     
@@ -161,7 +162,7 @@ extension Question {
         let banks = [
             variablesQuestions,ifElseQuestions,forLoopQuestions,whileLoopQuestions,functionQuestions,bitwiseQuestions,classQuestions,abstractionQuestions
         ]
-        return banks.map { $0.shuffled().first! }.shuffled()
+        return banks.compactMap { $0.randomElement() }.shuffled()
     }
 }
 

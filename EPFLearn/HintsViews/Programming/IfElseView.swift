@@ -2,45 +2,47 @@
 //  IfElseView.swift
 //  EPFLearn
 //
-//  One idea: an if / else-if chain is evaluated top-down,
-//  the first true condition wins, everything below is never touched.
-//  The trace visits every executed line; dead branches dim at the end.
+//  One idea: an if / else-if chain is evaluated top-down, the first true
+//  condition wins, and everything below it is never even looked at.
+//
+//  The thresholds are deliberately not the ones used in the quiz: the rule is
+//  what transfers, not the numbers.
 //
 
 import SwiftUI
 
 struct IfElseView: View {
+
     @State private var score = 72
     @State private var step = 0
 
     private var code: [String] {
-        [
-            "int score = \(score);",
-            "String grade;",
-            "if (score >= 90) {",
-            "    grade = \"A\";",
-            "} else if (score >= 75) {",
-            "    grade = \"B\";",
-            "} else if (score >= 60) {",
-            "    grade = \"C\";",
-            "} else {",
-            "    grade = \"F\";",
-            "}"
-        ]
+        ["int s = \(score);",
+         "String g;",
+         "if (s >= 85) {",
+         "    g = \"A\";",
+         "} else if (s >= 65) {",
+         "    g = \"B\";",
+         "} else if (s >= 40) {",
+         "    g = \"C\";",
+         "} else {",
+         "    g = \"F\";",
+         "}"]
     }
 
+    private let cuts = [85, 65, 40]
+
     private var winner: Int {
-        if score >= 90 { return 0 }
-        if score >= 75 { return 1 }
-        if score >= 60 { return 2 }
+        for (i, cut) in cuts.enumerated() where score >= cut { return i }
         return 3
     }
 
+    /// Executed lines, in order: the declarations, every condition tested, and
+    /// the single assignment that wins.
     private var seq: [Int] {
         var s = [0, 1]
         for i in 0..<min(winner + 1, 3) { s.append(2 + 2 * i) }
-        if winner < 3 { s.append(3 + 2 * winner) }
-        else { s.append(8); s.append(9) }
+        if winner < 3 { s.append(3 + 2 * winner) } else { s.append(8); s.append(9) }
         return s
     }
 
@@ -56,32 +58,29 @@ struct IfElseView: View {
 
     private var note: String {
         switch currentLine {
-        case 0: return "score = \(score)"
-        case 1: return "grade is declared, but not assigned yet"
-        case 2: return "checking score >= 90 -> \(score >= 90)"
-        case 3: return "true -> grade = \"A\". Java never even looks at the else-ifs below"
-        case 4: return "score >= 90 was false, so check the next one: score >= 75 -> \(score >= 75)"
-        case 5: return "true -> grade = \"B\". the remaining else-ifs are skipped"
-        case 6: return "score >= 75 was false too, so check: score >= 60 -> \(score >= 60)"
-        case 7: return "true -> grade = \"C\""
-        case 8: return "every condition above was false, so this falls into the final else"
-        case 9: return "grade = \"F\""
+        case 0: return "s = \(score)"
+        case 1: return "g declared, not assigned"
+        case 2: return "s >= 85 → \(score >= 85)"
+        case 3: return "true → g = \"A\"; the else-ifs below are never tested"
+        case 4: return "s >= 65 → \(score >= 65)"
+        case 5: return "true → g = \"B\"; the rest of the chain is skipped"
+        case 6: return "s >= 40 → \(score >= 40)"
+        case 7: return "true → g = \"C\""
+        case 8: return "all conditions failed, so the final else runs"
+        case 9: return "g = \"F\""
         default:
-            if done { return "grade = \"\(grade)\": once a branch runs, the rest of the chain is skipped" }
-            return "nothing has run yet, press ▸ to start"
+            return done ? "first match wins, the rest is skipped" : "drag the step slider to run"
         }
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 7) {
             PBHeader("If / Else")
 
-            PBScrub(label: "score", value: $score, range: 0...100, accent: .cyan) {
-                step = 0
-            }
+            PBScrub(label: "s", value: $score, range: 0...100, accent: .cyan) { step = 0 }
 
             PBAdaptive {
-                gradePanel
+                panel
             } code: {
                 PBCodePane(lines: paneLines, current: currentLine, accent: .cyan)
                     .pbViewport()
@@ -89,75 +88,69 @@ struct IfElseView: View {
 
             PBStepper(step: $step, total: total, accent: .cyan)
         }
-        .padding(14)
+        .padding(12)
         .frame(maxWidth: .infinity, alignment: .top)
         .background(Color(.systemGroupedBackground))
     }
 
-    private var gradePanel: some View {
-        VStack(spacing: 10) {
-            HStack {
-                PBChip(label: "score", value: "\(score)")
-                Spacer()
-                if done { PBChip(label: "grade", value: "\"\(grade)\"", color: gradeColor, hot: true) }
-            }
+    private var panel: some View {
+        HStack(spacing: 14) {
             ZStack {
                 Circle()
                     .fill(done ? gradeColor.opacity(0.15) : Color.primary.opacity(0.05))
-                    .frame(width: 88, height: 88)
+                    .frame(width: 62, height: 62)
                 Text(done ? grade : "?")
-                    .font(.system(size: 42, weight: .black, design: .monospaced))
+                    .font(.system(size: 30, weight: .black, design: .monospaced))
                     .foregroundColor(done ? gradeColor : .primary.opacity(0.25))
-                    .shadow(color: done ? gradeColor.opacity(0.6) : .clear, radius: 12)
                     .contentTransition(.numericText())
             }
-            // threshold ladder
-            VStack(spacing: 4) {
-                ladderRow("A", ">= 90", 0)
-                ladderRow("B", ">= 75", 1)
-                ladderRow("C", ">= 60", 2)
+
+            VStack(spacing: 3) {
+                ladderRow("A", ">= 85", 0)
+                ladderRow("B", ">= 65", 1)
+                ladderRow("C", ">= 40", 2)
                 ladderRow("F", "else", 3)
             }
         }
-        .padding(.horizontal, 14).padding(.top, 14).padding(.bottom, 38)
+        .padding(10)
+        .padding(.bottom, 20)
         .frame(maxWidth: .infinity)
         .pbViewport()
-        .overlay(alignment: .bottomLeading) {
-            PBNote(text: note).padding(9)
-        }
-        .animation(.spring(duration: 0.3), value: step)
+        .overlay(alignment: .bottomLeading) { PBNote(text: note).padding(7) }
+        .animation(.spring(duration: 0.28), value: step)
     }
 
     private func ladderRow(_ g: String, _ cond: String, _ idx: Int) -> some View {
+        // Tested-and-failed conditions dim as the chain walks past them.
+        let tested = step > 2 + idx && idx < min(winner + 1, 3)
         let isWinner = done && winner == idx
         let color: Color = [Color.green, .cyan, PB.num, .pink][idx]
-        return HStack {
-            Text(g).font(.system(size: 12, weight: .bold, design: .monospaced))
+        return HStack(spacing: 6) {
+            Text(g).font(.system(size: 11, weight: .bold, design: .monospaced))
                 .foregroundColor(isWinner ? color : .primary.opacity(0.5))
-                .frame(width: 18)
-            Text(cond).font(.system(size: 11, design: .monospaced))
+                .frame(width: 14)
+            Text(cond).font(.system(size: 10, design: .monospaced))
                 .foregroundColor(.primary.opacity(0.45))
-            Spacer()
+            Spacer(minLength: 0)
             if isWinner {
                 Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 12)).foregroundColor(color)
+                    .font(.system(size: 11)).foregroundColor(color)
+            } else if tested {
+                Text("false").font(.system(size: 9, design: .monospaced))
+                    .foregroundColor(.pink.opacity(0.8))
             }
         }
-        .padding(.horizontal, 10).padding(.vertical, 6)
-        .background(RoundedRectangle(cornerRadius: 8)
+        .padding(.horizontal, 8).padding(.vertical, 3)
+        .background(RoundedRectangle(cornerRadius: 6)
             .fill(isWinner ? color.opacity(0.14) : .clear))
     }
 
     private var paneLines: [PBCodePane.Line] {
         code.indices.map { i in
             var line = PBCodePane.Line(code: code[i])
-            if let ci = conditionIndex(ofLine: i), ci < min(winner + 1, 3) {
-                let frameOfCond = 2 + ci
-                if step > frameOfCond {
-                    let isTrue = ci == winner
-                    line.badge = PBBadge(text: isTrue ? "true" : "false",
-                                         color: isTrue ? .green : .pink)
-                }
+            if let ci = conditionIndex(ofLine: i), ci < min(winner + 1, 3), step > 2 + ci {
+                let isTrue = ci == winner
+                line.badge = PBBadge(text: isTrue ? "true" : "false", color: isTrue ? .green : .pink)
             }
             if done, (2...9).contains(i), !seq.contains(i) { line.dimmed = true }
             return line

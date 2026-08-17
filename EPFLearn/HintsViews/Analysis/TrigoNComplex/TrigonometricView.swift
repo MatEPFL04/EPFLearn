@@ -14,6 +14,9 @@ import SwiftUI
 struct TrigoView: View {
 
     @State private var theta: Double = .pi / 4
+    /// Finger-to-point angle offset, held for the length of one drag, so the
+    /// point does not jump under the fingertip the moment it is touched.
+    @State private var grabOffset: Double = 0
 
     /// Unit circle + labels (1.17) + tangent axis at x = 1.
     private let fitRadius: Double = 1.34
@@ -26,7 +29,7 @@ struct TrigoView: View {
     private var tanT: Double? { abs(cosT) < 0.02 ? nil : sinT / cosT }
 
     var body: some View {
-        VStack(spacing: 14) {
+        VStack(spacing: 9) {
             plot.frame(maxWidth: 520, maxHeight: 520)
                 .aspectRatio(1, contentMode: .fit)
             panel
@@ -40,9 +43,13 @@ struct TrigoView: View {
     private var plot: some View {
         TrigPlotCanvas(
             fitRadius: fitRadius,
+            onDragBegan: { location, space in
+                let (x, y) = space.math(location)
+                grabOffset = theta - atan2(y, x)
+            },
             onDragChanged: { location, space in
                 let (x, y) = space.math(location)
-                theta = TrigAngles.snap(atan2(y, x))
+                theta = TrigAngles.snap(atan2(y, x) + grabOffset)
             },
             content: { ctx, s in draw(&ctx, s) }
         )
@@ -95,14 +102,15 @@ struct TrigoView: View {
     @ViewBuilder
     private var panel: some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text("Unit circle").font(.headline)
+            VizHeader("Unit circle", subtitle: "cos and sin are the coordinates of one point.")
             Text("Drag the point: it snaps to notable angles.")
                 .font(.caption).foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
 
         TrigSlider(title: "θ", value: $theta, range: 0...(2 * .pi),
-                   tint: TrigPalette.radius, asMultipleOfPi: true)
+                   tint: TrigPalette.radius, asMultipleOfPi: true,
+                   snap: { TrigAngles.snap($0, tolerance: 0.10) })
             .padding(.horizontal, 8)
 
         VStack(alignment: .leading, spacing: 5) {

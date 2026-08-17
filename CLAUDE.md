@@ -21,6 +21,8 @@ This is a plain Xcode project (no SPM package, no CocoaPods) — `EPFLearn.xcode
 
 `EPFLearnApp.swift` is the `@main` entry point; it attaches a SwiftData `modelContainer` for `QuizResultRecord` and loads `ContentView`. `ContentView` is a `TabView` with three tabs: Quiz (`QuizView`), Progress (`StatisticsView`), Settings (`SettingsView`), and injects a `LocalProfile` into the environment.
 
+On first launch (gated by the `hasCompletedOnboarding` `@AppStorage` flag), `ContentView` presents `OnboardingView.swift` as a `fullScreenCover`. It's a paged intro whose middle two pages embed the real `VisualizationView` (same component a quiz question's Hint uses) directly on-screen — `.complexNumbers` and `.image` — so the app's core differentiator (manipulable visualizations, not just a quiz) is visible, live, before the user ever reaches the quiz picker.
+
 ### Quiz flow
 
 `QuizView` → category picker → `QuizViewModel` (`@Observable`) → `QuestionView`.

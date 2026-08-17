@@ -58,14 +58,9 @@ struct LHopitalView: View {
     private var current: LHopitalCase { lhopitalCases[selected] }
 
     var body: some View {
-        VStack(spacing: 14) {
+        VStack(spacing: 9) {
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text("L'Hôpital's Rule").font(.headline)
-                Text("\(current.chip)")
-                    .font(.system(size: 12, design: .monospaced))
-                    .foregroundStyle(.secondary)
-            }
+            VizHeader("L'Hôpital's Rule", subtitle: current.chip, mono: true)
 
             ZStack {
                 GridDrawing(step: 10).stroke(Color.blue.opacity(0.2), lineWidth: 0.5)
@@ -91,64 +86,55 @@ struct LHopitalView: View {
             .labelsHidden()
             .frame(width: graphSize)
 
-            // Légende sous le graphe (plus de superposition avec les courbes),
-            // avec le nom explicite de f et g plutôt que juste "slope X".
-            VStack(alignment: .leading, spacing: 6) {
-                HStack(spacing: 8) {
-                    Rectangle().fill(Color.red).frame(width: 20, height: 3)
-                    Text(current.fLabel)
-                        .font(.system(size: 13, weight: .medium, design: .monospaced))
-                        .foregroundStyle(.red)
-                    Spacer()
-                    Text(current.fSlope == nil ? "no slope" : "slope \(current.fSlope!, specifier: "%.0f")")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                HStack(spacing: 8) {
-                    Rectangle().fill(Color.blue).frame(width: 20, height: 3)
-                    Text(current.gLabel)
-                        .font(.system(size: 13, weight: .medium, design: .monospaced))
-                        .foregroundStyle(.blue)
-                    Spacer()
-                    Text("slope \(current.gSlope, specifier: "%.0f")")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
-            .padding(10)
-            .background(Color(.secondarySystemBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 8))
-            .frame(width: graphSize)
-
+            // f, g and the ratio they define, in one card under the plot.
             VStack(alignment: .leading, spacing: 4) {
-                Text("Zoom (x\(zoom, specifier: "%.0f"))")
+                curveRow(color: .red, label: current.fLabel,
+                         slope: current.fSlope.map { String(format: "slope %.0f", $0) } ?? "no slope")
+                curveRow(color: .blue, label: current.gLabel,
+                         slope: String(format: "slope %.0f", current.gSlope))
+
+                Divider()
+
+                if let fSlope = current.fSlope {
+                    Text("f′(0)/g′(0) = \(fSlope, specifier: "%.0f")/\(current.gSlope, specifier: "%.0f") = \(fSlope / current.gSlope, specifier: "%.3f")")
+                        .font(.system(size: 12, weight: .semibold, design: .monospaced))
+                        .foregroundStyle(.green)
+                } else {
+                    Text("f′(0) does not exist: L'Hôpital says nothing here")
+                        .font(.system(size: 12, weight: .semibold, design: .monospaced))
+                        .foregroundStyle(.red)
+                }
+
+                Text(current.note)
                     .font(.caption2)
                     .foregroundStyle(.secondary)
-                HStack {
-                    Text("wide view").font(.caption2).foregroundStyle(.secondary)
-                    Slider(value: $zoomT, in: 0...1)
-                    Text("zoomed").font(.caption2).foregroundStyle(.secondary)
-                }
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            .frame(width: graphSize)
+            .padding(8)
+            .frame(width: graphSize, alignment: .leading)
+            .background(Color(.secondarySystemBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 10))
 
-            if let fSlope = current.fSlope {
-                Text("f′(0)/g′(0) = \(fSlope, specifier: "%.0f")/\(current.gSlope, specifier: "%.0f") = \(fSlope / current.gSlope, specifier: "%.3f")")
-                    .font(.system(size: 14, weight: .semibold, design: .monospaced))
-                    .foregroundStyle(.green)
-            } else {
-                Text("f′(0) doesn't exist, so L'Hôpital gives no answer here")
-                    .font(.system(size: 14, weight: .semibold, design: .monospaced))
-                    .foregroundStyle(.red)
-            }
+            VizSlider(label: "Zoom", value: $zoomT, range: 0...1, accent: .orange,
+                      valueText: String(format: "x%.0f", zoom))
+                .frame(width: graphSize)
 
-            Text(current.note)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
         }
         .padding()
-        .adaptivePlot($graphSize)
+        .adaptivePlot($graphSize, max: 260)
+    }
+
+    private func curveRow(color: Color, label: String, slope: String) -> some View {
+        HStack(spacing: 8) {
+            Rectangle().fill(color).frame(width: 18, height: 3)
+            Text(label)
+                .font(.system(size: 12, weight: .medium, design: .monospaced))
+                .foregroundStyle(color)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+            Spacer(minLength: 4)
+            Text(slope).font(.caption2).foregroundStyle(.secondary)
+        }
     }
 }
 

@@ -284,13 +284,11 @@ struct TopoSortLab: View {
     @State private var edges: [TEdge] = []
     @State private var frames: [TopoFrame] = []
     @State private var idx = 0
-    @State private var playing = false
     @State private var size: CGSize = .zero
 
-    private let nRange = 3...11
-    private let timer = Timer.publish(every: 0.5, on: .main, in: .common).autoconnect()
+    private let nRange = 3...8
 
-    init(n: Int = 7, lockedAlgo: Topo.Algo? = nil) {
+    init(n: Int = 6, lockedAlgo: Topo.Algo? = nil) {
         self.lockedAlgo = lockedAlgo
         _n = State(initialValue: n)
         _algo = State(initialValue: lockedAlgo ?? .kahn)
@@ -300,9 +298,8 @@ struct TopoSortLab: View {
     private var current: TopoFrame? { frames.indices.contains(idx) ? frames[idx] : nil }
 
     var body: some View {
-        VStack(spacing: 14) {
-            Text("Topological sort: \(effectiveAlgo.rawValue)")
-                .font(.headline).foregroundColor(.primary)
+        VStack(spacing: 10) {
+            VizHeader("Topological sort", subtitle: "\(effectiveAlgo.rawValue): an order respecting every arrow.")
 
             GeometryReader { proxy in
                 ZStack {
@@ -317,21 +314,23 @@ struct TopoSortLab: View {
                     if positions.isEmpty { generate() }
                 }
             }
+            // A GeometryReader has no height of its own: inside the scroll view
+            // this collapsed, so the graph needs the same fixed box as the
+            // other graph views.
+            .frame(height: 270)
             .clipShape(RoundedRectangle(cornerRadius: 16))
             .overlay(RoundedRectangle(cornerRadius: 16).stroke(.primary.opacity(0.1)))
 
-            sliderRow(title: "Vertices", value: "\(n)") {
-                Slider(value: Binding(
-                    get: { Double(n) },
-                    set: { n = Int($0); generate() }
-                ), in: Double(nRange.lowerBound)...Double(nRange.upperBound), step: 1)
-            }
+            VizSlider(label: "Vertices",
+                      intValue: Binding(get: { n }, set: { n = $0; generate() }),
+                      range: nRange)
 
             if lockedAlgo == nil {
                 Picker("", selection: $algo) {
                     ForEach(Topo.Algo.allCases, id: \.self) { Text($0.rawValue).tag($0) }
                 }
-                .pickerStyle(.segmented)
+                .pickerStyle(.menu)
+                .labelsHidden()
                 .onChange(of: algo) { _ in rebuildFrames() }
             }
 
@@ -352,35 +351,15 @@ struct TopoSortLab: View {
                     .clipShape(RoundedRectangle(cornerRadius: 8))
             }
 
-            HStack(spacing: 18) {
-                Button { idx = 0; playing = false } label: { Image(systemName: "backward.end.fill") }
-                Button { if idx > 0 { idx -= 1 } } label: { Image(systemName: "backward.fill") }
-                Button { playing.toggle() } label: {
-                    Image(systemName: playing ? "pause.circle.fill" : "play.circle.fill")
-                        .font(.system(size: 34))
-                }
-                Button { if idx < frames.count - 1 { idx += 1 } } label: { Image(systemName: "forward.fill") }
-                Button { idx = frames.count - 1; playing = false } label: { Image(systemName: "forward.end.fill") }
-                Spacer()
-                Button("New") { generate() }.buttonStyle(.bordered)
+            HStack(spacing: 10) {
+                StepSlider(step: $idx, total: max(frames.count - 1, 0), accent: .cyan)
+                Button("New") { generate() }
+                    .buttonStyle(.bordered)
+                    .tint(.cyan)
             }
-            .tint(.cyan)
         }
         .padding()
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
-        .onReceive(timer) { _ in
-            guard playing, !frames.isEmpty else { return }
-            if idx < frames.count - 1 { idx += 1 } else { playing = false }
-        }
-    }
-
-    @ViewBuilder
-    private func sliderRow<S: View>(title: String, value: String, @ViewBuilder slider: () -> S) -> some View {
-        HStack(spacing: 10) {
-            Text(title).font(.caption).foregroundColor(.primary).frame(width: 64, alignment: .leading)
-            slider()
-            Text(value).font(.caption.monospaced()).foregroundColor(.cyan).frame(width: 26, alignment: .trailing)
-        }
     }
 
     private func generate() {
@@ -396,23 +375,22 @@ struct TopoSortLab: View {
             ? Topo.kahnFrames(n: n, edges: edges)
             : Topo.dfsFrames(n: n, edges: edges)
         idx = 0
-        playing = false
     }
 }
 
 struct KahnView: View {
-    var n: Int = 7
+    var n: Int = 6
     var body: some View { TopoSortLab(n: n, lockedAlgo: .kahn) }
 }
 
 struct TopoDFSView: View {
-    var n: Int = 7
+    var n: Int = 6
     var body: some View { TopoSortLab(n: n, lockedAlgo: .dfs) }
 }
 
 /// Free version (Kahn / DFS picker).
 struct TopoSortView: View {
-    var n: Int = 7
+    var n: Int = 6
     var body: some View { TopoSortLab(n: n) }
 }
 

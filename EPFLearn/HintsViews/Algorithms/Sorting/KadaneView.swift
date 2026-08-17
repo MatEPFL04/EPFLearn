@@ -142,10 +142,9 @@ struct KadaneView: View {
     }
 
     var body: some View {
-        VStack(spacing: 16) {
-            HStack {
-                Text("Kadane").font(.caption).bold()
-                Spacer()
+        VStack(spacing: 14) {
+            VizHeader(title: "Kadane's Algorithm",
+                      subtitle: "Best contiguous sum, in one pass.") {
                 Text("sum: \(frame.curSum)   best: \(frame.bestSum)")
                     .font(.system(.caption2, design: .monospaced))
                     .foregroundStyle(.secondary)
@@ -160,12 +159,9 @@ struct KadaneView: View {
                 .overlay(RoundedRectangle(cornerRadius: 12).stroke(.gray.opacity(0.2)))
 
             if maxStep > 0 {
-                VStack(spacing: 4) {
-                    Slider(value: $step, in: 0...Double(maxStep), step: 1)
-                    Text("Step \(Int(step)) / \(maxStep)")
-                        .font(.system(.caption2, design: .monospaced))
-                        .foregroundStyle(.secondary)
-                }
+                VizSlider(label: "Step", value: $step, range: 0...Double(maxStep),
+                          step: 1, accent: .cyan,
+                          valueText: "\(Int(step)) / \(maxStep)")
             }
 
             HStack(spacing: 12) {
@@ -179,19 +175,13 @@ struct KadaneView: View {
             .pickerStyle(.menu)
             .onChange(of: shape) { reset() }
 
-            Text("Elements: \(n)")
-                .font(.system(.caption2, design: .monospaced))
-                .foregroundStyle(.secondary)
-            Slider(
-                value: Binding(get: { Double(n) }, set: { n = Int($0) }),
-                in: 5...50, step: 1
-            )
-            .onChange(of: n) { reset() }
+            VizSlider(label: "Elements",
+                      intValue: Binding(get: { n }, set: { n = $0 }),
+                      range: 5...50, accent: .cyan)
+                .onChange(of: n) { reset() }
             if shape == .random {
-                Text("Offset C: \(Int(offset))")
-                    .font(.system(.caption2, design: .monospaced))
-                    .foregroundStyle(.secondary)
-                Slider(value: $offset, in: -10...10, step: 1)
+                VizSlider(label: "Offset C", value: $offset, range: -10...10,
+                          step: 1, accent: .cyan, format: "%.0f")
                     .onChange(of: offset) {
                         array = array.map { $0 + Int(offset) }
                         frames = []     

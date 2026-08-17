@@ -54,13 +54,9 @@ struct ConvergenceView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Convergence: the ε-N definition").font(.headline)
-                Text("uₙ = \(c.name)   ·   ∀ε > 0, ∃N, ∀n ≥ N : |uₙ − L| < ε")
-                    .font(.system(size: 11, design: .monospaced))
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1).minimumScaleFactor(0.7)
-            }
+            VizHeader("Convergence: the ε-N definition",
+                      subtitle: "uₙ = \(c.name)   ·   ∀ε > 0, ∃N, ∀n ≥ N : |uₙ − L| < ε",
+                      mono: true)
 
             SeqPlotCanvas(
                 nRange: 1...totalN,
@@ -79,14 +75,9 @@ struct ConvergenceView: View {
             .labelsHidden()
             .onChange(of: index) { cursor = nil }
 
-            HStack(spacing: 8) {
-                Text("ε").font(.caption.bold()).foregroundStyle(SeqPalette.limit).frame(width: 16)
-                Slider(value: $sliderPos, in: 0...1).tint(SeqPalette.limit)
-                Text(String(format: "%.3f", epsilon))
-                    .font(.system(.caption2, design: .monospaced))
-                    .foregroundStyle(.secondary)
-                    .frame(width: 46, alignment: .trailing)
-            }
+            VizSlider(label: "ε", value: $sliderPos, range: 0...1,
+                      accent: SeqPalette.limit,
+                      valueText: String(format: "%.3f", epsilon))
             .padding(.horizontal, 8)
 
             verdict

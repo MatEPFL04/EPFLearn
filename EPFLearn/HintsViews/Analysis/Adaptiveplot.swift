@@ -46,9 +46,12 @@ struct AdaptivePlotModifier: ViewModifier {
 
 extension View {
     /// Fait suivre à `size` la largeur du conteneur. Aucune mesure du contenu : insensible à la rotation.
+    /// `max` used to be 420, which on a phone made the plot alone taller than
+    /// half the screen and pushed every control below the fold. 300 keeps the
+    /// plot, its picker and its sliders on one screen.
     func adaptivePlot(_ size: Binding<CGFloat>,
                       min minSize: CGFloat = 200,
-                      max maxSize: CGFloat = 420,
+                      max maxSize: CGFloat = 300,
                       inset: CGFloat = 32) -> some View {
         modifier(AdaptivePlotModifier(size: size, minSize: minSize, maxSize: maxSize, inset: inset))
     }

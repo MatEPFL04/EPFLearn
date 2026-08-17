@@ -2,337 +2,269 @@
 //  RecurrenceRelationsView.swift
 //  EPFLearn
 //
-//  Rebuilt: the point of a recurrence is the *unfolding*. This view shows the
-//  substitution chain that turns a recursive definition into a closed form,
-//  next to an animated growth curve with an optional log scale.
+//  The point of a recurrence is the *unfolding*: the substitution chain that
+//  runs a term back down to the base case, next to the growth curve.
+//
+//  The chart stops at a₇: past that the terms stop being checkable by hand,
+//  and the unfolding below always runs down from the last term on the chart.
+//
+//  Chrome deliberately matches the sorting views: native picker, plain
+//  secondarySystemBackground panels, solid system colours.
 //
 
 import SwiftUI
 
 struct RecurrenceRelationsView: View {
 
-    // MARK: Model
-
     enum Kind: String, CaseIterable, Hashable {
-        case arithmetic, geometric, fibonacci
-
-        var title: String {
-            switch self {
-            case .arithmetic: return "Arithmetic"
-            case .geometric:  return "Geometric"
-            case .fibonacci:  return "Fibonacci"
-            }
-        }
+        case arithmetic = "Arithmetic", geometric = "Geometric"
+        case fibonacci = "Fibonacci"
     }
 
     private struct Recurrence {
-        let tint: Color
-        let symbol: String
         let letter: String
-        let firstIndex: Int
-        /// (multiplier, added constant) for a first-order linear recurrence.
         let linear: (r: Int, c: Int)?
         let recurrenceLine: String
         let baseLine: String
-        let closedForm: String
-        let blurb: String
-        let value: (Int) -> Int                        // by position (0-based)
+        let value: (Int) -> Int
     }
 
     // MARK: State
 
-    @State private var kind: Kind = .geometric
-    @State private var terms = 10
-    @State private var logScale = false
-    @State private var progress: CGFloat = 0
+    @State private var kind: Kind = .arithmetic
+    @State private var terms = 8
 
-    private var model: Recurrence { Self.model(for: kind) }
-    private var tint: Color { model.tint }
-    private var stepCount: Int { max(2, terms) }
-    private var stateKey: String { "\(kind.rawValue)-\(terms)-\(logScale)" }
+    private static let a0 = 1
+
+    private var model: Recurrence { recurrence(for: kind) }
+    private var stepCount: Int { max(2, min(terms, maxTerms)) }
+
+    /// The chart stops at a₇: everything below it then fits without scrolling.
+    private let maxTerms = 8
+
+    private var tint: Color {
+        switch kind {
+        case .arithmetic: return .blue
+        case .geometric:  return .purple
+        case .fibonacci:  return .orange
+        }
+    }
 
     // MARK: Body
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                DMHero(title: "Recurrence Relations",
-                       subtitle: model.blurb,
-                       symbol: model.symbol,
-                       tint: tint)
+        VStack(spacing: 12) {
+            VizHeader("Recurrence Relations", subtitle: "Each term is built from the ones before it.")
 
-                DMSegmented(selection: $kind,
-                            options: Kind.allCases,
-                            label: { $0.title },
-                            tint: tint)
+            definitionPanel
+            chartPanel
+            unfoldingPanel
 
-                definitionCard
-                chartCard
-                termsCard
-                unfoldingCard
+            // Under the chart, like every other picker in the app.
+            Picker("Kind", selection: $kind) {
+                ForEach(Kind.allCases, id: \.self) { Text($0.rawValue).tag($0) }
             }
-            .padding(20)
-            .animation(.spring(response: 0.35, dampingFraction: 0.85), value: kind)
+            .pickerStyle(.menu)
+            .labelsHidden()
+
+            Spacer(minLength: 0)
         }
-        .background(DMAurora(tint: tint, accent: DMTheme.violet))
-        .task(id: stateKey) {
-            progress = 0
-            withAnimation(.easeOut(duration: 0.9)) { progress = 1 }
-        }
+        .padding()
+    }
+
+    private func panel<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
+        content()
+            .padding(10)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color(.secondarySystemBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .overlay(RoundedRectangle(cornerRadius: 10).stroke(.gray.opacity(0.2)))
     }
 
     // MARK: Definition
 
-    private var definitionCard: some View {
-        DMCard(tint: tint) {
-            VStack(alignment: .leading, spacing: 10) {
-                DMSectionTitle(text: "Definition", symbol: "text.book.closed.fill", tint: tint)
-                DMFormula(text: model.recurrenceLine, tint: tint, emphasised: true)
-                DMFormula(text: model.baseLine, tint: tint)
+    private var definitionPanel: some View {
+        panel {
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(alignment: .firstTextBaseline, spacing: 10) {
+                    Text(model.recurrenceLine)
+                        .font(.system(.subheadline, design: .monospaced).bold())
+                        .foregroundStyle(tint)
+                    Text(model.baseLine)
+                        .font(.system(.caption, design: .monospaced))
+                        .foregroundStyle(.secondary)
+                    Spacer(minLength: 0)
+                }
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
             }
         }
     }
 
-    // MARK: Chart
+    // MARK: Growth
 
-    private var chartCard: some View {
-        DMCard(tint: tint) {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack {
-                    DMSectionTitle(text: "Growth", symbol: "chart.xyaxis.line", tint: tint)
-                    Spacer()
-                    Button {
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                            logScale.toggle()
-                        }
-                    } label: {
-                        Text(logScale ? "log scale" : "linear")
-                            .font(.system(size: 10, weight: .bold))
-                            .foregroundStyle(logScale ? .white : tint)
-                            .padding(.vertical, 5).padding(.horizontal, 10)
-                            .background(Capsule().fill(logScale ? AnyShapeStyle(DMTheme.grad(tint))
-                                                               : AnyShapeStyle(tint.opacity(0.14))))
-                    }
-                    .buttonStyle(.plain)
-                }
+    private var chartPanel: some View {
+        panel {
+            VStack(alignment: .leading, spacing: 8) {
+                curve(points: chartPoints, colour: tint)
+                    .frame(height: 110)
 
-                chartBody
-                    .frame(height: 210)
+                termsStrip
 
-                DMStepper(title: "Number of terms", value: $terms, range: 3...20, tint: tint)
+                VizSlider(label: "terms shown", intValue: $terms, range: 3...maxTerms,
+                          accent: tint, caption: "up to \(label(stepCount - 1))")
             }
         }
     }
 
-    private var chartBody: some View {
-        GeometryReader { geo in
-            let padLeading: CGFloat = 6
-            let padTrailing: CGFloat = 6
-            let padTop: CGFloat = 18
-            let padBottom: CGFloat = 24
-            let w = max(geo.size.width - padLeading - padTrailing, 1)
-            let h = max(geo.size.height - padTop - padBottom, 1)
-            let pts = chartPoints
-
-            ZStack(alignment: .topLeading) {
-                ForEach(0..<4, id: \.self) { i in
-                    Rectangle()
-                        .fill(Color.primary.opacity(0.06))
-                        .frame(width: w, height: 1)
-                        .offset(x: padLeading, y: padTop + h * CGFloat(i) / 3)
-                }
-
-                DMAreaShape(points: pts)
-                    .fill(LinearGradient(colors: [tint.opacity(0.38), tint.opacity(0.02)],
-                                         startPoint: .top, endPoint: .bottom))
-                    .frame(width: w, height: h)
-                    .offset(x: padLeading, y: padTop)
-                    .opacity(Double(progress))
-
-                DMPolyline(points: pts)
-                    .trim(from: 0, to: progress)
-                    .stroke(DMTheme.grad(tint),
-                            style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round))
-                    .frame(width: w, height: h)
-                    .offset(x: padLeading, y: padTop)
-                    .shadow(color: tint.opacity(0.35), radius: 8, y: 4)
-
-                ForEach(pts.indices, id: \.self) { i in
-                    let reached = CGFloat(i) / CGFloat(max(pts.count - 1, 1)) <= progress
-                    Circle()
-                        .fill(Color(.systemBackground))
-                        .overlay(Circle().strokeBorder(tint, lineWidth: 2))
-                        .frame(width: 8, height: 8)
-                        .position(x: padLeading + pts[i].x * w, y: padTop + pts[i].y * h)
-                        .opacity(reached ? 1 : 0)
-                }
-
-                if let last = pts.last {
-                    Text("\(model.value(stepCount - 1))")
-                        .font(.system(size: 11, weight: .heavy, design: .rounded))
-                        .foregroundStyle(.white)
-                        .padding(.vertical, 3).padding(.horizontal, 7)
-                        .background(Capsule().fill(tint))
-                        .position(x: min(padLeading + last.x * w, geo.size.width - 28),
-                                  y: max(padTop + last.y * h - 16, 10))
-                        .opacity(Double(progress))
-                }
-
-                Text("n")
-                    .font(.caption2.bold())
-                    .foregroundStyle(.secondary)
-                    .position(x: geo.size.width - 10, y: padTop + h + 10)
+    private func curve(points: [CGPoint], colour: Color) -> some View {
+        Canvas { ctx, size in
+            guard points.count > 1 else { return }
+            var path = Path()
+            for (i, p) in points.enumerated() {
+                let pt = CGPoint(x: p.x * size.width, y: 6 + p.y * (size.height - 12))
+                if i == 0 { path.move(to: pt) } else { path.addLine(to: pt) }
+            }
+            ctx.stroke(path, with: .color(colour), style: StrokeStyle(lineWidth: 2.5, lineJoin: .round))
+            for p in points {
+                let pt = CGPoint(x: p.x * size.width, y: 6 + p.y * (size.height - 12))
+                ctx.fill(Path(ellipseIn: CGRect(x: pt.x - 2.5, y: pt.y - 2.5, width: 5, height: 5)),
+                         with: .color(colour))
             }
         }
     }
 
     private var chartPoints: [CGPoint] {
-        let raw = (0..<stepCount).map { Double(model.value($0)) }
-        let mapped = logScale ? raw.map { log10(max($0, 0) + 1) } : raw
-        let maxV = mapped.max() ?? 1
-        let minV = mapped.min() ?? 0
+        normalise((0..<stepCount).map { Double(model.value($0)) })
+    }
+
+    private func normalise(_ mapped: [Double]) -> [CGPoint] {
+        let maxV = mapped.max() ?? 1, minV = mapped.min() ?? 0
         let span = max(maxV - minV, 0.0001)
         return mapped.enumerated().map { i, v in
-            CGPoint(x: Double(i) / Double(max(stepCount - 1, 1)),
-                    y: 1 - (v - minV) / span)
+            CGPoint(x: Double(i) / Double(max(stepCount - 1, 1)), y: 1 - (v - minV) / span)
         }
     }
 
-    // MARK: Terms strip
-
-    private var termsCard: some View {
-        DMCard(tint: tint) {
-            VStack(alignment: .leading, spacing: 10) {
-                DMSectionTitle(text: "The sequence", symbol: "list.number", tint: tint)
-
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
-                        ForEach(0..<stepCount, id: \.self) { i in
-                            VStack(spacing: 3) {
-                                Text(label(i))
-                                    .font(.system(size: 10, weight: .bold, design: .rounded))
-                                    .foregroundStyle(.secondary)
-                                Text("\(model.value(i))")
-                                    .font(.system(.subheadline, design: .rounded).weight(.heavy))
-                                    .foregroundStyle(tint)
-                                    .contentTransition(.numericText())
-                            }
-                            .frame(minWidth: 52)
-                            .padding(.vertical, 10)
-                            .background(RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .fill(tint.opacity(0.10)))
-                        }
+    private var termsStrip: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 5) {
+                ForEach(0..<stepCount, id: \.self) { i in
+                    VStack(spacing: 0) {
+                        Text(label(i))
+                            .font(.system(size: 8, design: .monospaced))
+                            .foregroundStyle(.secondary)
+                        Text("\(model.value(i))")
+                            .font(.system(size: 12, design: .monospaced))
+                            .contentTransition(.numericText())
                     }
-                    .padding(.vertical, 2)
+                    .frame(minWidth: 38)
+                    .padding(.vertical, 4)
+                    .background(RoundedRectangle(cornerRadius: 6).fill(tint.opacity(0.12)))
                 }
             }
         }
     }
 
-    // MARK: Unfolding - the pedagogical core
+    // MARK: Unfolding
 
-    private var unfoldingCard: some View {
-        DMCard(tint: DMTheme.amber) {
-            VStack(alignment: .leading, spacing: 10) {
-                DMSectionTitle(text: kind == .fibonacci ? "Building it up" : "Unfolding the recursion",
-                               symbol: "arrow.triangle.branch", tint: DMTheme.amber)
-
-                VStack(alignment: .leading, spacing: 6) {
-                    ForEach(traceLines.indices, id: \.self) { i in
-                        Text(traceLines[i])
-                            .font(.system(.footnote, design: .monospaced))
-                            .foregroundStyle(i == traceLines.count - 1 ? DMTheme.amber : .primary)
-                            .fontWeight(i == traceLines.count - 1 ? .bold : .regular)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    }
+    private var unfoldingPanel: some View {
+        panel {
+            VStack(alignment: .leading, spacing: 3) {
+                ForEach(traceLines.indices, id: \.self) { i in
+                    Text(traceLines[i])
+                        .font(.system(size: 12, design: .monospaced))
+                        .foregroundStyle(i == traceLines.count - 1 ? .orange : .primary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.6)
                 }
-                .padding(12)
-                .background(RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(DMTheme.amber.opacity(0.08)))
-
             }
         }
     }
 
     private var traceLines: [String] {
         let m = model
-        let t = min(stepCount - 1, 4)
+        // Follows the chart: unfolding always starts from the last term drawn.
+        let t = stepCount - 1
         guard t >= 1 else { return [] }
 
-        if let lin = m.linear {
+        switch kind {
+        case .arithmetic, .geometric:
+            guard let lin = m.linear else { return [] }
             var lines: [String] = []
-            var A = 1, B = 0
-            var j = 1
+            var A = 1, B = 0, j = 1
             while t - j >= 0 {
                 let newA = A * lin.r
                 let newB = B + A * lin.c
                 let rhs = term(coefficient: newA, label: label(t - j), constant: newB)
                 lines.append(j == 1 ? "\(label(t)) = \(rhs)" : "     = \(rhs)")
-                A = newA; B = newB
-                j += 1
+                A = newA; B = newB; j += 1
             }
-            let base = m.value(0)
-            lines.append("     = \(A)·\(base) + \(B) = \(m.value(t))")
+            lines.append("     = \(A)·\(m.value(0)) + \(B) = \(m.value(t))")
+            return lines
+
+        case .fibonacci:
+            var lines = ["\(label(0)) = \(m.value(0)),  \(label(1)) = \(m.value(1))"]
+            for i in 2...max(2, t) where i < stepCount {
+                lines.append("\(label(i)) = \(m.value(i - 1)) + \(m.value(i - 2)) = \(m.value(i))")
+            }
             return lines
         }
-
-        // Fibonacci: bottom-up ladder.
-        var lines: [String] = ["\(label(0)) = \(m.value(0)),  \(label(1)) = \(m.value(1))"]
-        for i in 2...max(2, t) where i < stepCount {
-            lines.append("\(label(i)) = \(m.value(i - 1)) + \(m.value(i - 2)) = \(m.value(i))")
-        }
-        return lines
     }
 
     private func term(coefficient: Int, label: String, constant: Int) -> String {
         let head = coefficient == 1 ? label : "\(coefficient)·\(label)"
-        return constant == 0 ? head : "\(head) + \(constant)"
+        if constant == 0 { return head }
+        return constant > 0 ? "\(head) + \(constant)" : "\(head) − \(-constant)"
     }
 
     private func label(_ position: Int) -> String {
-        model.letter + DMMath.subscriptDigits(position + model.firstIndex)
+        model.letter + DMMath.subscriptDigits(position)
     }
 
     // MARK: Catalogue
 
-    private static func model(for kind: Kind) -> Recurrence {
+    private static func fib(_ n: Int) -> Int {
+        if n == 0 { return 0 }
+        var a = 0, b = 1
+        for _ in 1..<max(n, 1) { let t = a + b; a = b; b = t }
+        return b
+    }
+
+    /// aₙ for the linear family, from a₀ up. Static so the closures stored in
+    /// Recurrence never capture the view.
+    private static func linearValue(_ n: Int, r: Int, c: Int) -> Int {
+        var v = a0
+        guard n > 0 else { return v }
+        for _ in 1...n { v = r * v + c }
+        return v
+    }
+
+    private func recurrence(for kind: Kind) -> Recurrence {
         switch kind {
         case .arithmetic:
             return Recurrence(
-                tint: DMTheme.cyan, symbol: "plus.forwardslash.minus", letter: "a",
-                firstIndex: 0, linear: (r: 1, c: 3),
+                letter: "a", linear: (r: 1, c: 3),
                 recurrenceLine: "aₙ = aₙ₋₁ + 3",
-                baseLine: "a₀ = 1",
-                closedForm: "aₙ = 1 + 3n",
-                blurb: "Each term adds a fixed step to the previous one, so growth is a straight line.",
-                value: { 1 + 3 * $0 }
+                baseLine: "a₀ = \(Self.a0)",
+                value: { n in Self.a0 + 3 * n }
             )
 
         case .geometric:
             return Recurrence(
-                tint: DMTheme.violet, symbol: "chart.line.uptrend.xyaxis", letter: "a",
-                firstIndex: 0, linear: (r: 2, c: 0),
-                recurrenceLine: "aₙ = 2·aₙ₋₁",
-                baseLine: "a₀ = 1",
-                closedForm: "aₙ = 2ⁿ",
-                blurb: "Each term multiplies the previous one, so growth explodes exponentially.",
-                value: { Int(pow(2.0, Double($0))) }
+                letter: "a", linear: (r: 2, c: 1),
+                recurrenceLine: "aₙ = 2·aₙ₋₁ + 1",
+                baseLine: "a₀ = \(Self.a0)",
+                value: { n in Self.linearValue(n, r: 2, c: 1) }
             )
 
         case .fibonacci:
             return Recurrence(
-                tint: DMTheme.amber, symbol: "leaf.fill", letter: "F",
-                firstIndex: 0, linear: nil,
+                letter: "F", linear: nil,
                 recurrenceLine: "Fₙ = Fₙ₋₁ + Fₙ₋₂",
-                baseLine: "F₀ = 0,  F₁ = 1",
-                closedForm: "Fₙ = (φⁿ − ψⁿ)/√5,  φ = (1+√5)/2",
-                blurb: "Each term needs the two before it: a second-order recurrence with a golden-ratio closed form.",
-                value: { n in
-                    var a = 0, b = 1
-                    if n == 0 { return 0 }
-                    for _ in 1..<max(n, 1) { let t = a + b; a = b; b = t }
-                    return b
-                }
+                baseLine: "F₀ = 0, F₁ = 1",
+                value: { n in Self.fib(n) }
             )
         }
     }

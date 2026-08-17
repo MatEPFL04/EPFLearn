@@ -12,11 +12,11 @@ extension Question {
         Question(
             subject: .graphs,
             text: "Which statement about DFS is false?",
-            hint: "",
+            hint: "Run DFS in the view and watch the order vertices turn orange: one branch is exhausted before any sibling is touched.",
             options: [
                 "A back edge (an edge going toward an ancestor) is never used",
-                "The first node to finish (i.e. with the smallest finishing time) is always the deepest one in the forest",
-                "The node with the highest finishing time is always the one that got the first start time in a connected graph",
+                "The first node to finish is always the deepest one in the forest",
+                "On a connected graph, the last node to finish is the one that started first",
                 "DFS always runs in Θ(V + E)"
             ],
             correctIndex: 1,
@@ -26,10 +26,10 @@ extension Question {
         Question(
             subject: .graphs,
             text: "When running DFS on an undirected graph, how do we detect that the graph has a cycle?",
-            hint: "What happens if you see a node that's already visited, but it's not the node you just came from?",
+            hint: "Step DFS through a graph with a cycle and watch for an edge reaching a vertex that is already coloured.",
             options: [
                 "When DFS finishes exploring all nodes and returns to the root",
-                "When we follow an edge to an already-visited vertex that is not the immediate parent of the current vertex",
+                "When an edge leads to a visited vertex that is not the current parent",
                 "When the stack becomes completely empty before all nodes are visited",
                 "Undirected graphs cannot contain cycles by definition"
             ],
@@ -40,7 +40,7 @@ extension Question {
         Question(
             subject: .graphs,
             text: "In a DFS run you observe d[u] < d[v] < f[v] < f[u] (d = discovery time, f = finish time). What is the relationship between u and v?",
-            hint: "Try it in the tool, and look for the pattern in the question",
+            hint: "Step DFS and read the d/f labels: v's pair of times opens and closes entirely inside u's.",
             options: [
                 "v is a descendant of u in the DFS forest",
                 "u is a descendant of v",
@@ -54,10 +54,10 @@ extension Question {
         Question(
             subject: .graphs,
             text: "If a graph has several disconnected components, how does a standard full DFS traversal make sure every node gets visited?",
-            hint: "What does the algorithm do once the recursive call from the starting node fully finishes?",
+            hint: "Turn the connected toggle off and step DFS to the end: watch what happens after the first component is done.",
             options: [
                 "It automatically teleports to random nodes",
-                "A loop in the main function goes through all vertices and restarts DFS from any vertex still unvisited",
+                "An outer loop restarts DFS from every vertex still unvisited",
                 "DFS cannot handle disconnected components and crashes",
                 "The algorithm increases its search radius until it reaches the disconnected part"
             ],
@@ -71,7 +71,7 @@ extension Question {
         Question(
             subject: .graphs,
             text: "For which type of graph does BFS run in Ω(V + E)?",
-            hint: "",
+            hint: "Turn the connected toggle on and off and compare how much of the graph BFS colours in each case.",
             options: [
                 "Graphs with no cycles",
                 "Connected graphs",
@@ -85,7 +85,7 @@ extension Question {
         Question(
             subject: .graphs,
             text: "Run BFS on an undirected graph and label each vertex with its level (distance from s). What's true of every non-tree edge (u, v)?",
-            hint: "Look at the values for non-tree edges in the vizualization. ",
+            hint: "Run BFS and read the level labels at both ends of an edge that is not part of the tree.",
             options: [
                 "It can connect levels that differ by any amount",
                 "Their levels differ by at most 1 (same level or adjacent levels)",
@@ -99,7 +99,7 @@ extension Question {
         Question(
             subject: .graphs,
             text: "During BFS, at any moment, the queue contains vertices from how many distinct levels?",
-            hint: "Think about what's in the queue right when you finish one level and start the next.",
+            hint: "Step BFS one frame at a time and watch how many different levels are waiting in the queue at once.",
             options: [
                 "Exactly one level",
                 "At most two consecutive levels (k and k+1)",
@@ -112,13 +112,13 @@ extension Question {
         ),
         Question(
             subject: .graphs,
-            text: "On a connected graph, let m(s) be the deepest BFS level when starting from s. You sweep the slider over every possible source. Which statement about the values m(s) is always true, no matter the graph?",
-            hint: "Pick two sources that are neighbors and run both. By how much can m(s) differ between them?",
+            text: "On a connected graph, let m(s) be the deepest BFS level when starting from s. You consider every possible source s. Which statement about the values m(s) is always true, no matter the graph?",
+            hint: "Move the start slider between two neighbouring vertices and compare the deepest level each run reaches.",
             options: [
                 "Two adjacent sources can have m-values differing by at most 1",
                 "The source with the most neighbors always gives the smallest m(s)",
                 "Every source gives a distinct m(s)",
-                "m(s) is smallest exactly for the source with the tallest BFS tree (most tree edges)"
+                "m(s) is smallest for the source with the tallest BFS tree"
             ],
             correctIndex: 0,
             explanation: "Moving the source to an adjacent vertex shifts every distance by at most 1 (triangle inequality), so the deepest level can change by at most 1 between neighbors; check it by running two adjacent sources. The degree-based and 'all distinct' claims are false: a hub can still be far from one branch, and many sources often share the same m(s).",
@@ -130,10 +130,10 @@ extension Question {
         Question(
             subject: .graphs,
             text: "At each step Prim adds the cheapest edge crossing the cut (tree vs non-tree). Why is that edge guaranteed to be safe (part of some MST)?",
-            hint: "Think about any cut and the lightest edge crossing it.",
+            hint: "Step Prim and watch the edge it picks: it is always the cheapest one leaving the tree built so far.",
             options: [
                 "Because it's the smallest edge remaining in the whole graph",
-                "By the cut property: the minimum-weight edge crossing any cut belongs to some MST",
+                "By the cut property: the lightest edge crossing a cut is in some MST",
                 "Because it always touches the start vertex",
                 "Because Prim sorts all edges first, like Kruskal"
             ],
@@ -144,12 +144,12 @@ extension Question {
         Question(
             subject: .graphs,
             text: "Let G be a connected graph with unique edge weights, and G' any other connected weighted graph. What can we say about the edges added by Prim starting from different vertices?",
-            hint: "Try running Prim on a graph with G'-like properties in the playground.",
+            hint: "Run Prim from different start vertices with the same graph and compare the set of edges it ends up with.",
             options: [
-                "G: the set of edges doesn't change. G': the edges can vary, but the total weight is always the same.",
-                "G: the set of edges can vary, but the total weight is the same. G': the edges can vary, but the total weight is always the same.",
-                "G: the set of edges doesn't change. G': the set of edges doesn't change either.",
-                "In both cases the set of edges doesn't change."
+                "In G always the same edges; in G' possibly different edges of equal total weight",
+                "In both, possibly different edges of equal total weight",
+                "In both, always the same edges",
+                "In both, possibly different edges and different totals"
             ],
             correctIndex: 0,
             explanation: "When edge weights are strictly unique, the graph has exactly one unique Minimum Spanning Tree. Since Prim always finds an MST, every start vertex converges to the exact same final edge set. Only the order in which edges are added differs.",
@@ -158,7 +158,7 @@ extension Question {
         Question(
             subject: .graphs,
             text: "Unlike Kruskal, the set of vertices already in Prim's tree is always…",
-            hint: "How many separate pieces does Prim's partial result have at any moment?",
+            hint: "Step Prim and Kruskal on the same graph and compare how many disconnected pieces each has mid-run.",
             options: [
                 "Possibly several disconnected fragments",
                 "Always a single connected subtree that grows by one vertex per step",
@@ -172,10 +172,10 @@ extension Question {
         Question(
             subject: .graphs,
             text: "Let e be the edge with the absolute maximum weight in a connected graph. Under what condition is Prim's algorithm guaranteed to accept and add e to the tree?",
-            hint: "Think about what happens if removing e completely disconnects the graph.",
+            hint: "Generate graphs until the heaviest edge is the only link between two parts, then step Prim to the end.",
             options: [
-                "Never; Prim greedily minimizes weights, so the heaviest edge is always rejected",
-                "If e is a bridge edge (cut-edge) whose removal splits the graph into two isolated components",
+                "Never: Prim minimizes weights, so the heaviest edge is always rejected",
+                "If e is a bridge: removing it splits the graph in two",
                 "Only if Prim starts directly from one of the two endpoints of e",
                 "If e belongs to a cycle where every other edge is even heavier"
             ],
@@ -189,7 +189,7 @@ extension Question {
         Question(
             subject: .graphs,
             text: "You add 1 completely isolated vertex (no connected edges) to an initially connected graph with V vertices, then run Kruskal. What's the total number of accepted edges when it finishes?",
-            hint: "Can an edge ever connect to a vertex that has no edges attached to it?",
+            hint: "Turn off the connected toggle and step Kruskal to the end: count the edges it accepts.",
             options: [
                 "Exactly V edges, since the total number of vertices increased by 1",
                 "Exactly V − 1 edges, since the isolated vertex can't absorb any edges",
@@ -203,7 +203,7 @@ extension Question {
         Question(
             subject: .graphs,
             text: "During a Kruskal run on a connected graph with V vertices, after how many accepted edges does the algorithm stop adding new ones?",
-            hint: "Try tracking the numbers on small examples.",
+            hint: "Step Kruskal to the end on a few graphs of different sizes and compare the accepted count with V.",
             options: [
                 "After E accepted edges",
                 "After exactly V − 1 accepted edges",
@@ -216,11 +216,11 @@ extension Question {
         ),
         Question(
             subject: .graphs,
-            text: "You toggle the graph to non-connected and run Kruskal, but stop it just before it adds its very last valid edge. What does it produce?",
-            hint: "Each valid edge added by Kruskal merges two separate components together. Missing the last edge means one fewer merge happens.",
+            text: "You run Kruskal on a graph that is not connected, but stop it just before it adds its very last valid edge. What does it produce?",
+            hint: "Turn off the connected toggle and stop the step slider one frame before the end: count the pieces left.",
             options: [
-                "A minimum spanning forest with exactly V − (number of original components) edges",
-                "A disjoint forest containing exactly (number of original components + 1) trees",
+                "A minimum spanning forest with V − c edges, c the original component count",
+                "A forest of c + 1 trees, c the original component count",
                 "Nothing: stopping early triggers an error",
                 "A single tree with exactly V − 1 edges anyway"
             ],
@@ -231,7 +231,7 @@ extension Question {
         Question(
             subject: .graphs,
             text: "You take a connected graph with V vertices and attach a separate, independent chain of 3 new vertices linked by 2 edges, completely disconnected from the main graph. When you run Kruskal, what's the total number of ACCEPTED edges?",
-            hint: "How many total vertices and how many total components does this new configuration have?",
+            hint: "Use the connected toggle to get two components and count the accepted edges against the vertex count.",
             options: [
                 "Exactly V − 1 accepted edges",
                 "Exactly V + 1 accepted edges",
@@ -248,10 +248,10 @@ extension Question {
         Question(
             subject: .graphs,
             text: "Why does Dijkstra fail on graphs with negative edge weights, even without any negative cycle?",
-            hint: "Once a vertex is settled (green), Dijkstra never revisits it. What could a later negative edge do?",
+            hint: "Turn on negative weights and step Dijkstra: watch a vertex settle before a cheaper path through a negative edge appears.",
             options: [
                 "It loops forever",
-                "A vertex can be settled with a non-final distance, since a later negative edge could still lower it",
+                "A vertex can be settled too early: a later negative edge could still lower it",
                 "It always returns distance 0 everywhere",
                 "It works fine; only negative cycles break it"
             ],
@@ -261,8 +261,8 @@ extension Question {
         ),
         Question(
             subject: .graphs,
-            text: "At the moment Dijkstra settles (turns green) a vertex u, what is guaranteed about dist[u]?",
-            hint: "It's pulled from the frontier as the current minimum. Could a shorter path to u still appear later?",
+            text: "At the moment Dijkstra settles a vertex u, what is guaranteed about dist[u]?",
+            hint: "Step Dijkstra and watch the label on a vertex the moment it turns green: does it ever change afterwards?",
             options: [
                 "It is final, no future relaxation can lower it",
                 "It's only an upper bound that may still decrease",
@@ -275,8 +275,8 @@ extension Question {
         ),
         Question(
             subject: .graphs,
-            text: "On a fixed graph you move the source slider and rerun Dijkstra. The shortest-path tree that lights up green…",
-            hint: "Distances are from the source. Is the tree a property of the graph or of the source?",
+            text: "On a fixed graph you change the source and rerun Dijkstra. The resulting shortest-path tree…",
+            hint: "Move the source slider on a fixed graph and compare the green trees the runs produce.",
             options: [
                 "Stays the same regardless of the source",
                 "Generally changes, since it is rooted at the chosen source",
@@ -290,7 +290,7 @@ extension Question {
         Question(
             subject: .graphs,
             text: "Using a binary-heap priority queue, what is Dijkstra's running time on a graph with V vertices and E edges?",
-            hint: "Each edge might trigger a decrease-key; each vertex is extracted once.",
+            hint: "Step through a run and count the two things that happen: one extraction per vertex, one check per edge.",
             options: [
                 "O(V + E)",
                 "O((V + E) log V)",
@@ -307,10 +307,10 @@ extension Question {
         Question(
             subject: .graphs,
             text: "Why does Bellman-Ford run exactly V − 1 relaxation passes over all edges?",
-            hint: "How many edges can a shortest path have, at most?",
+            hint: "Watch the step counter against the vertex count: the passes stop just before the number of vertices.",
             options: [
                 "Because there are V − 1 edges in the graph",
-                "Because a shortest path has at most V − 1 edges, and each pass extends correct distances by one more edge",
+                "A shortest path has at most V − 1 edges, and each pass settles one more",
                 "Because it sorts the edges V − 1 times",
                 "It's arbitrary; any number of passes works"
             ],
@@ -321,7 +321,7 @@ extension Question {
         Question(
             subject: .graphs,
             text: "After V − 1 passes, Bellman-Ford does one more pass. If some edge (u, v) can STILL be relaxed, what does that mean?",
-            hint: "Distances shouldn't improve anymore if everything were finite and cycle-free.",
+            hint: "Turn on negative weights and keep stepping past the last pass: watch whether any label still drops.",
             options: [
                 "The graph is disconnected",
                 "There is a negative-weight cycle reachable from the source",
@@ -335,10 +335,10 @@ extension Question {
         Question(
             subject: .graphs,
             text: "You run Bellman-Ford with all NON-negative weights. Compared to Dijkstra on the same graph, the final distances are…",
-            hint: "Both are correct here. What differs is the cost, not the answer.",
+            hint: "Run both on the same non-negative graph and compare the final labels, then compare how much work each did.",
             options: [
                 "Different, Bellman-Ford is less accurate",
-                "Identical, both compute true shortest distances; only the running time differs",
+                "Identical: only the running time differs",
                 "Identical only on trees",
                 "Different, because Bellman-Ford ignores edge weights"
             ],
@@ -349,10 +349,10 @@ extension Question {
         Question(
             subject: .graphs,
             text: "During Bellman-Ford, edges are relaxed in a fixed order each pass. Does that order affect the final distances?",
-            hint: "Could a lucky order finish in fewer passes? Could it change the final numbers?",
+            hint: "Regenerate the same graph a few times and compare the final labels with the number of passes needed.",
             options: [
                 "Yes: a bad order gives wrong distances",
-                "No: the final distances are always the same; only how many passes are actually needed can differ",
+                "No: the distances are the same, only the number of passes needed differs",
                 "Yes: the order changes which vertices are reachable",
                 "Only if the graph has negative weights"
             ],
@@ -366,11 +366,11 @@ extension Question {
     static let topoQuestions: [Question] = [
         Question(
             subject: .graphs,
-            text: "Run a graph and look at the layout. Find two vertices sitting in the same vertical layer (no arrow between them). What does that tell you about the ordering?",
-            hint: "Two vertices with no path linking them, could you swap them and still have a valid order?",
+            text: "A directed acyclic graph has two vertices with no path between them in either direction. What does that tell you about its topological ordering?",
+            hint: "Find two vertices in the same vertical layer and check whether any arrow forces one before the other.",
             options: [
                 "Nothing; the order is still unique",
-                "They could be swapped, so this graph has more than one valid topological order",
+                "They can be swapped: this graph has several valid orders",
                 "It means the graph has a cycle",
                 "It means one of them is the source"
             ],
@@ -380,8 +380,8 @@ extension Question {
         ),
         Question(
             subject: .graphs,
-            text: "Find the very first vertex of the ordering. What's special about it?",
-            hint: "How many edges point into the first vertex of a valid order?",
+            text: "What is special about the very first vertex of a topological ordering?",
+            hint: "Step the algorithm one frame and look at the arrows arriving at the vertex it picks first.",
             options: [
                 "It has the most outgoing edges",
                 "It has no incoming edge",
@@ -394,11 +394,11 @@ extension Question {
         ),
         Question(
             subject: .graphs,
-            text: "Increase the vertices slider and run several graphs. When does a graph have only one valid ordering?",
-            hint: "Look at the layout. When is there exactly one vertex per layer, chained left to right?",
+            text: "When does a directed acyclic graph have only one valid topological ordering?",
+            hint: "Regenerate graphs and compare the layered layouts: when does each layer hold exactly one vertex?",
             options: [
                 "Whenever the graph is connected",
-                "When the vertices form a single chain v₁→v₂→…→vₙ (a directed path through all of them)",
+                "When the vertices form a single chain v₁→v₂→…→vₙ",
                 "Whenever there are more edges than vertices",
                 "It's always forced"
             ],
@@ -409,9 +409,9 @@ extension Question {
         Question(
             subject: .graphs,
             text: "Which statement about topological ordering is false?",
-            hint: "",
+            hint: "Step a run to the end and look at the order strip: check each claim against what the view actually produced.",
             options: [
-                "It arranges the vertices so that for every edge (u,v), u comes before v in the ordering",
+                "It orders the vertices so that u comes before v for every edge (u, v)",
                 "A topological sort only makes sense in a directed graph",
                 "A topological sort can be found in a cyclic graph",
                 "A topological sort can be found in O(V + E)"
