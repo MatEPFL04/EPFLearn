@@ -12,22 +12,22 @@ import Foundation
 let matrixShapeQuestions = [
     Question(
         subject: .linearAlgebra,
-        text: "What is the resulting dimension when multiplying a 3×2 matrix A by a 2×4 matrix B?",
-        hint: "The inner dimensions have to match, and the outer ones survive. Set the shapes in the view to check your answer.",
+        text: "What is the resulting dimension when multiplying a 3×2 matrix A by a 2×3 matrix B?",
+        hint: "The inner dimensions have to match, and the outer ones survive. Drag each matrix by its corner to check your answer.",
         options: [
-            "3×4 matrix",
+            "3×3 matrix",
             "2×2 matrix",
             "3×2 matrix",
             "The multiplication is undefined"
         ],
         correctIndex: 0,
-        explanation: "Multiplying an m×n matrix by an n×p matrix results in an m×p matrix. Here, (3×2) × (2×4) yields a 3×4 matrix.",
+        explanation: "Multiplying an m×n matrix by an n×p matrix gives an m×p matrix: the inner dimensions cancel and the outer ones survive. Here (3×2) × (2×3) yields a 3×3 matrix. Note the reverse order, (2×3) × (3×2), is also defined but comes out 2×2, so the two products are not even the same size.",
         visualization: .matrixOperations
     ),
     Question(
         subject: .linearAlgebra,
         text: "For any non-square matrix A of dimension m×n (where m ≠ n), which statement about its transpose Aᵀ is correct?",
-        hint: "Pick the transpose operation and move the row and column sliders apart: watch which products the view still allows.",
+        hint: "Pick the transpose operation and drag A by its corner to make it non-square: watch which products the view still allows.",
         options: [
             "Only A·Aᵀ is well-defined",
             "Only Aᵀ·A is well-defined",
@@ -40,16 +40,16 @@ let matrixShapeQuestions = [
     ),
     Question(
         subject: .linearAlgebra,
-        text: "Let A be a 3×2 matrix and B be a 4×2 matrix. What is the shape of ((A·Bᵀ)ᵀ)·A?",
+        text: "Let A be a 3×2 matrix and B be a 3×2 matrix. What is the shape of ((A·Bᵀ)ᵀ)·A?",
         hint: "Use (X·Y)ᵀ = Yᵀ·Xᵀ to remove the outer transpose first, then count the dimensions left to right.",
         options: [
             "3×2 matrix",
-            "4×3 matrix",
+            "2×3 matrix",
             "The operation is mathematically undefined",
-            "4×2 matrix"
+            "3×3 matrix"
         ],
-        correctIndex: 3,
-        explanation: "Let's simplify: ((A·Bᵀ)ᵀ) = (Bᵀ)ᵀ·Aᵀ = B·Aᵀ. Now the full expression becomes: B·Aᵀ·A. Checking dimensions: B is 4×2, Aᵀ is 2×3, and A is 3×2. The composition (4×2)×(2×3)×(3×2) is perfectly valid and results in a 4×2 matrix.",
+        correctIndex: 0,
+        explanation: "Simplify first: (A·Bᵀ)ᵀ = (Bᵀ)ᵀ·Aᵀ = B·Aᵀ, so the whole expression is B·Aᵀ·A. Now count left to right: B is 3×2, Aᵀ is 2×3, and A is 3×2. So (3×2)×(2×3) gives 3×3, and (3×3)×(3×2) gives 3×2.",
         visualization: .matrixOperations
     ),
     Question(

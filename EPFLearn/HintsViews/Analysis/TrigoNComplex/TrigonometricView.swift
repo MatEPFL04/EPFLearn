@@ -13,6 +13,9 @@ import SwiftUI
 
 struct TrigoView: View {
 
+    /// Set in challenge mode so the run can grade the angle the student sets.
+    var onReading: ((ChallengeReading) -> Void)? = nil
+
     @State private var theta: Double = .pi / 4
     /// Finger-to-point angle offset, held for the length of one drag, so the
     /// point does not jump under the fingertip the moment it is touched.
@@ -29,13 +32,16 @@ struct TrigoView: View {
     private var tanT: Double? { abs(cosT) < 0.02 ? nil : sinT / cosT }
 
     var body: some View {
-        VStack(spacing: 9) {
+        VStack(spacing: 7) {
             plot.frame(maxWidth: 520, maxHeight: 520)
                 .aspectRatio(1, contentMode: .fit)
             panel
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 8)
+        .onChange(of: theta, initial: true) { _, new in
+            onReading?(.unitCircle(theta: new))
+        }
     }
 
     // MARK: Drawing
@@ -71,9 +77,22 @@ struct TrigoView: View {
         ctx.line(s.point(0, 0), s.point(c, y), TrigPalette.radius, width: 2)
         ctx.dot(s.point(c, y), TrigPalette.radius, radius: 7)
 
+        // Plates carrying the values, not bare names: the whole point of the
+        // figure is that cos and sin *are* those two segments, and reading
+        // "cos θ" over the grid never said how long the orange one currently is.
+        let bounds = CGSize(width: s.side, height: s.side)
         let cp = s.point(c / 2, 0), sp = s.point(0, y / 2)
-        ctx.label("cos θ", at: CGPoint(x: cp.x, y: cp.y + 13), size: 11, TrigPalette.cosColor, bold: true)
-        ctx.label("sin θ", at: CGPoint(x: sp.x - 22, y: sp.y), size: 11, TrigPalette.sinColor, bold: true)
+        ctx.chip("cos θ = \(fmt(c))", at: CGPoint(x: cp.x, y: cp.y + 16),
+                 size: 9.5, TrigPalette.cosColor, within: bounds)
+        ctx.chip("sin θ = \(fmt(y))", at: CGPoint(x: sp.x - 36, y: sp.y),
+                 size: 9.5, TrigPalette.sinColor, within: bounds)
+
+        let tip = s.point(c, y)
+        let dx = tip.x - s.center.x, dy = tip.y - s.center.y
+        let len = max(hypot(dx, dy), 1)
+        ctx.chip(String(format: "θ = %.2fπ", theta / .pi),
+                 at: CGPoint(x: tip.x + dx / len * 28, y: tip.y + dy / len * 28),
+                 size: 9.5, TrigPalette.radius, within: bounds)
     }
 
     private func drawTangent(_ ctx: inout GraphicsContext, _ s: TrigSpace) {

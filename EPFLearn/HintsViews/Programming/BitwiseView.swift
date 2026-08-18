@@ -14,6 +14,9 @@ import SwiftUI
 
 struct BitwiseView: View {
 
+    /// Set in challenge mode so the run can grade what the student assembles.
+    var onReading: ((ChallengeReading) -> Void)? = nil
+
     enum Op: String, CaseIterable {
         case and = "&", or = "|", xor = "^", not = "~", shl = "<<", shr = ">>"
 
@@ -54,6 +57,10 @@ struct BitwiseView: View {
 
     private var b: Int { useMask ? (1 << k) & 0xFF : freeB }
     private var result: Int { op.compute(a, b, k) }
+
+    private var reading: BitwiseReading {
+        BitwiseReading(a: a, b: b, result: result, op: op.rawValue, shift: k)
+    }
 
     private let bits = Array((0..<8).reversed())
 
@@ -130,9 +137,12 @@ struct BitwiseView: View {
                     .pbViewport()
             }
         }
-        .padding(12)
+        .padding(10)
         .frame(maxWidth: .infinity, alignment: .top)
         .background(Color(.systemGroupedBackground))
+        .onChange(of: reading, initial: true) { _, new in
+            onReading?(.bitwise(new))
+        }
     }
 
     private var stage: some View {

@@ -11,6 +11,11 @@ import SwiftUI
 
 struct VectorSpaceView: View {
 
+    /// Set in challenge mode so the run can grade the configuration the
+    /// student builds. Left nil everywhere else, which keeps this a plain
+    /// hint view.
+    var onReading: ((ChallengeReading) -> Void)? = nil
+
     @State private var v1 = V3(2, 1, 0)
     @State private var v2 = V3(1, 2, 0)
     @State private var v3 = V3(0.5, 0.5, 2)
@@ -28,7 +33,8 @@ struct VectorSpaceView: View {
     @State private var draggingVector: Int? = nil
     @State private var canvasSize: CGSize = CGSize(width: 300, height: 360)
 
-    init(is3D: Bool = true) {
+    init(is3D: Bool = true, onReading: ((ChallengeReading) -> Void)? = nil) {
+        self.onReading = onReading
         _is3D = State(initialValue: is3D)
         // The planar view is the determinant view: it opens on the identity,
         // the one pair whose det every other example is read against. v3 keeps
@@ -78,12 +84,17 @@ struct VectorSpaceView: View {
         )
     }
 
+    private var reading: VectorReading {
+        VectorReading(v1x: w1.x, v1y: w1.y, v2x: w2.x, v2y: w2.y,
+                      det: det, is3D: is3D)
+    }
+
     private var camAzimuth: Double { is3D ? azimuth : -.pi / 2 }
     private var camElevation: Double { is3D ? elevation : .pi / 2 - 0.0006 }
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 7) {
                 viewport
                 if !is3D {
                     VizSlider(label: "length of v₁", value: v1Length, range: 0.5...4,
@@ -93,9 +104,12 @@ struct VectorSpaceView: View {
                 controlDeck
                 analysisCard
             }
-            .padding(14)
+            .padding(10)
         }
         .background(Color(.systemGroupedBackground))
+        .onChange(of: reading, initial: true) { _, new in
+            onReading?(.vectorSpace(new))
+        }
         .onChange(of: is3D) {
             // The two catalogues are different lists, so an index carried over
             // would point at an unrelated example.
@@ -115,7 +129,7 @@ struct VectorSpaceView: View {
             Canvas { ctx, size in
                 render(ctx, size: size)
             }
-            .frame(height: 300)   // matches the other algebra viewports, and keeps the readouts on screen
+            .frame(height: 250)   // matches the other algebra viewports, and keeps the readouts on screen
             .background(
                 LinearGradient(colors: [Color(.secondarySystemBackground),
                                         Color(.tertiarySystemBackground)],
@@ -163,7 +177,12 @@ struct VectorSpaceView: View {
                             let d = hypot(tip.x - g.startLocation.x, tip.y - g.startLocation.y)
                             return (idx, d)
                         }
-                        .filter { $0.1 < 34 }
+                        // A fingertip covers far more than the 34pt this used
+                        // to allow, and the handle it is aiming at is hidden
+                        // underneath it. 64pt makes the nearer arrow catch
+                        // reliably without the two ever fighting over a touch,
+                        // since only the closest candidate wins.
+                        .filter { $0.1 < 64 }
                         .min { $0.1 < $1.1 }
                     draggingVector = hit?.0
                 }
@@ -272,8 +291,8 @@ struct VectorSpaceView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding(10)
-        .background(RoundedRectangle(cornerRadius: 16).fill(Color(.secondarySystemGroupedBackground)))
+        .padding(8)
+        .background(RoundedRectangle(cornerRadius: 14).fill(Color(.secondarySystemGroupedBackground)))
     }
 
     private func sectionLabel(_ s: String) -> some View {
@@ -415,7 +434,7 @@ struct VectorSpaceView: View {
         if !independent { drawSpan(ctx, p) }
         if is3D { drawShadow(ctx, p) }
         drawSolid(ctx, p)
-        drawVectors(ctx, p)
+        drawVectors(ctx, p, size)
     }
 
     private func drawFloor(_ ctx: GraphicsContext, _ p: Projector) {
@@ -554,7 +573,12 @@ struct VectorSpaceView: View {
         }
     }
 
-    private func drawVectors(_ ctx: GraphicsContext, _ p: Projector) {
+    private func coords(_ v: V3) -> String {
+        is3D ? "(\(fmt(v.x, 1)), \(fmt(v.y, 1)), \(fmt(v.z, 1)))"
+             : "(\(fmt(v.x, 1)), \(fmt(v.y, 1)))"
+    }
+
+    private func drawVectors(_ ctx: GraphicsContext, _ p: Projector, _ size: CGSize) {
         var items: [(V3, Color, String)] = [(w1, .red, "v₁"), (w2, .green, "v₂")]
         if is3D { items.append((w3, .blue, "v₃")) }
 
@@ -575,17 +599,19 @@ struct VectorSpaceView: View {
             }
 
             if let tip = p.project(v) {
-                ctx.draw(Text(label).font(.system(size: 14, weight: .heavy)).foregroundStyle(color),
-                         at: CGPoint(x: tip.x + 16, y: tip.y - 12))
-
                 // A visible, grabbable handle - only in 2D, where the tip can
-                // actually be dragged straight on the graph.
-                if !is3D {
-                    let r: CGFloat = 7
-                    let dot = Path(ellipseIn: CGRect(x: tip.x - r, y: tip.y - r, width: r * 2, height: r * 2))
-                    ctx.fill(dot, with: .color(color))
-                    ctx.stroke(dot, with: .color(.white.opacity(0.85)), lineWidth: 1.5)
-                }
+                // actually be dragged straight on the graph. Drawn large, with
+                // a soft ring around it: under a fingertip the handle itself is
+                // invisible, so the ring is what tells you where you have hold.
+                // Plate pushed out along the vector, carrying the coordinates.
+                // A bare "v₁" at a fixed offset landed on top of v₂'s label
+                // exactly when the two lined up, which is the configuration
+                // this view exists to show.
+                let origin = p.project(.zero) ?? CGPoint(x: size.width / 2, y: size.height / 2)
+                let dx = tip.x - origin.x, dy = tip.y - origin.y
+                let len = max(hypot(dx, dy), 1)
+                let anchor = CGPoint(x: tip.x + dx / len * 24, y: tip.y + dy / len * 24)
+                ctx.chip("\(label) = \(coords(v))", at: anchor, size: 9.5, color, within: size)
             }
         }
     }

@@ -2,6 +2,10 @@
 import SwiftUI
 
 struct PigeonholePrincipleView: View {
+
+    /// Set in challenge mode so the run can grade the numbers the student picks.
+    var onReading: ((ChallengeReading) -> Void)? = nil
+
     @State private var pigeons: Int = 13
     @State private var holes: Int = 10
     /// How many of the n items have been dropped in, scrubbed by the slider.
@@ -25,6 +29,10 @@ struct PigeonholePrincipleView: View {
     private var capacityBelowBound: Int { holes * (guaranteedMin - 1) }
 
     private var currentMax: Int { distribution.max() ?? 0 }
+
+    private var reading: PigeonholeReading {
+        PigeonholeReading(items: pigeons, holes: holes, guaranteed: guaranteedMin)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -77,9 +85,12 @@ struct PigeonholePrincipleView: View {
 
             Spacer(minLength: 0)
         }
-        .padding(16)
+        .padding(12)
         .frame(maxWidth: .infinity, alignment: .topLeading)
         .background(Color(.systemGroupedBackground))
+        .onChange(of: reading, initial: true) { _, new in
+            onReading?(.pigeonhole(new))
+        }
     }
 
     /// Why the bound is a certainty and not a likelihood: try to keep every

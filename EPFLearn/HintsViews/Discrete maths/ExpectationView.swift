@@ -150,6 +150,9 @@ struct TheoreticalPMFChart: View {
 /// removed on purpose: it is not part of the first-year syllabus here.
 struct ExpectationView: View {
 
+    /// Set in challenge mode so the run can grade the law the student shapes.
+    var onReading: ((ChallengeReading) -> Void)? = nil
+
     @State private var count: Double = 6           // number of values (2…10)
     @State private var shape: DistributionShape = .bell
     @State private var skew: Double = 0.5          // law shape 0…1
@@ -184,6 +187,12 @@ struct ExpectationView: View {
         return probs.map { $0 / maxP * 0.9 }
     }
 
+    private var reading: ExpectationReading {
+        ExpectationReading(values: (0..<n).map { firstValue + $0 },
+                           probabilities: probabilities,
+                           mean: theoreticalMean)
+    }
+
     private var theoreticalMean: Double {
         probabilities.enumerated().reduce(0) { $0 + Double(firstValue + $1.offset) * $1.element }
     }
@@ -202,6 +211,9 @@ struct ExpectationView: View {
         // lifts. Without this the vertical drag scrolls the page instead.
         .scrollDisabled(isDragging)
         .onAppear(perform: syncWeights)
+        .onChange(of: reading, initial: true) { _, new in
+            onReading?(.expectation(new))
+        }
         .onChange(of: count) { _, _ in syncWeights() }
         .onChange(of: shape) { oldValue, newValue in
             // Guarded by isDragging: when the drag itself flips the law to

@@ -102,15 +102,6 @@ struct FunctionDrawing: Shape {
                 scale: scale
             )
 
-        case .dirichlet:
-            let period = 0.01
-            return FunctionDrawing(
-                f: { x in
-                    Int(floor(x / period)) % 2 == 0 ? 1.0 : 0.0
-                },
-                integrF: { _ in .nan },
-                scale: scale
-            )
         case .constant:
             return FunctionDrawing(
                 f:      { _ in 5 },
@@ -127,5 +118,4 @@ enum MathFunctionType: String, CaseIterable {
     case cubic     = "f(x) = x³"
     case sine      = "f(x) = sin(x)"
     case cosine    = "f(x) = cos(x)"
-    case dirichlet = "f(x) = 1 if x ∈ ℚ, 0 otherwise"
 }

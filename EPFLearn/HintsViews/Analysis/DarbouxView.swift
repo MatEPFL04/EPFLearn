@@ -8,10 +8,6 @@ private struct DarbouxFunction {
     let f: @Sendable (Double) -> Double
     /// nil when f is not Riemann integrable, which the readout reports.
     let antiderivative: (@Sendable (Double) -> Double)?
-    /// Closed form for the infimum and supremum on a slice, when sampling
-    /// would be wrong. Dirichlet needs it: no finite sample set can see that
-    /// both values occur in every interval, however small.
-    let exactExtrema: (@Sendable (Double, Double) -> (inf: Double, sup: Double))?
 }
 
 enum DarbouxPreset: String, CaseIterable, Identifiable {
@@ -20,7 +16,6 @@ enum DarbouxPreset: String, CaseIterable, Identifiable {
     case cubic
     case sine
     case cosine
-    case dirichlet
 
     var id: Self { self }
 
@@ -31,42 +26,26 @@ enum DarbouxPreset: String, CaseIterable, Identifiable {
         case .cubic:     return "f(x) = x³/500"
         case .sine:      return "f(x) = 10 sin(x/5)"
         case .cosine:    return "f(x) = 10 cos(x/5)"
-        case .dirichlet: return "f(x) = 1 on ℚ, 0 elsewhere"
         }
     }
-
-    var isIntegrable: Bool { self != .dirichlet }
 
     fileprivate var function: DarbouxFunction {
         switch self {
         case .constant:
             return DarbouxFunction(f: { _ in 5 },
-                                   antiderivative: { 5 * $0 },
-                                   exactExtrema: nil)
+                                   antiderivative: { 5 * $0 })
         case .affine:
             return DarbouxFunction(f: { $0 / 2 + 3 },
-                                   antiderivative: { $0 * $0 / 4 + 3 * $0 },
-                                   exactExtrema: nil)
+                                   antiderivative: { $0 * $0 / 4 + 3 * $0 })
         case .cubic:
             return DarbouxFunction(f: { pow($0, 3) / 500 },
-                                   antiderivative: { pow($0, 4) / 2000 },
-                                   exactExtrema: nil)
+                                   antiderivative: { pow($0, 4) / 2000 })
         case .sine:
             return DarbouxFunction(f: { 10 * sin($0 / 5) },
-                                   antiderivative: { -50 * cos($0 / 5) },
-                                   exactExtrema: nil)
+                                   antiderivative: { -50 * cos($0 / 5) })
         case .cosine:
             return DarbouxFunction(f: { 10 * cos($0 / 5) },
-                                   antiderivative: { 50 * sin($0 / 5) },
-                                   exactExtrema: nil)
-        case .dirichlet:
-            return DarbouxFunction(
-                // Drawn as a dense comb so the curve reads as "everywhere 0
-                // and everywhere 1" instead of a blank line.
-                f: { x in Int(floor(x / 0.05)) % 2 == 0 ? 1 : 0 },
-                antiderivative: nil,
-                exactExtrema: { _, _ in (inf: 0, sup: 1) }
-            )
+                                   antiderivative: { 50 * sin($0 / 5) })
         }
     }
 }
@@ -96,11 +75,6 @@ private func buildSlices(
     return (0..<count).map { k in
         let x0 = a + Double(k) * dx
         let x1 = x0 + dx
-
-        if let exact = fn.exactExtrema {
-            let e = exact(x0, x1)
-            return Slice(id: k, xStart: x0, xEnd: x1, low: e.inf, high: e.sup)
-        }
 
         var lo = fn.f(x0)
         var hi = lo
@@ -257,7 +231,7 @@ struct DarbouxView: View {
         let now = sums(slices, dx: dx)
         let integral = fn.antiderivative.map { $0(b) - $0(a) }
 
-        VStack(spacing: 9) {
+        VStack(spacing: 6) {
             VizHeader("Darboux Sums", subtitle: "Lower and upper staircases squeeze the area from both sides.")
             
             plot(slices)
@@ -284,7 +258,7 @@ struct DarbouxView: View {
                 .frame(width: graphSize)
         }
         .padding(.horizontal)
-        .padding(.vertical, 8)
+        .padding(.vertical, 6)
         .adaptivePlot($graphSize)
     }
 
@@ -386,11 +360,9 @@ struct DarbouxView: View {
 
     // MARK: Readout
 
-    /// The three numbers on their own do not say what is happening. On the
-    /// Dirichlet comb in particular the screen is a solid black band and a
-    /// reading of "S⁺ 30.00", with nothing to say whether the sum is large
-    /// because the function is or because the gap simply never closes. One
-    /// line of prose, keyed to the case on screen.
+    /// The three numbers on their own do not say what is happening: nothing
+    /// in them says whether a sum is large because the function is, or because
+    /// the gap has not closed yet. One line of prose, keyed to the case.
     private func note(gap: Double, integral: Double?, span: Double) -> some View {
         let integrable = integral != nil
         let text: String = integrable

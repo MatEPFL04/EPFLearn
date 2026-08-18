@@ -166,13 +166,21 @@ struct HintCallout: View {
             .buttonStyle(.plain)
 
             if expanded {
-                Text(text)
-                    .font(.callout)
-                    .foregroundStyle(.primary)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.top, 6)
-                    .transition(.opacity.combined(with: .move(edge: .top)))
+                // Capped and scrollable rather than free to grow. A long hint
+                // used to push the plot and its sliders off the screen, so
+                // reading the instruction and acting on it became two separate
+                // trips; now both stay in view and the hint scrolls in place.
+                ScrollView {
+                    Text(text)
+                        .font(.callout)
+                        .foregroundStyle(.primary)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .frame(maxHeight: 86)
+                .scrollBounceBehavior(.basedOnSize)
+                .padding(.top, 6)
+                .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
         .padding(.horizontal, 14)

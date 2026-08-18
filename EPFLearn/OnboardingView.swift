@@ -27,7 +27,7 @@ struct OnboardingView: View {
                 ).tag(1)
 
                 DemoPage(
-                    caption: "56 VISUALIZATIONS LIKE THIS ACROSS 6 SUBJECTS",
+                    caption: "47 FIGURES LIKE THIS, ACROSS 6 SUBJECTS",
                     type: .image
                 ).tag(2)
 
@@ -94,7 +94,7 @@ private struct WelcomePage: View {
                 .font(.largeTitle.bold())
                 .multilineTextAlignment(.center)
 
-            Text("Master your first-year engineering courses through quizzes paired with visualizations you manipulate yourself.")
+            Text("Work through your first-year engineering courses on figures you manipulate yourself, either by answering questions about them or by building them.")
                 .font(.body)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -102,7 +102,7 @@ private struct WelcomePage: View {
 
             HStack(spacing: 28) {
                 stat("214", "questions")
-                stat("56", "visualizations")
+                stat("47", "visualizations")
                 stat("6", "subjects")
             }
             .padding(.top, 10)
@@ -171,8 +171,9 @@ private struct FinalPage: View {
                 .multilineTextAlignment(.center)
 
             VStack(alignment: .leading, spacing: 14) {
-                bullet("questionmark.circle.fill", "Quizzes across 6 subjects, freshly sampled every time")
-                bullet("chart.bar.fill", "Your Progress tab tracks scores over time")
+                bullet("checklist", "Quiz mode: multiple choice, with the figure as a hint")
+                bullet("hand.draw.fill", "Build it mode: no options, you answer by moving the figure")
+                bullet("chart.bar.fill", "Progress tracks both modes, and points you at your weakest subject")
                 bullet("lock.fill", "No account. Everything stays on this device.")
             }
             .padding(.horizontal, 32)

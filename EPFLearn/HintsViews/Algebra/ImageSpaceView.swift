@@ -11,6 +11,9 @@ import SwiftUI
 
 struct ImageSpaceView: View {
 
+    /// Set in challenge mode so the run can grade the map the student builds.
+    var onReading: ((ChallengeReading) -> Void)? = nil
+
     @State private var matrix = M3(c1: V3(1, 0.3, 0), c2: V3(0.2, 1, 0.3), c3: V3(0, 0.2, 1))
     @State private var presetIndex = 2
     @State private var morph: Double = 1
@@ -95,7 +98,7 @@ struct ImageSpaceView: View {
     /// matrix panel.
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 7) {
                 AlgebraHeader(
                     title: "The Image of a Map",
                     subtitle: "Drag the transformation slider and watch the grid leave its origin."
@@ -122,9 +125,21 @@ struct ImageSpaceView: View {
                     pickerHeight: 88
                 )
             }
-            .padding(14)
+            .padding(10)
         }
         .background(Color(.systemGroupedBackground))
+        .onChange(of: reading, initial: true) { _, new in
+            onReading?(.linearMap(new))
+        }
+    }
+
+    private var reading: LinearMapReading {
+        LinearMapReading(
+            rank: rank,
+            entries: [matrix.c1.x, matrix.c1.y, matrix.c1.z,
+                      matrix.c2.x, matrix.c2.y, matrix.c2.z,
+                      matrix.c3.x, matrix.c3.y, matrix.c3.z],
+            morph: morph)
     }
 
     // MARK: - Viewport overlays

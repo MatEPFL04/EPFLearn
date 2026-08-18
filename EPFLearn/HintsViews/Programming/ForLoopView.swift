@@ -14,6 +14,9 @@ import SwiftUI
 
 struct ForLoopView: View {
 
+    /// Set in challenge mode so the run can grade the loop the student sets up.
+    var onReading: ((ChallengeReading) -> Void)? = nil
+
     enum Mode: String, CaseIterable {
         case single = "one loop"
         case nested = "nested"
@@ -42,18 +45,28 @@ struct ForLoopView: View {
                 .onChange(of: mode) { reset() }
             }
 
-            if mode == .single {
-                VStack(spacing: 5) {
-                    PBScrub(label: "start i", value: $from, range: 0...8, accent: .cyan) { reset() }
-                    PBScrub(label: "run while i <", value: $to, range: 0...10, accent: .green) { reset() }
-                    PBScrub(label: "step i +=", value: $by, range: 1...4, accent: PB.num) { reset() }
-                }
-            } else {
-                VStack(spacing: 5) {
-                    PBScrub(label: "outer i <", value: $outer, range: 1...4, accent: .cyan) { reset() }
-                    PBScrub(label: "inner j <", value: $inner, range: 1...4, accent: PB.num) { reset() }
+            // One labelled card, short nouns, the same shape in both modes.
+            // The three controls used to read "start i", "run while i <" and
+            // "step i +=", which restated the header printed in the code pane
+            // three times over and lined up at three different widths.
+            VStack(alignment: .leading, spacing: 5) {
+                Text(mode == .single ? "BOUNDS" : "COUNTS")
+                    .font(.system(size: 9, weight: .bold))
+                    .tracking(0.7)
+                    .foregroundStyle(.secondary)
+
+                if mode == .single {
+                    PBScrub(label: "start", value: $from, range: 0...8, accent: .cyan) { reset() }
+                    PBScrub(label: "bound", value: $to, range: 0...10, accent: .green) { reset() }
+                    PBScrub(label: "step", value: $by, range: 1...4, accent: PB.num) { reset() }
+                } else {
+                    PBScrub(label: "outer", value: $outer, range: 1...4, accent: .cyan) { reset() }
+                    PBScrub(label: "inner", value: $inner, range: 1...4, accent: PB.num) { reset() }
                 }
             }
+            .padding(10)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(RoundedRectangle(cornerRadius: 12).fill(Color(.secondarySystemGroupedBackground)))
 
             PBAdaptive {
                 mode == .single ? AnyView(singleStage) : AnyView(nestedStage)
@@ -66,9 +79,25 @@ struct ForLoopView: View {
 
             PBStepper(step: $step, total: total, accent: .green)
         }
-        .padding(12)
+        .padding(10)
         .frame(maxWidth: .infinity, alignment: .top)
         .background(Color(.systemGroupedBackground))
+        .onChange(of: reading, initial: true) { _, new in
+            onReading?(.loop(new))
+        }
+    }
+
+    /// The header says `for (int i = from; i < to; i += by)`, so the body
+    /// runs ⌈(to − from) / by⌉ times, floored at zero.
+    private var singleIterations: Int {
+        to <= from ? 0 : (to - from + by - 1) / by
+    }
+
+    private var reading: LoopReading {
+        LoopReading(nested: mode == .nested,
+                    from: from, to: to, by: by,
+                    outer: outer, inner: inner,
+                    iterations: mode == .nested ? outer * inner : singleIterations)
     }
 
     private func reset() { step = 0 }

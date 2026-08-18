@@ -92,7 +92,7 @@ struct CombinatoricsView: View {
     // MARK: - Body
 
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 9) {
             VizHeader("Counting", subtitle: "Does order matter, and may items repeat?")
 
             resultPanel
@@ -121,7 +121,7 @@ struct CombinatoricsView: View {
 
             Spacer(minLength: 0)
         }
-        .padding()
+        .padding(10)
         .onAppear { regenerate() }
     }
 

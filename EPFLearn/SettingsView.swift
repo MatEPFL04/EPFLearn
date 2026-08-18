@@ -42,11 +42,11 @@ struct SettingsView: View {
         NavigationStack {
             List {
                 Section {
-                    LabeledContent("Quizzes completed", value: "\(myRecordCount)")
+                    LabeledContent("Sessions completed", value: "\(myRecordCount)")
                 } header: {
                     Text("Your data")
                 } footer: {
-                    Text("LearnViz has no accounts. Everything you do stays on this device and is never uploaded.")
+                    Text("LearnScope has no accounts. Everything you do stays on this device and is never uploaded.")
                 }
 
                 Section {
@@ -55,7 +55,7 @@ struct SettingsView: View {
                             handleReminderToggle(isOn)
                         }
                 } footer: {
-                    Text("A single evening nudge if you haven't practiced yet, never on a day you already have.")
+                    Text("One evening nudge if you have not practiced yet, and never on a day you already have.")
                 }
 
                 Section {
@@ -70,7 +70,7 @@ struct SettingsView: View {
                     }
                     .disabled(isResetting || myRecordCount == 0)
                 } footer: {
-                    Text("Permanently erases every quiz result stored on this device. This cannot be undone.")
+                    Text("Permanently erases every result stored on this device, from both study modes. This cannot be undone.")
                 }
 
                 Section("About") {
@@ -89,7 +89,7 @@ struct SettingsView: View {
                 }
                 Button("Cancel", role: .cancel) { }
             } message: {
-                Text("All your quiz history will be erased. This cannot be undone.")
+                Text("Your whole history will be erased, in both study modes. This cannot be undone.")
             }
             .alert("Couldn't reset your progress", isPresented: $showError) {
                 Button("OK", role: .cancel) { }

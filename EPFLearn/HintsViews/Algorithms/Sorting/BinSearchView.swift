@@ -61,7 +61,7 @@ struct BinarySearchView: View {
     private var targetIndex: Int? { arrayBin.firstIndex(of: target) }
 
     var body: some View {
-        VStack(spacing: 14) {
+        VStack(spacing: 10) {
             VizHeader("Searching", subtitle: "Halving a sorted array against scanning it end to end.")
 
             panel(title: "Binary search", frames: framesBin, step: stepBin)
@@ -93,7 +93,7 @@ struct BinarySearchView: View {
                     reset()
                 }
         }
-        .padding()
+        .padding(10)
         .onAppear { if arrayBin.isEmpty { reset() } }
     }
 

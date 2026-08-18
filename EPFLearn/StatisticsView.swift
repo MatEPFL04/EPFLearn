@@ -26,6 +26,17 @@ extension Subject {
         case .programmingBasics: return .indigo
         }
     }
+
+    var icon: String {
+        switch self {
+        case .analysis: return "chart.xyaxis.line"
+        case .linearAlgebra: return "squareshape.split.3x3"
+        case .discreteMaths: return "number.square"
+        case .programmingBasics: return "chevron.left.forwardslash.chevron.right"
+        case .arrays: return "arrow.up.and.down.and.sparkles"
+        case .graphs: return "waveform.path"
+        }
+    }
 }
 
 // One ring, one topic, one independent rate
@@ -55,6 +66,19 @@ struct CategoryStat: Identifiable {
     let subject: Subject
     let rate: Double     // 0...1
     let attempts: Int
+
+    /// Per-subject success rate from a set of completed runs, in one place
+    /// so "what is the student struggling with" is computed the same way
+    /// wherever it is asked.
+    static func compute(from scores: [ResultQCM], subjects: [Subject]) -> [CategoryStat] {
+        subjects.compactMap { subject in
+            let filtered = scores.filter { $0.category == subject }
+            let total = filtered.reduce(0) { $0 + $1.nbQuestions }
+            guard total > 0 else { return nil }
+            let correct = filtered.reduce(0) { $0 + $1.nbCorrectAnswers }
+            return CategoryStat(subject: subject, rate: Double(correct) / Double(total), attempts: filtered.count)
+        }
+    }
 }
 
 // One attempt = one row (bars + label)
@@ -90,7 +114,7 @@ struct AttemptRow: View {
                 }
             }
 
-            Text("\(result.nbCorrectAnswers) / \(result.nbQuestions) correct answers")
+            Text("\(result.nbCorrectAnswers) / \(result.nbQuestions) right")
                 .font(.caption2)
                 .foregroundStyle(.secondary)
         }
@@ -109,28 +133,9 @@ struct StatisticsView: View {
 
     private let allSubjects: [Subject] = [.analysis, .linearAlgebra, .discreteMaths, .programmingBasics, .arrays, .graphs]
 
-    // Single source of truth: summed correct answers ÷ summed questions
-    private func correctRate(for category: Subject) -> Double {
-        let filtered = scores.filter { $0.category == category }
-        let (total, correct) = filtered.reduce(into: (0, 0)) { acc, r in
-            acc.0 += r.nbQuestions
-            acc.1 += r.nbCorrectAnswers
-        }
-        guard total > 0 else { return 0 }
-        return Double(correct) / Double(total)
-    }
-
     // Only topics that actually have attempts
     private var categoryStats: [CategoryStat] {
-        allSubjects.compactMap { subject in
-            let attempts = scores.filter { $0.category == subject }.count
-            guard attempts > 0 else { return nil }
-            return CategoryStat(
-                subject: subject,
-                rate: correctRate(for: subject),
-                attempts: attempts
-            )
-        }
+        CategoryStat.compute(from: scores, subjects: allSubjects)
     }
 
     // Most recent first, keeping the original "Try n" numbering
@@ -171,7 +176,7 @@ struct StatisticsView: View {
                                 Text("\(streak)-day streak")
                                     .font(.headline)
                                 Text(streak == 1
-                                     ? "Complete a quiz tomorrow to keep it going"
+                                     ? "Practice again tomorrow to keep it going"
                                      : "Keep it going, come back tomorrow")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
@@ -222,7 +227,7 @@ struct StatisticsView: View {
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(stat.subject.displayName)
                                         .font(.headline)
-                                    Text("\(stat.attempts) quiz\(stat.attempts > 1 ? "zes" : "")")
+                                    Text("\(stat.attempts) run\(stat.attempts > 1 ? "s" : "")")
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
                                 }
@@ -266,13 +271,13 @@ struct StatisticsView: View {
                     }
                 }
             }
-            .navigationTitle("Statistics")
+            .navigationTitle("Progress")
             .overlay {
                 if scores.isEmpty {
                     ContentUnavailableView(
-                        "No finished attempt yet",
+                        "Nothing to show yet",
                         systemImage: "chart.bar.xaxis",
-                        description: Text("Complete a quiz to see your statistics")
+                        description: Text("Finish a run in either study mode and it lands here.")
                     )
                 }
             }

@@ -170,6 +170,30 @@ extension GraphicsContext {
         draw(t, at: p, anchor: .center)
     }
 
+    /// A label on its own filled plate. Plain text over the grid was legible
+    /// on an empty plot and unreadable the moment a vector, the circle or the
+    /// other point ran underneath it, which is exactly when it matters most.
+    /// Stays inside `bounds` so a point dragged to the edge keeps its readout.
+    /// Non-mutating so the algebra views, which hand their context around by
+    /// value, can label their vectors the same way.
+    func chip(_ string: String, at p: CGPoint, size: CGFloat,
+              _ color: Color, within bounds: CGSize) {
+        var t = resolve(Text(string).font(.system(size: size, weight: .bold, design: .monospaced)))
+        t.shading = .color(.white)
+
+        let m = t.measure(in: CGSize(width: 500, height: 100))
+        let w = m.width + 10, h = m.height + 6
+
+        let cx = min(max(p.x, w / 2 + 2), max(bounds.width - w / 2 - 2, w / 2 + 2))
+        let cy = min(max(p.y, h / 2 + 2), max(bounds.height - h / 2 - 2, h / 2 + 2))
+        let plate = Path(roundedRect: CGRect(x: cx - w / 2, y: cy - h / 2, width: w, height: h),
+                         cornerRadius: 5)
+
+        fill(plate, with: .color(color))
+        stroke(plate, with: .color(.white.opacity(0.55)), lineWidth: 0.8)
+        draw(t, at: CGPoint(x: cx, y: cy), anchor: .center)
+    }
+
     mutating func drawGrid(_ s: TrigSpace) {
         let e = s.halfExtent
         var path = Path()

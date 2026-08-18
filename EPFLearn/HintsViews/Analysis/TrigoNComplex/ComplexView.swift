@@ -33,6 +33,10 @@ enum ComplexOp: String, CaseIterable, Identifiable {
 
 struct ComplexPlaneView: View {
 
+    /// Set in challenge mode so the run can grade what the student builds.
+    /// Left nil everywhere else, which keeps this a plain hint view.
+    var onReading: ((ChallengeReading) -> Void)? = nil
+
     @State private var r1: Double = 1
     @State private var theta1: Double = .pi / 4
     @State private var r2: Double = 0.7
@@ -54,14 +58,24 @@ struct ComplexPlaneView: View {
         frozenFit ?? max(1.34, max(r1, r2, result.modulus) * 1.15)
     }
 
+    private var reading: ComplexReading {
+        ComplexReading(z1re: z1.re, z1im: z1.im,
+                       z2re: z2.re, z2im: z2.im,
+                       resultRe: result.re, resultIm: result.im,
+                       isProduct: operation == .multiply)
+    }
+
     var body: some View {
-        VStack(spacing: 9) {
+        VStack(spacing: 7) {
             plot.frame(maxWidth: 520, maxHeight: 520)
                 .aspectRatio(1, contentMode: .fit)
             panel
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 8)
+        .onChange(of: reading, initial: true) { _, new in
+            onReading?(.complexPlane(new))
+        }
     }
 
     // MARK: Tracé
@@ -138,7 +152,26 @@ struct ComplexPlaneView: View {
             ctx.dot(tip, color.opacity(0.28), radius: width * 4.4)
         }
         ctx.dot(tip, color, radius: width * (held ? 2.8 : 2.2))
-        ctx.label(name, at: CGPoint(x: tip.x + 22, y: tip.y - 12), size: 11, color, bold: true)
+
+        // Pushed out along the vector rather than a fixed up-and-right nudge:
+        // that offset dropped z₂'s label straight onto z₁'s whenever the two
+        // pointed the same way, which is exactly the case worth reading. The
+        // value travels with the name so the figure states what it is.
+        let dx = tip.x - s.center.x, dy = tip.y - s.center.y
+        let len = max(hypot(dx, dy), 1)
+        let anchor = CGPoint(x: tip.x + dx / len * 26, y: tip.y + dy / len * 26)
+        ctx.chip("\(name) = \(compact(z))", at: anchor, size: 9.5, color,
+                 within: CGSize(width: s.side, height: s.side))
+    }
+
+    /// One decimal, and no "+ 0.0i" tail on a real: the plate has to stay
+    /// narrow enough that it never buries the figure it is labelling.
+    private func compact(_ z: Complex) -> String {
+        let re = (z.re * 10).rounded() / 10
+        let im = (z.im * 10).rounded() / 10
+        if abs(im) < 0.05 { return String(format: "%.1f", re) }
+        if abs(re) < 0.05 { return String(format: "%.1fi", im) }
+        return String(format: "%.1f", re) + (im < 0 ? "−" : "+") + String(format: "%.1fi", abs(im))
     }
 
     private func point(_ s: TrigSpace, _ z: Complex) -> CGPoint { s.point(z.re, z.im) }
@@ -168,26 +201,48 @@ struct ComplexPlaneView: View {
         .labelsHidden()
         .padding(.horizontal, 8)
 
-        VStack(alignment: .leading, spacing: 5) {
-            Text("z₁ = \(exponentialStr(r: r1, theta: theta1)) = \(str(z1))")
-                .foregroundStyle(TrigPalette.radius)
-            Text("z₂ = \(exponentialStr(r: r2, theta: theta2)) = \(str(z2))")
-                .foregroundStyle(TrigPalette.z2)
-            Text("z₁ \(operation.rawValue) z₂ = \(exponentialStr(r: result.modulus, theta: result.argument)) = \(str(result))")
-                .foregroundStyle(TrigPalette.result).fontWeight(.semibold)
+        // Three cards rather than three shrink-to-fit lines: the old readout
+        // squeezed cartesian and polar onto one row and scaled it down to
+        // ~8pt, so the numbers the whole view is about were the hardest thing
+        // on screen to read.
+        VStack(spacing: 6) {
+            readout("z₁", z1, TrigPalette.radius)
+            readout("z₂", z2, TrigPalette.z2)
+            readout("z₁ \(operation.rawValue) z₂", result, TrigPalette.result, emphasised: true)
         }
-        .font(.system(.footnote, design: .monospaced))
-        .lineLimit(1)
-        .minimumScaleFactor(0.65)
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private func fmt(_ v: Double) -> String { String(format: "%.2f", v) }
-    
-    private func exponentialStr(r: Double, theta: Double) -> String {
-        let coeff = String(format: "%.2f", theta / .pi)
-        return "\(fmt(r))eⁱ⁽\(coeff)π⁾"
+    private func readout(_ name: String, _ z: Complex, _ color: Color,
+                         emphasised: Bool = false) -> some View {
+        HStack(spacing: 9) {
+            Text(name)
+                .font(.system(size: 11, weight: .heavy, design: .monospaced))
+                .foregroundStyle(.white)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 4)
+                .background(color, in: RoundedRectangle(cornerRadius: 5))
+
+            VStack(alignment: .leading, spacing: 1) {
+                Text(str(z))
+                    .font(.system(size: 13, weight: emphasised ? .heavy : .semibold,
+                                  design: .monospaced))
+                Text("|z| = \(fmt(z.modulus))   ·   arg = \(fmt(z.argument / .pi))π")
+                    .font(.system(size: 10, design: .monospaced))
+                    .foregroundStyle(.secondary)
+            }
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
+
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 5)
+        .background(color.opacity(emphasised ? 0.15 : 0.07),
+                    in: RoundedRectangle(cornerRadius: 9))
     }
+
+    private func fmt(_ v: Double) -> String { String(format: "%.2f", v) }
 
     private func str(_ z: Complex) -> String {
         "\(fmt(z.re)) \(z.im < 0 ? "−" : "+") \(fmt(abs(z.im)))i"

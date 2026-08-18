@@ -51,8 +51,8 @@ struct ContentView: View {
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            QuizView(vm: $vm, pendingSubject: $pendingSubject)
-                .tabItem { Label("Quiz", systemImage: "questionmark.circle") }
+            QuizView(vm: $vm, pendingSubject: $pendingSubject, onChallengeComplete: record)
+                .tabItem { Label("Practice", systemImage: "questionmark.circle") }
                 .tag(0)
 
             StatisticsView(scores: .constant(previousScores), streak: currentStreak) { subject in
@@ -82,11 +82,14 @@ struct ContentView: View {
 
     /// Persists a finished quiz under the current local profile.
     private func installQuizCompletionHandler() {
-        vm.onComplete = { result in
-            modelContext.insert(QuizResultRecord(result: result, userID: profile.id))
-            try? modelContext.save()
-            if reminderEnabled { ReminderManager.reschedule(hasCompletedQuizToday: true) }
-        }
+        vm.onComplete = record
+    }
+
+    /// Shared by both study modes: a finished run is a finished run.
+    private func record(_ result: ResultQCM) {
+        modelContext.insert(QuizResultRecord(result: result, userID: profile.id))
+        try? modelContext.save()
+        if reminderEnabled { ReminderManager.reschedule(hasCompletedQuizToday: true) }
     }
 
     private var hasCompletedQuizToday: Bool {

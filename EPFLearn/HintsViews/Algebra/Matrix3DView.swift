@@ -139,6 +139,9 @@ struct Projector {
 
 struct Matrix3DView: View {
 
+    /// Set in challenge mode so the run can grade the map the student builds.
+    var onReading: ((ChallengeReading) -> Void)? = nil
+
     @State private var matrix = M3.identity
     @State private var vector = V3(1, 1, 1)
     @State private var presetIndex = 0
@@ -152,6 +155,12 @@ struct Matrix3DView: View {
     /// Matrix actually rendered (morph between I and the chosen matrix).
     private var live: M3 { M3.lerp(.identity, matrix, morph) }
     private var image: V3 { matrix.apply(vector) }
+
+    private var reading: SpaceMapReading {
+        SpaceMapReading(vx: vector.x, vy: vector.y, vz: vector.z,
+                        avx: image.x, avy: image.y, avz: image.z,
+                        det: matrix.det, morph: morph)
+    }
 
     // Palette
     static let vSceneColor = Color.primary
@@ -195,7 +204,10 @@ struct Matrix3DView: View {
 
                 equationCard
             }
-            .padding(14)
+            .padding(10)
+        }
+        .onChange(of: reading, initial: true) { _, new in
+            onReading?(.spaceMap(new))
         }
         .background(Color(.systemGroupedBackground))
     }

@@ -8,12 +8,15 @@ import SwiftUI
 
 struct VennDiagramView: View {
 
+    /// Set in challenge mode so the run can grade the configuration drawn.
+    var onReading: ((ChallengeReading) -> Void)? = nil
+
     enum Region: String, CaseIterable, Identifiable {
         // 2 sets
         case a = "A", b = "B"
         case unionAB = "A ∪ B", interAB = "A ∩ B"
         case aMinusB = "A \\ B", bMinusA = "B \\ A"
-        case symmAB = "A △ B", compA = "Aᶜ"
+        case compA = "Aᶜ"
         // Written forms of the same regions. A set identity is only checkable
         // if both sides of it can be shaded, so every expression the questions
         // offer gets its own entry, even when two entries paint the same area:
@@ -40,8 +43,6 @@ struct VennDiagramView: View {
                 return "In A but not in B."
             case .bMinusA:
                 return "In B but not in A."
-            case .symmAB:
-                return "In exactly one of the two (symmetric difference)."
             case .compA:
                 return "All of Ω except A"
             case .aInterCompB:
@@ -86,7 +87,7 @@ struct VennDiagramView: View {
     private var regions: [Region] {
         threeSets
         ? [.unionABC, .interABC, .pairAB, .exactlyOne, .none3]
-        : [.a, .b, .compA, .unionAB, .interAB, .aMinusB, .bMinusA, .symmAB,
+        : [.a, .b, .compA, .unionAB, .interAB, .aMinusB, .bMinusA,
            .aInterCompB, .compAInterB, .compUnionAB, .compAInterCompB,
            .compInterAB, .compAUnionCompB]
     }
@@ -130,7 +131,18 @@ struct VennDiagramView: View {
             }
             .padding()
         }
+        .onChange(of: reading, initial: true) { _, new in
+            onReading?(.sets(new))
+        }
     }
+
+    private var reading: SetsReading {
+        SetsReading(centreDistance: Double(hypot(cA.x - cB.x, cA.y - cB.y)),
+                    radiusA: Double(rA), radiusB: Double(rB),
+                    threeSets: threeSets,
+                    region: region.rawValue)
+    }
+
 
     private func disc(_ c: CGPoint, _ r: CGFloat) -> Path {
         Path(ellipseIn: CGRect(x: c.x - r, y: c.y - r, width: 2*r, height: 2*r))
@@ -153,9 +165,6 @@ struct VennDiagramView: View {
         case .aMinusB:
             ctx.drawLayer { l in l.clip(to: b, options: .inverse); l.fill(a, with: .color(fill)) }
         case .bMinusA:
-            ctx.drawLayer { l in l.clip(to: a, options: .inverse); l.fill(b, with: .color(fill)) }
-        case .symmAB:
-            ctx.drawLayer { l in l.clip(to: b, options: .inverse); l.fill(a, with: .color(fill)) }
             ctx.drawLayer { l in l.clip(to: a, options: .inverse); l.fill(b, with: .color(fill)) }
         case .compA:
             ctx.drawLayer { l in l.clip(to: a, options: .inverse); l.fill(universe, with: .color(fill)) }
@@ -260,12 +269,19 @@ struct DraggableDisc: View {
                         .onEnded { _ in start = nil }
                 )
 
+            // 10pt of visible dot used to be 10pt of touch target as well,
+            // sitting on top of the disc's own drag area, so grabbing it was
+            // mostly luck and the drag underneath won. The dot is now bigger
+            // and carries a 44pt hit area, and the gesture takes priority over
+            // the disc it sits on.
             Circle()
                 .fill(Color.blue)
-                .overlay(Circle().strokeBorder(.white.opacity(0.7), lineWidth: 1.5))
-                .frame(width: 10, height: 10)
+                .overlay(Circle().strokeBorder(.white.opacity(0.9), lineWidth: 2))
+                .frame(width: 15, height: 15)
+                .frame(width: 44, height: 44)
+                .contentShape(Circle())
                 .position(knob)
-                .gesture(
+                .highPriorityGesture(
                     DragGesture(coordinateSpace: .named("venn"))
                         .onChanged { v in
                             let d = hypot(v.location.x - center.x, v.location.y - center.y)

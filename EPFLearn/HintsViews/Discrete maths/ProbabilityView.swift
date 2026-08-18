@@ -127,7 +127,7 @@ struct ProbabilityView: View {
 
             Spacer(minLength: 0)
         }
-        .padding()
+        .padding(10)
         .animation(.easeInOut(duration: 0.2), value: selected)
         .animation(.easeInOut(duration: 0.2), value: experiment)
     }

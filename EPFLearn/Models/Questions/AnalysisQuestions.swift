@@ -172,7 +172,7 @@ extension Question {
                 "S⁻ = S⁺ = c"
             ],
             correctIndex: 0,
-            explanation: "Infimum and supremum are both c on every piece, so both sums equal c(b − a). The gap is zero from the start, the exact opposite of the Dirichlet case.",
+            explanation: "Infimum and supremum are both c on every piece, so both sums equal c(b − a). The gap is zero from the very first subdivision, and refining cannot improve on it.",
             visualization: .darboux
         ),
     ]

@@ -9,6 +9,9 @@ import SwiftUI
 
 struct TAFView: View {
 
+    /// Set in challenge mode so the run can grade the interval the student sets.
+    var onReading: ((ChallengeReading) -> Void)? = nil
+
     @State private var selectedFunction = 0
     @State private var a: Double = -1.0
     @State private var b: Double =  1.0
@@ -17,8 +20,35 @@ struct TAFView: View {
     private let baseScale: Double = 100
     private var scale: Double { baseScale * Double(graphSize) / 300 }
     
-    init(_ selectedFunction: Int = 0) {
+    init(_ selectedFunction: Int = 0, onReading: ((ChallengeReading) -> Void)? = nil) {
+        self.onReading = onReading
         _selectedFunction = State(initialValue: selectedFunction)
+    }
+
+    /// Every curve here is even or odd, so the default interval [−1, 1] hands
+    /// you f(a) = f(b) the instant a function is picked and Rolle's hypothesis
+    /// is satisfied before the student has done anything. Shuffling to an
+    /// asymmetric interval puts the work back.
+    private func shuffle() {
+        // The plot shows x from −graphSize/(2·scale) to +that, which is ±1.5
+        // at the default size. An earlier version drew from ±2 and pushed the
+        // markers clean off the canvas, so the interval is kept comfortably
+        // inside the frame.
+        let visible = 1.25
+        let lo = Double.random(in: -visible ... -0.4)
+        var hi = Double.random(in: 0.4 ... visible)
+        // Symmetry is exactly what we are trying to avoid handing out: every
+        // curve here is even or odd, so a symmetric interval gives f(a) = f(b)
+        // for free the moment a function is picked.
+        if abs(hi + lo) < 0.25 { hi = min(hi + 0.4, visible) }
+        a = (lo * 10).rounded() / 10
+        b = (hi * 10).rounded() / 10
+    }
+
+    private var reading: MeanValueReading {
+        let f = functions[selectedFunction]
+        return MeanValueReading(a: a, b: b, fa: f(a), fb: f(b),
+                                matchingPoints: findAllC(f: f, a: a, b: b).count)
     }
 
     // MARK: - Functions
@@ -94,11 +124,29 @@ struct TAFView: View {
 
         VStack(spacing: 9) {
 
-            VStack(alignment: .leading, spacing: 2) {
-                VizHeader("Mean Value Theorem", subtitle: "Somewhere the tangent matches the slope between a and b.")
-                Text("f(x) = \(functionName(selectedFunction))")
-                    .font(.system(size: 12, design: .monospaced))
-                    .foregroundStyle(.secondary)
+            HStack(alignment: .top, spacing: 8) {
+                VStack(alignment: .leading, spacing: 2) {
+                    VizHeader("Mean Value Theorem", subtitle: "Somewhere the tangent matches the slope between a and b.")
+                    Text("f(x) = \(functionName(selectedFunction))")
+                        .font(.system(size: 12, design: .monospaced))
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer(minLength: 0)
+
+                // Throws the interval somewhere asymmetric. Without it the
+                // default [−1, 1] is symmetric and every curve here is even or
+                // odd, so f(a) = f(b) comes free with the function choice.
+                Button {
+                    withAnimation(.easeInOut(duration: 0.25)) { shuffle() }
+                } label: {
+                    Image(systemName: "shuffle")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(.blue)
+                        .padding(7)
+                        .background(Circle().fill(Color.blue.opacity(0.12)))
+                }
+                .buttonStyle(.plain)
             }
 
             ZStack {
@@ -183,8 +231,12 @@ struct TAFView: View {
             }
             .frame(width: graphSize - 40)
         }
-        .padding()
+        .padding(10)
         .adaptivePlot($graphSize)
+        .onAppear { shuffle() }
+        .onChange(of: reading, initial: true) { _, new in
+            onReading?(.meanValue(new))
+        }
     }
 
     // MARK: - Subviews
