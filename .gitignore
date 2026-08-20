@@ -1,2 +1,16 @@
 Secrets.swift
 EPFLearn/Secrets.swift
+
+# macOS
+.DS_Store
+
+# Xcode per-user IDE state, churns constantly and isn't shared work
+xcuserdata/
+*.xcuserstate
+
+# Scratch screenshots/recordings, not meant for version control
+claude-code-logo.png
+Annex files/Simulator Screenshot*
+Annex files/Simulator.mov
+ScreenRecording*.mp4
+photos application/
