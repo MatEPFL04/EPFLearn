@@ -695,7 +695,10 @@ struct ScrubCell: View {
     @State private var anchor: Double? = nil
 
     var body: some View {
-        Text(String(format: "%.2f", value))
+        // Rounding a small negative number toward zero (drag/computation)
+        // can land on -0.0, which %.2f prints as "-0.00". -0.0 == 0.0 in
+        // IEEE754, so this substitution is free and always safe.
+        Text(String(format: "%.2f", value == 0 ? 0 : value))
             .font(.system(size: 11.5, weight: .semibold, design: .monospaced))
             .foregroundStyle(.primary)
             .frame(width: Matrix3DView.cellW, height: Matrix3DView.cellH)

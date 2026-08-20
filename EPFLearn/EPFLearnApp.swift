@@ -7,9 +7,16 @@
 
 import SwiftUI
 import SwiftData
+import UserNotifications
 
 @main
 struct EPFLearnApp: App {
+    init() {
+        // Set before any notification can be tapped, including a cold
+        // launch straight from one.
+        UNUserNotificationCenter.current().delegate = RateAppNotificationDelegate.shared
+    }
+
     var body: some Scene {
         WindowGroup {
             ContentView()

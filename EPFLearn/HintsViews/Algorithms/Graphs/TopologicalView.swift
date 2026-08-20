@@ -185,7 +185,7 @@ struct TopoOrderStrip: View {
             Text("Order").font(.caption2).foregroundColor(.primary.opacity(0.6))
             HStack(spacing: 4) {
                 if order.isEmpty {
-                    Text("—").font(.caption).foregroundColor(.primary.opacity(0.4))
+                    Text("n/a").font(.caption).foregroundColor(.primary.opacity(0.4))
                 } else {
                     ForEach(Array(order.enumerated()), id: \.offset) { i, node in
                         Text("\(node)")

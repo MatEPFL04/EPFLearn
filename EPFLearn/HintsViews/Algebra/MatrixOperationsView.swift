@@ -18,7 +18,7 @@
 //  Growing a matrix moves nothing but its own outline.
 //
 //  Shapes are capped at 3×3 rather than 4×4. That is what buys the whole
-//  statement — operands, operator and result — a single row at a legible cell
+//  statement (operands, operator and result) a single row at a legible cell
 //  size; at 4 it had to wrap onto a second line, which reads like two separate
 //  things rather than one equation.
 //

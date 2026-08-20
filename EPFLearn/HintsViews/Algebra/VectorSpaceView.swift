@@ -76,9 +76,24 @@ struct VectorSpaceView: View {
             get: { (v1.x * v1.x + v1.y * v1.y).squareRoot() },
             set: { new in
                 let current = (v1.x * v1.x + v1.y * v1.y).squareRoot()
-                guard current > 0.0001 else { v1 = V3(new, 0, 0); return }
+                guard current > 0.0001 else { v1 = V3(snap2(new), 0, 0); return }
                 let k = new / current
-                v1 = V3(v1.x * k, v1.y * k, 0)
+                v1 = V3(snap2(v1.x * k), snap2(v1.y * k), 0)
+                presetIndex = 0
+            }
+        )
+    }
+
+    /// Mirrors v1Length for v⃗₂: without it, v⃗₁ was the only vector with a
+    /// dedicated control and v⃗₂ could only be set by eye on the canvas.
+    private var v2Length: Binding<Double> {
+        Binding(
+            get: { (v2.x * v2.x + v2.y * v2.y).squareRoot() },
+            set: { new in
+                let current = (v2.x * v2.x + v2.y * v2.y).squareRoot()
+                guard current > 0.0001 else { v2 = V3(0, snap2(new), 0); return }
+                let k = new / current
+                v2 = V3(snap2(v2.x * k), snap2(v2.y * k), 0)
                 presetIndex = 0
             }
         )
@@ -99,7 +114,9 @@ struct VectorSpaceView: View {
                 if !is3D {
                     VizSlider(label: "length of v₁", value: v1Length, range: 0.5...4,
                               accent: .cyan, format: "%.2f",
-                              caption: "Drag either dot on the graph to turn a vector; use this to scale v⃗₁ exactly.")
+                              caption: "Drag either dot on the graph to turn a vector; use these to scale exactly.")
+                    VizSlider(label: "length of v₂", value: v2Length, range: 0.5...4,
+                              accent: .cyan, format: "%.2f")
                 }
                 controlDeck
                 analysisCard
@@ -190,7 +207,7 @@ struct VectorSpaceView: View {
                       let math = p.unprojectToZPlane(g.location) else { return }
 
                 let snapped = snapDirection(math, against: idx == 0 ? w2 : w1)
-                let clamped = V3(min(max(snapped.x, -4), 4), min(max(snapped.y, -4), 4), 0)
+                let clamped = V3(snap2(min(max(snapped.x, -4), 4)), snap2(min(max(snapped.y, -4), 4)), 0)
                 if idx == 0 { v1 = clamped } else { v2 = clamped }
                 presetIndex = 0
             }
@@ -226,11 +243,20 @@ struct VectorSpaceView: View {
         return p
     }
 
+    /// 2D only: the Build-it target-dot-product challenge grades against this
+    /// value, but nothing on screen showed it until now.
+    private var dot: Double { w1.x * w2.x + w1.y * w2.y }
+
     private var hud: some View {
         VStack(alignment: .leading, spacing: 1) {
-            Text("det = \(fmt(det, 3))")
+            Text("det = \(fmt(det, 2))")
                 .font(.system(size: 13, weight: .bold, design: .monospaced))
                 .foregroundStyle(independent ? .cyan : VectorSpaceView.warm)
+            if !is3D {
+                Text("v⃗₁·v⃗₂ = \(fmt(dot, 2))")
+                    .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                    .foregroundStyle(.secondary)
+            }
             Text(verdictShort)
                 .font(.system(size: 9.5))
                 .foregroundStyle(.secondary)
@@ -574,9 +600,18 @@ struct VectorSpaceView: View {
     }
 
     private func coords(_ v: V3) -> String {
-        is3D ? "(\(fmt(v.x, 1)), \(fmt(v.y, 1)), \(fmt(v.z, 1)))"
-             : "(\(fmt(v.x, 1)), \(fmt(v.y, 1)))"
+        // Same digit count as det/area/editor cells: the coordinates a
+        // student reads off the canvas should multiply out to exactly the
+        // det shown, not to a value one rounding step off it.
+        is3D ? "(\(fmt(v.x, 2)), \(fmt(v.y, 2)), \(fmt(v.z, 2)))"
+             : "(\(fmt(v.x, 2)), \(fmt(v.y, 2)))"
     }
+
+    /// Quantizes to hundredths so a value set by a continuous drag or slider
+    /// matches, digit for digit, the 2-decimal readouts (det, area, coords)
+    /// computed from it. Otherwise "2.00" on screen could hide a value like
+    /// 1.9863 and make det look wrong by hand.
+    private func snap2(_ v: Double) -> Double { (v * 100).rounded() / 100 }
 
     private func drawVectors(_ ctx: GraphicsContext, _ p: Projector, _ size: CGSize) {
         var items: [(V3, Color, String)] = [(w1, .red, "v₁"), (w2, .green, "v₂")]

@@ -450,7 +450,7 @@ extension Challenge {
         Challenge(subject: .linearAlgebra, visualization: .image,
                   prompt: "Let A be a map of ℝ³. Make its image a plane, with none of the nine entries equal to zero.",
                   explanation: """
-                  A column is redundant when it is a combination of the others, and that has nothing to do with zeros. Rank–nullity does the rest: an image of dimension 2 forces a kernel of dimension 1.
+                  A column is redundant when it is a combination of the others, and that has nothing to do with zeros. Rank-Nullity does the rest: an image of dimension 2 forces a kernel of dimension 1.
 
                   Worked example: columns (1,2,3), (2,1,1) and (3,3,4). The third is the sum of the first two, entry by entry. No zero anywhere, yet the rank is 2 and the kernel is the line through (1,1,−1).
 
@@ -503,7 +503,7 @@ extension Challenge {
 
     static let bitwiseChallenges: [Challenge] = [
         bitwiseChallenge(
-            "Let a be the byte on screen. Pick the operator and second operand that switch bit 5 on and leave every other bit alone.",
+            "Let a be the byte on screen. Pick the operator and second operand (b) that switch bit 5 on and leave every other bit alone.",
             explanation: """
             OR writes a 1 where either side has one and leaves a bit untouched where the mask has a 0. So a | (1 << 5) sets bit 5 and nothing else.
 
@@ -514,7 +514,7 @@ extension Challenge {
             satisfied: { $0.op == "|" && $0.b == 1 << 5 }),
 
         bitwiseChallenge(
-            "Let a be the byte on screen, with bit 3 currently on. Switch that bit off and leave every other bit exactly as it was.",
+            "Let a be the byte on screen, with bit 3 currently on. Pick the operator and second operand (b) that switch that bit off and leave every other bit exactly as it was.",
             explanation: """
             Setting a bit is OR with a mask holding a single 1. Clearing one is the mirror image: AND with a mask holding a single 0, which is ~(1 << 3) = 1111_0111.
 
@@ -528,7 +528,7 @@ extension Challenge {
             }),
 
         bitwiseChallenge(
-            "Let a be the byte on screen. Flip exactly its low four bits and leave the high four alone.",
+            "Let a be the byte on screen. Pick the operator and second operand (b) that flip exactly its low four bits and leave the high four alone.",
             explanation: """
             XOR flips a bit where the mask has a 1 and leaves it where the mask has a 0, which makes it the toggle operator. The low four bits are 0000_1111.
 
@@ -710,7 +710,7 @@ extension Challenge {
             explanation: """
             The trap is to reach for row 6. Row 6 counts every subset of S, and only half of those contain x.
 
-            Build such a subset instead: x is compulsory, and the rest is any subset of the other 5 elements. So the subsets of S containing x correspond exactly to the subsets of a 5-element set, and the counts you want are C(5,0), C(5,1), … C(5,5) — the whole of row 5.
+            Build such a subset instead: x is compulsory, and the rest is any subset of the other 5 elements. So the subsets of S containing x correspond exactly to the subsets of a 5-element set, and the counts you want are C(5,0), C(5,1), … C(5,5): the whole of row 5.
 
             Worked example: the subsets of S containing x that have 3 elements are x plus 2 of the remaining 5, and there are C(5,2) = 10 of them. Read straight off row 6, size 3 would have said C(6,3) = 20, which counts the ones without x as well.
 

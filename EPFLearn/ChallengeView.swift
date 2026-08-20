@@ -125,7 +125,7 @@ struct ChallengeView: View {
             HStack(spacing: 12) {
                 attemptDots
 
-                Spacer(minLength: 0)
+                Spacer(minLength: 16)
 
                 Button("Show me") { vm.reveal() }
                     .font(.caption.weight(.semibold))

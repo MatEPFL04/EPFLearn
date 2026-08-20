@@ -124,7 +124,7 @@ private struct WelcomePage: View {
 // MARK: - Pages 2 & 3: live visualization demos
 
 /// Embeds the *real* `VisualizationView` used inside a quiz question's Hint
-/// screen — same view, same layout, same header baked into each hint view —
+/// screen (same view, same layout, same header baked into each hint view),
 /// so this is pixel-for-pixel what the student gets in an actual question,
 /// not a lookalike built for the onboarding.
 private struct DemoPage: View {

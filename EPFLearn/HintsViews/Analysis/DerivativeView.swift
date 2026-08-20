@@ -318,7 +318,7 @@ struct DerivateView: View {
                 }
                 .frame(width: 26, height: 18)
 
-                Text(slope.map(formatted) ?? "—")
+                Text(slope.map(formatted) ?? "n/a")
                     .font(.system(.footnote, design: .monospaced).weight(.bold))
                     .foregroundStyle(color)
                     .contentTransition(.numericText())

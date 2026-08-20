@@ -116,16 +116,16 @@ let gaussQuestions: [Question] = [
         ),
     Question(
         subject: .linearAlgebra,
-        text: "Two systems both have a second equation whose left-hand side is exactly twice the first equation's. One has no solution, the other has infinitely many. What settles which is which?",
-        hint: "Compare 'No solution' and 'A whole line' at step 0: only the constant column differs. Then step both once.",
+        text: "System A pairs x + y + z = 2 with 2x + 2y + 2z = 5. System B pairs x + y + z = 3 with 2x + 2y + 2z = 6. In both, the second equation's left-hand side is exactly twice the first's. Why does A have no solution while B has infinitely many?",
+        hint: "Open 'No solution' for A and 'A whole line' for B. Step each forward once and watch what the second equation becomes: 0 equals what.",
         options: [
             "The number of unknowns involved",
-            "Whether the constant is also doubled, or not",
-            "The order in which the rows are written",
-            "The sign of the coefficients in the third equation"
+            "Whether the constant is doubled too, matching the left-hand side",
+            "The order the rows are written in",
+            "The sign of the coefficients in L₃"
         ],
         correctIndex: 1,
-        explanation: "When the constant follows the same doubling, the second equation says nothing new and dissolves into 0 = 0, leaving fewer equations than unknowns. When it does not, the same elimination produces 0 = a non-zero number, a flat contradiction. The left blocks are indistinguishable; the augmented column is what carries the verdict, which is exactly why the bar is drawn.",
+        explanation: "L₂ minus 2·L₁ clears the left-hand side either way, since it is a copy of L₁'s. What is left is the constants. For A, 5 minus 2 times 2 is 1, not zero, so that row reads 0 = 1: a flat contradiction, and A has no solution. For B, 6 minus 2 times 3 is 0, so that row reads 0 = 0 and says nothing new, leaving B with one fewer real equation than unknowns. Same left-hand side both times; the constant column decides it.",
         visualization: .gaussianElimination
     ),
 ]
@@ -197,16 +197,16 @@ let vectorSpaceQuestions = [
     
     Question(
            subject: .linearAlgebra,
-           text: "You apply a reflection across a line L to vector v⃗, producing v⃗'. Under what geometric condition does {v⃗, v⃗'} fail to form a basis for ℝ²?",
-           hint: "A reflection keeps the length of v⃗, so v⃗' is v⃗ turned by some angle. Lay the two arrows exactly on top of one another, then make one the exact opposite of the other: det collapses to 0 both times. Which positions of v⃗ relative to L produce those two cases?",
+           text: "Let v⃗₁, v⃗₂ ∈ ℝ² with v⃗₁ = λ·v⃗₂, for v⃗₂ fixed and non-zero. Which statement is true as λ ranges over every real number?",
+           hint: "In the view, keep v⃗₂ fixed and set v⃗₁ to multiples of it: try λ = 2, then 0.5, then −1. det stays 0 the whole time, since v⃗₁ never leaves v⃗₂'s line. Now read v⃗₁·v⃗₂ at each: does it climb as λ grows, or turn around?",
            options: [
-               "When v⃗ ∈ L or v⃗ ⊥ L",
-               "Only when v⃗ ⊥ L",
-               "When v⃗ makes a 45° angle with L",
-               "Reflections always preserve independence"
+               "det = 0 for every λ, and v⃗₁·v⃗₂ increases as λ increases",
+               "det = 0 for every λ, and v⃗₁·v⃗₂ decreases as λ increases",
+               "det = 0 only for λ > 0, and v⃗₁·v⃗₂ stays constant",
+               "det depends on λ, so it is never a fixed value"
            ],
            correctIndex: 0,
-           explanation: "If v⃗ ∈ L (on the axis), then v⃗' = v⃗. If v⃗ ⊥ L (perpendicular), then v⃗' = −v⃗. In both cases, v⃗ and v⃗' are collinear, so span{v⃗, v⃗'} is one-dimensional and cannot form a basis for ℝ².",
+           explanation: "v⃗₁ = λ·v⃗₂ makes the pair collinear for every λ, positive, negative, or zero, so det(v⃗₁, v⃗₂) = λ·det(v⃗₂, v⃗₂) = 0 always: the parallelogram is flat no matter what λ is. The dot product tells a different story: v⃗₁·v⃗₂ = λ·(v⃗₂·v⃗₂) = λ|v⃗₂|², a straight line in λ with positive slope |v⃗₂|² > 0. So while det sits frozen at 0, the dot product climbs steadily as λ increases, crossing 0 exactly at λ = 0 where v⃗₁ vanishes.",
            visualization: .determinant
        ),
     
@@ -228,7 +228,7 @@ let vectorSpaceQuestions = [
     Question(
         subject: .linearAlgebra,
         text: "In ℝ³, you have a plane P = span{v⃗₁, v⃗₂}. You add w⃗ forming angle ε > 0 with P. Do {v⃗₁, v⃗₂, w⃗} form a basis for ℝ³?",
-        hint: "Independence is not a matter of degree: either w⃗ lies in the plane, or it does not. Lift it slightly in the view.",
+        hint: "Set v⃗₁ = (1,0,0) and v⃗₂ = (0,1,0) so P is the xy-plane, then drag w⃗'s z-entry up from 0 in the grid. The volume readout leaves 0 the instant z isn't exactly 0, however small. It's not how big ε is, only whether it's zero.",
         options: [
             "No, because ε is too small",
             "Yes: ε ≠ 0 puts w⃗ outside P, so the three are independent",

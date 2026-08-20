@@ -3,6 +3,7 @@
 //  LearnViz
 //
 
+
 import SwiftUI
 import SwiftData
 
@@ -90,6 +91,7 @@ struct ContentView: View {
         modelContext.insert(QuizResultRecord(result: result, userID: profile.id))
         try? modelContext.save()
         if reminderEnabled { ReminderManager.reschedule(hasCompletedQuizToday: true) }
+        RateAppManager.maybeNudge(sessionCount: previousScores.count, streak: currentStreak)
     }
 
     private var hasCompletedQuizToday: Bool {

@@ -102,7 +102,7 @@ struct CNFView: View {
                             cell(b ? "T" : "F", tint: b ? .green : .red, background: bg)
                         }
                         cell(value ? "T" : "F", tint: value ? .green : .red, background: bg)
-                        cell(isTarget ? piece(vs, row) : "—", mono: true, background: bg, wide: true)
+                        cell(isTarget ? piece(vs, row) : "n/a", mono: true, background: bg, wide: true)
                     }
                 }
             }

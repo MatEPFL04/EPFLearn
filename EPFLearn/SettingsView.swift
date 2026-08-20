@@ -33,8 +33,8 @@ struct SettingsView: View {
 
     private var appVersion: String {
         let info = Bundle.main.infoDictionary
-        let version = info?["CFBundleShortVersionString"] as? String ?? "—"
-        let build   = info?["CFBundleVersion"] as? String ?? "—"
+        let version = info?["CFBundleShortVersionString"] as? String ?? "n/a"
+        let build   = info?["CFBundleVersion"] as? String ?? "n/a"
         return "\(version) (\(build))"
     }
 
@@ -71,6 +71,16 @@ struct SettingsView: View {
                     .disabled(isResetting || myRecordCount == 0)
                 } footer: {
                     Text("Permanently erases every result stored on this device, from both study modes. This cannot be undone.")
+                }
+
+                Section {
+                    NavigationLink {
+                        FeedbackView()
+                    } label: {
+                        Label("Send Feedback", systemImage: "envelope.fill")
+                    }
+                } footer: {
+                    Text("Bugs, ideas, or just how it's going: tell us directly.")
                 }
 
                 Section("About") {
